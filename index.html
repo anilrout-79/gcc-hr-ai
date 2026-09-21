@@ -10,6 +10,7 @@
 <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
 <script src="https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -1192,11 +1193,12 @@
 // GCC HR AI PREMIUM - Complete System with Custom Fields
 // ============================================================
 // ---- Supabase connection ----
+// ---- Supabase connection ----
 const SUPABASE_URL = 'https://jlhlayydqcsvmmzdypcr.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_N8t3mr2fEUNbGQuV8qThSg_ECIYi7V7';
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const SUPABASE_KEY = 'sb_publishable_N8t3mr2fEUNbGQuV8qThSg_ECIYi7V7'; // your sb_publishable_... key
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-async function testSupabaseConnection() {
+window.testSupabaseConnection = async function () {
   const { data, error } = await supabaseClient.from('companies').select('*').limit(5);
   if (error) {
     console.error('Supabase error:', error);
@@ -1205,7 +1207,7 @@ async function testSupabaseConnection() {
   }
   console.log('Supabase OK, companies:', data);
   alert('Supabase connected! Companies: ' + (data?.length ?? 0));
-}
+};
 
   let STORAGE_KEY = (function() {
   try {
