@@ -1208,7 +1208,59 @@ window.testSupabaseConnection = async function () {
   console.log('Supabase OK, companies:', data);
   alert('Supabase connected! Companies: ' + (data?.length ?? 0));
 };
+// ---- Cloud save / load (app_data table) ----
+const CLOUD_KEY = 'default'; // one company blob for now
 
+async function saveToCloud() {
+  try {
+    if (typeof data === 'undefined') {
+      alert('App data not ready');
+      return;
+    }
+    const payload = JSON.parse(JSON.stringify(data));
+    const { error } = await supabaseClient
+      .from('app_data')
+      .upsert(
+        { company_key: CLOUD_KEY, payload: payload, updated_at: new Date().toISOString() },
+        { onConflict: 'company_key' }
+      );
+    if (error) throw error;
+    console.log('Cloud save OK');
+    if (typeof showToast === 'function') showToast('Saved to cloud', 'success');
+    else alert('Saved to cloud');
+  } catch (e) {
+    console.error(e);
+    alert('Cloud save failed: ' + (e.message || e));
+  }
+}
+
+async function loadFromCloud() {
+  try {
+    const { data: rows, error } = await supabaseClient
+      .from('app_data')
+      .select('payload')
+      .eq('company_key', CLOUD_KEY)
+      .limit(1);
+    if (error) throw error;
+    if (!rows || !rows.length) {
+      alert('No cloud data yet. Use the app, then Save to cloud.');
+      return;
+    }
+    // Merge into existing app data object
+    Object.keys(rows[0].payload).forEach(k => { data[k] = rows[0].payload[k]; });
+    if (typeof saveData === 'function') saveData(); // also keep localStorage backup
+    if (typeof renderDashboard === 'function') renderDashboard();
+    alert('Loaded from cloud. Refresh sections if needed.');
+    location.reload(); // simplest reliable refresh
+  } catch (e) {
+    console.error(e);
+    alert('Cloud load failed: ' + (e.message || e));
+  }
+}
+
+window.saveToCloud = saveToCloud;
+window.loadFromCloud = loadFromCloud;
+  
   let STORAGE_KEY = (function() {
   try {
     const active = localStorage.getItem('gcc_hr_active_company') || 'default';
