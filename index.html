@@ -1209,12 +1209,13 @@ window.testSupabaseConnection = async function () {
   alert('Supabase connected! Companies: ' + (data?.length ?? 0));
 };
 // ---- Cloud save / load (app_data table) ----
-const CLOUD_KEY = 'default'; // one company blob for now
+// ---- Cloud save / load (app_data table) ----
+const CLOUD_KEY = 'default';
 
-async function saveToCloud() {
+window.saveToCloud = async function () {
   try {
     if (typeof data === 'undefined') {
-      alert('App data not ready');
+      alert('App data not ready — login first');
       return;
     }
     const payload = JSON.parse(JSON.stringify(data));
@@ -1226,13 +1227,34 @@ async function saveToCloud() {
       );
     if (error) throw error;
     console.log('Cloud save OK');
-    if (typeof showToast === 'function') showToast('Saved to cloud', 'success');
-    else alert('Saved to cloud');
+    alert('Saved to cloud');
   } catch (e) {
     console.error(e);
     alert('Cloud save failed: ' + (e.message || e));
   }
-}
+};
+
+window.loadFromCloud = async function () {
+  try {
+    const { data: rows, error } = await supabaseClient
+      .from('app_data')
+      .select('payload')
+      .eq('company_key', CLOUD_KEY)
+      .limit(1);
+    if (error) throw error;
+    if (!rows || !rows.length) {
+      alert('No cloud data yet. Login, use the app, then saveToCloud().');
+      return;
+    }
+    Object.keys(rows[0].payload).forEach(k => { data[k] = rows[0].payload[k]; });
+    if (typeof saveData === 'function') saveData();
+    alert('Loaded from cloud — reloading');
+    location.reload();
+  } catch (e) {
+    console.error(e);
+    alert('Cloud load failed: ' + (e.message || e));
+  }
+};
 
 async function loadFromCloud() {
   try {
