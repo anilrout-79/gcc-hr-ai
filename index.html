@@ -1191,8 +1191,23 @@
 // ============================================================
 // GCC HR AI PREMIUM - Complete System with Custom Fields
 // ============================================================
+// ---- Supabase connection ----
+const SUPABASE_URL = 'https://jlhlayydqcsvmmzdypcr.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_N8t3mr2fEUNbGQuV8qThSg_ECIYi7V7';
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-let STORAGE_KEY = (function() {
+async function testSupabaseConnection() {
+  const { data, error } = await supabaseClient.from('companies').select('*').limit(5);
+  if (error) {
+    console.error('Supabase error:', error);
+    alert('Supabase connection failed: ' + error.message);
+    return;
+  }
+  console.log('Supabase OK, companies:', data);
+  alert('Supabase connected! Companies: ' + (data?.length ?? 0));
+}
+
+  let STORAGE_KEY = (function() {
   try {
     const active = localStorage.getItem('gcc_hr_active_company') || 'default';
     return active === 'default' ? 'gcc_hr_ai_premium_v1' : 'gcc_hr_ai_premium_' + active;
