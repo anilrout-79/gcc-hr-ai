@@ -10,7 +10,6 @@
 <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
 <script src="https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -183,6 +182,16 @@
   /* Stat tiles subtle lift */
   .stat-tile { transition: transform .2s ease, box-shadow .2s; }
   .stat-tile:hover { transform: translateY(-2px); box-shadow: var(--shadow-soft); }
+  body.compact .p-5.md\:p-7 { padding: 0.85rem !important; }
+  body.compact .section-content .p-6 { padding: 1rem !important; }
+  body.compact table td, body.compact table th { padding-top: 0.4rem !important; padding-bottom: 0.4rem !important; }
+  body.compact .sidebar-item { padding-top: 0.4rem !important; padding-bottom: 0.4rem !important; font-size: 0.75rem; }
+  @media print {
+    #loginScreen, #appSidebar, #appHeader, #toastContainer, #cmdPalette, #notifPanel, #essPortal { display: none !important; }
+    main { overflow: visible !important; }
+    body { background: white !important; }
+    .section-content { display: block !important; }
+  }
 </style>
 </head>
 <body class="text-gray-800 antialiased">
@@ -308,21 +317,49 @@
         <h2 id="pageTitle" class="text-xl font-extrabold text-gray-900 tracking-tight">Dashboard</h2>
         <p class="text-xs text-gray-500 flex items-center gap-2 mt-0.5"><span class="live-dot"></span> Live · <span id="currentDateTime"></span></p>
       </div>
-      <div class="flex items-center gap-3">
-        <button onclick="toggleLanguage()" id="langToggleBtn" class="px-3 py-2 border border-gray-300 rounded-lg text-sm font-bold hover:bg-gray-50" title="العربية / English">AR</button>
-        <button onclick="toggleDarkMode()" class="p-2 text-gray-500 hover:bg-gray-100 rounded-lg" title="Dark Mode"><i class="fas fa-moon" id="darkIcon"></i></button>
-        <button onclick="saveToCloud()" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-2 rounded-xl text-xs font-semibold">
-  <i class="fas fa-cloud-upload-alt mr-1"></i> Save Cloud
-</button>
-<button onclick="loadFromCloud()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-xl text-xs font-semibold">
-  <i class="fas fa-cloud-download-alt mr-1"></i> Load Cloud
-</button>
-        <button onclick="exportAllData()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2"><i class="fas fa-download"></i> Backup</button>
-        <button onclick="openModal('aiHelp')" class="bg-gradient-to-r from-emerald-500 to-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2"><i class="fas fa-robot"></i> AI Help</button>
-        <button onclick="openModal('securityCenter')" class="p-2 text-gray-500 hover:bg-gray-100 rounded-lg" title="Security & Audit"><i class="fas fa-shield-alt"></i></button>
-        <button onclick="logout()" class="p-2 text-red-500 hover:bg-red-50 rounded-lg" title="Logout"><i class="fas fa-sign-out-alt"></i></button>
+      <div class="flex items-center gap-2 flex-wrap justify-end">
+        <button onclick="openCommandPalette()" class="hidden sm:flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-xl text-xs text-gray-500 hover:bg-gray-50 hover:border-teal-300 transition" title="Search (Ctrl+K)">
+          <i class="fas fa-search text-gray-400"></i>
+          <span>Search…</span>
+          <kbd class="text-[10px] bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200 font-mono">⌘K</kbd>
+        </button>
+        <button onclick="openCommandPalette()" class="sm:hidden p-2 text-gray-500 hover:bg-gray-100 rounded-xl" title="Search"><i class="fas fa-search"></i></button>
+        <button onclick="toggleNotifications()" class="relative p-2 text-gray-500 hover:bg-gray-100 rounded-xl" title="Alerts">
+          <i class="fas fa-bell"></i>
+          <span id="notifBadge" class="hidden absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1">0</span>
+        </button>
+        <button onclick="toggleDensity()" class="p-2 text-gray-500 hover:bg-gray-100 rounded-xl" title="Compact / Comfortable density"><i class="fas fa-compress-alt" id="densityIcon"></i></button>
+        <button onclick="toggleLanguage()" id="langToggleBtn" class="px-2.5 py-2 border border-gray-200 rounded-xl text-xs font-bold hover:bg-gray-50" title="العربية / English">AR</button>
+        <button onclick="toggleDarkMode()" class="p-2 text-gray-500 hover:bg-gray-100 rounded-xl" title="Dark Mode"><i class="fas fa-moon" id="darkIcon"></i></button>
+        <button onclick="exportAllData()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-xl text-xs font-semibold"><i class="fas fa-download mr-1"></i> Backup</button>
+        <button onclick="openModal('sopManual')" class="bg-slate-700 hover:bg-slate-800 text-white px-3 py-2 rounded-xl text-xs font-semibold" title="Standard Operating Procedure"><i class="fas fa-book mr-1"></i> SOP</button>
+        <button onclick="openModal('aiHelp')" class="bg-gradient-to-r from-teal-500 to-emerald-600 text-white px-3 py-2 rounded-xl text-xs font-semibold"><i class="fas fa-robot mr-1"></i> Help</button>
+        <button onclick="openModal('shortcutsHelp')" class="p-2 text-gray-500 hover:bg-gray-100 rounded-xl" title="Shortcuts"><i class="fas fa-keyboard"></i></button>
+        <button onclick="openModal('securityCenter')" class="p-2 text-gray-500 hover:bg-gray-100 rounded-xl" title="Security"><i class="fas fa-shield-alt"></i></button>
+        <button onclick="logout()" class="p-2 text-red-500 hover:bg-red-50 rounded-xl" title="Logout"><i class="fas fa-sign-out-alt"></i></button>
       </div>
     </header>
+
+    <!-- Notifications panel -->
+    <div id="notifPanel" class="hidden absolute right-4 top-16 z-30 w-80 max-h-96 overflow-y-auto bg-white rounded-2xl shadow-2xl border border-gray-100 p-3">
+      <div class="flex justify-between items-center mb-2 px-1">
+        <span class="text-sm font-bold">Alerts</span>
+        <button onclick="toggleNotifications()" class="text-gray-400 text-xs">Close</button>
+      </div>
+      <div id="notifList" class="space-y-2 text-sm"></div>
+    </div>
+
+    <!-- Command palette -->
+    <div id="cmdPalette" class="hidden fixed inset-0 z-[360] flex items-start justify-center pt-[12vh] px-4" onclick="if(event.target===this)closeCommandPalette()">
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg border border-gray-100 overflow-hidden" style="animation: modalIn .25s cubic-bezier(.16,1,.3,1)">
+        <div class="flex items-center gap-3 px-4 py-3 border-b border-gray-100">
+          <i class="fas fa-search text-gray-400"></i>
+          <input id="cmdInput" type="search" placeholder="Search employees, projects, invoices, modules…" class="flex-1 border-0 outline-none text-sm py-1" oninput="runCommandSearch(this.value)" onkeydown="cmdKeyNav(event)">
+          <kbd class="text-[10px] bg-gray-100 px-1.5 py-0.5 rounded border text-gray-500">ESC</kbd>
+        </div>
+        <div id="cmdResults" class="max-h-80 overflow-y-auto p-2"></div>
+      </div>
+    </div>
 
     <div class="p-5 md:p-7">
 
@@ -358,10 +395,26 @@
             <div class="text-2xl font-bold"><span class="curr">KD</span> <span id="statPayroll">0</span></div>
             <div class="text-sm text-gray-500">Monthly Payroll</div>
           </div>
-          <div class="bg-white rounded-xl border border-gray-100 p-5 shadow-sm">
+          <div class="bg-white rounded-xl border border-gray-100 p-5 shadow-sm stat-tile">
             <div class="flex items-center justify-between mb-3"><div class="w-11 h-11 bg-amber-100 rounded-lg flex items-center justify-center"><i class="fas fa-sliders-h text-amber-600"></i></div></div>
             <div class="text-2xl font-bold" id="statCustomFields">0</div>
             <div class="text-sm text-gray-500">Custom Fields</div>
+          </div>
+        </div>
+
+        <div id="onboardingBox" class="hidden mb-6 bg-gradient-to-r from-teal-50 to-violet-50 border border-teal-100 rounded-2xl p-5">
+          <h3 class="font-bold text-teal-900 mb-2"><i class="fas fa-rocket mr-2"></i>Getting started checklist</h3>
+          <ul id="onboardingList" class="text-sm space-y-1.5 text-gray-700"></ul>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
+          <div class="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+            <h3 class="font-bold text-sm mb-3 text-gray-700">Workforce by nationality</h3>
+            <div class="h-48"><canvas id="chartNationality"></canvas></div>
+          </div>
+          <div class="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm">
+            <h3 class="font-bold text-sm mb-3 text-gray-700">Attendance snapshot</h3>
+            <div class="h-48"><canvas id="chartAttendance"></canvas></div>
           </div>
         </div>
 
@@ -1198,98 +1251,8 @@
 // ============================================================
 // GCC HR AI PREMIUM - Complete System with Custom Fields
 // ============================================================
-// ---- Supabase connection ----
-// ---- Supabase connection ----
-const SUPABASE_URL = 'https://jlhlayydqcsvmmzdypcr.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_N8t3mr2fEUNbGQuV8qThSg_ECIYi7V7'; // your sb_publishable_... key
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-window.testSupabaseConnection = async function () {
-  const { data, error } = await supabaseClient.from('companies').select('*').limit(5);
-  if (error) {
-    console.error('Supabase error:', error);
-    alert('Supabase connection failed: ' + error.message);
-    return;
-  }
-  console.log('Supabase OK, companies:', data);
-  alert('Supabase connected! Companies: ' + (data?.length ?? 0));
-};
-// ---- Cloud save / load (app_data table) ----
-// ---- Cloud save / load (app_data table) ----
-const CLOUD_KEY = 'default';
-
-window.saveToCloud = async function () {
-  try {
-    if (typeof data === 'undefined') {
-      alert('App data not ready — login first');
-      return;
-    }
-    const payload = JSON.parse(JSON.stringify(data));
-    const { error } = await supabaseClient
-      .from('app_data')
-      .upsert(
-        { company_key: CLOUD_KEY, payload: payload, updated_at: new Date().toISOString() },
-        { onConflict: 'company_key' }
-      );
-    if (error) throw error;
-    console.log('Cloud save OK');
-    alert('Saved to cloud');
-  } catch (e) {
-    console.error(e);
-    alert('Cloud save failed: ' + (e.message || e));
-  }
-};
-
-window.loadFromCloud = async function () {
-  try {
-    const { data: rows, error } = await supabaseClient
-      .from('app_data')
-      .select('payload')
-      .eq('company_key', CLOUD_KEY)
-      .limit(1);
-    if (error) throw error;
-    if (!rows || !rows.length) {
-      alert('No cloud data yet. Login, use the app, then saveToCloud().');
-      return;
-    }
-    Object.keys(rows[0].payload).forEach(k => { data[k] = rows[0].payload[k]; });
-    if (typeof saveData === 'function') saveData();
-    alert('Loaded from cloud — reloading');
-    location.reload();
-  } catch (e) {
-    console.error(e);
-    alert('Cloud load failed: ' + (e.message || e));
-  }
-};
-
-async function loadFromCloud() {
-  try {
-    const { data: rows, error } = await supabaseClient
-      .from('app_data')
-      .select('payload')
-      .eq('company_key', CLOUD_KEY)
-      .limit(1);
-    if (error) throw error;
-    if (!rows || !rows.length) {
-      alert('No cloud data yet. Use the app, then Save to cloud.');
-      return;
-    }
-    // Merge into existing app data object
-    Object.keys(rows[0].payload).forEach(k => { data[k] = rows[0].payload[k]; });
-    if (typeof saveData === 'function') saveData(); // also keep localStorage backup
-    if (typeof renderDashboard === 'function') renderDashboard();
-    alert('Loaded from cloud. Refresh sections if needed.');
-    location.reload(); // simplest reliable refresh
-  } catch (e) {
-    console.error(e);
-    alert('Cloud load failed: ' + (e.message || e));
-  }
-}
-
-window.saveToCloud = saveToCloud;
-window.loadFromCloud = loadFromCloud;
-  
-  let STORAGE_KEY = (function() {
+let STORAGE_KEY = (function() {
   try {
     const active = localStorage.getItem('gcc_hr_active_company') || 'default';
     return active === 'default' ? 'gcc_hr_ai_premium_v1' : 'gcc_hr_ai_premium_' + active;
@@ -1535,6 +1498,9 @@ function renderDashboard() {
     </div>`;
   } catch (e) {}
   document.getElementById('recentEmployees').innerHTML = recentHtml;
+  try { renderDashboardCharts(); } catch (e) {}
+  try { renderOnboarding(); } catch (e) {}
+  try { updateNotifBadge(); } catch (e) {}
 }
 
 // -------------------- Admin Controls / Custom Fields --------------------
@@ -2563,9 +2529,162 @@ function openModal(type, payload) {
         <p><strong>Custom Fields:</strong> Go to Custom Fields → Add any field (Visa Number, Blood Group, etc.). It appears automatically in employee forms and Excel.</p>
         <p><strong>Import:</strong> Use column headers matching field labels (including custom fields).</p>
         <p><strong>Backup:</strong> Settings → Download Full Backup (JSON). Restore anytime.</p>
-        <p><strong>Data:</strong> Everything is saved automatically in your browser (localStorage).</p>
+        <p><strong>Data:</strong> Browser localStorage + optional Supabase cloud (Save Cloud / Load Cloud).</p>
+        <p><strong>Full manual:</strong> Click the <strong>SOP</strong> button in the header for the complete Standard Operating Procedure.</p>
       </div>
-      <button onclick="closeModal()" class="mt-4 w-full bg-emerald-600 text-white py-2 rounded-lg font-semibold">Got it</button>
+      <button onclick="closeModal(); openModal('sopManual')" class="mt-3 w-full bg-slate-700 text-white py-2 rounded-lg font-semibold">Open SOP Manual</button>
+      <button onclick="closeModal()" class="mt-2 w-full bg-emerald-600 text-white py-2 rounded-lg font-semibold">Got it</button>
+    </div>`;
+  }
+
+  else if (type === 'sopManual') {
+    html = `<div class="p-6 max-w-3xl">
+      <div class="flex justify-between items-start mb-4 gap-3">
+        <div>
+          <h3 class="text-xl font-extrabold text-gray-900"><i class="fas fa-book text-slate-700 mr-2"></i>Standard Operating Procedure</h3>
+          <p class="text-xs text-gray-500 mt-1">GCC HR AI Premium · Kuwait HR / Payroll / Finance · Version 1.0</p>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="printSop()" class="text-xs px-3 py-1.5 border rounded-lg hover:bg-gray-50"><i class="fas fa-print mr-1"></i>Print</button>
+          <button onclick="closeModal()"><i class="fas fa-times"></i></button>
+        </div>
+      </div>
+      <div id="sopContent" class="text-sm space-y-5 max-h-[70vh] overflow-y-auto pr-1 leading-relaxed">
+
+        <section class="border border-gray-100 rounded-xl p-4 bg-slate-50">
+          <h4 class="font-bold text-slate-800 mb-2">1. Purpose</h4>
+          <p>This SOP defines how authorized staff operate <strong>GCC HR AI Premium</strong> for employee records, attendance, leave, payroll (Kuwait labour rules), mobilization, contracts, accounting, and cloud backup.</p>
+        </section>
+
+        <section class="border border-gray-100 rounded-xl p-4">
+          <h4 class="font-bold text-slate-800 mb-2">2. Roles & login</h4>
+          <ul class="list-disc pl-5 space-y-1">
+            <li><strong>Admin</strong> — full access including Admin Controls (custom fields), Settings, Security.</li>
+            <li><strong>HR User</strong> — employees, attendance, leave, payroll, mobilization, contracts.</li>
+            <li><strong>Accounts</strong> — accounting, P&amp;L, invoices, suppliers, cash/bank, assets, budget.</li>
+          </ul>
+          <p class="mt-2 text-xs text-amber-800 bg-amber-50 border border-amber-100 rounded-lg p-2">Change default passwords in production. Do not share Admin credentials.</p>
+        </section>
+
+        <section class="border border-gray-100 rounded-xl p-4">
+          <h4 class="font-bold text-slate-800 mb-2">3. Daily startup</h4>
+          <ol class="list-decimal pl-5 space-y-1">
+            <li>Open the live app URL (GitHub Pages).</li>
+            <li>Log in with your role.</li>
+            <li>If using cloud: click <strong>Load Cloud</strong> after login (especially on a new PC/browser).</li>
+            <li>Check the <strong>bell</strong> for Civil ID / invoice alerts.</li>
+            <li>Review Dashboard stats and Kuwaitization indicator.</li>
+          </ol>
+        </section>
+
+        <section class="border border-gray-100 rounded-xl p-4">
+          <h4 class="font-bold text-slate-800 mb-2">4. Employees</h4>
+          <ol class="list-decimal pl-5 space-y-1">
+            <li>Go to <strong>Employees</strong> → Add Employee (or Import Excel).</li>
+            <li>Enter salary components, join date, document expiry dates, project.</li>
+            <li>Fill any <strong>custom fields</strong> defined by Admin.</li>
+            <li>Keep Civil ID / Passport / Visa dates updated for compliance alerts.</li>
+          </ol>
+        </section>
+
+        <section class="border border-gray-100 rounded-xl p-4">
+          <h4 class="font-bold text-slate-800 mb-2">5. Attendance & leave</h4>
+          <ul class="list-disc pl-5 space-y-1">
+            <li><strong>Attendance:</strong> mark Present / Absent / On Leave per employee.</li>
+            <li><strong>Leave:</strong> request leave; balances use entitlement (default 30 days Kuwait) minus used.</li>
+            <li>Low leave balances appear in the notification centre.</li>
+          </ul>
+        </section>
+
+        <section class="border border-gray-100 rounded-xl p-4">
+          <h4 class="font-bold text-slate-800 mb-2">6. Payroll (Kuwait)</h4>
+          <ol class="list-decimal pl-5 space-y-1">
+            <li>Use <strong>Calculator</strong> for single employee OT / net pay checks.</li>
+            <li>Use <strong>Payroll</strong> for period runs; OT and settlement follow Kuwait labour rules configured in the app.</li>
+            <li><strong>Final Settlement:</strong> run for leavers; read the on-screen explanatory note (EOS, leave encashment).</li>
+            <li><strong>WPS Export:</strong> generate bank upload file after payroll is approved.</li>
+            <li>Optional: email payslip via the mailto/payslip actions where available.</li>
+          </ol>
+        </section>
+
+        <section class="border border-gray-100 rounded-xl p-4">
+          <h4 class="font-bold text-slate-800 mb-2">7. Mobilization</h4>
+          <ul class="list-disc pl-5 space-y-1">
+            <li><strong>Overseas:</strong> track stages from recruitment selection through visa, medical, travel, work permit, residency, Civil ID, Mobile ID.</li>
+            <li><strong>Local:</strong> use the local workflow stages.</li>
+            <li>Update stage status regularly so HR and operations share one status board.</li>
+          </ul>
+        </section>
+
+        <section class="border border-gray-100 rounded-xl p-4">
+          <h4 class="font-bold text-slate-800 mb-2">8. Contracts & documents</h4>
+          <ul class="list-disc pl-5 space-y-1">
+            <li>Generate Employment Contract, Offer Letter, warnings, certificates (EN / AR / bilingual where available).</li>
+            <li>Store signed copies outside the app (company drive); use the app as the generator and tracker.</li>
+            <li><strong>Document Expiry:</strong> action Civil ID / passport / visa alerts before expiry.</li>
+          </ul>
+        </section>
+
+        <section class="border border-gray-100 rounded-xl p-4">
+          <h4 class="font-bold text-slate-800 mb-2">9. Finance & accounting</h4>
+          <ul class="list-disc pl-5 space-y-1">
+            <li>Accounts role: journal entries, invoices (AR), supplier bills (AP), cash &amp; bank, assets, budget, VAT notes.</li>
+            <li>Use <strong>P&amp;L</strong> and <strong>Project P&amp;L</strong> for monthly and project profitability.</li>
+            <li>Tag VAT as 0% / exempt per Kuwait service rules when recording invoices.</li>
+          </ul>
+        </section>
+
+        <section class="border border-gray-100 rounded-xl p-4">
+          <h4 class="font-bold text-slate-800 mb-2">10. Admin Controls (Admin only)</h4>
+          <ol class="list-decimal pl-5 space-y-1">
+            <li>Open <strong>Admin Controls</strong>.</li>
+            <li>Add custom fields (text, number, date, select, checkbox, textarea) for Employees, Payroll, Mobilization, Recruitment, etc.</li>
+            <li>Only Admin should change field definitions to avoid breaking Excel import templates.</li>
+          </ol>
+        </section>
+
+        <section class="border border-gray-100 rounded-xl p-4 bg-teal-50 border-teal-100">
+          <h4 class="font-bold text-teal-900 mb-2">11. Cloud backup (Supabase)</h4>
+          <ol class="list-decimal pl-5 space-y-1">
+            <li>After important changes click <strong>Save Cloud</strong> (header).</li>
+            <li>On another device/browser: log in → <strong>Load Cloud</strong>.</li>
+            <li>Also use <strong>Backup</strong> (JSON download) weekly and store offline.</li>
+            <li>Cloud stores a full JSON snapshot in table <code>app_data</code> (key: default).</li>
+          </ol>
+        </section>
+
+        <section class="border border-gray-100 rounded-xl p-4">
+          <h4 class="font-bold text-slate-800 mb-2">12. End-of-day / end-of-month</h4>
+          <ul class="list-disc pl-5 space-y-1">
+            <li><strong>Daily:</strong> attendance updated, Save Cloud, clear urgent document alerts.</li>
+            <li><strong>Monthly:</strong> complete payroll → WPS → journal/payroll expense entries → P&amp;L review → Backup JSON.</li>
+            <li><strong>Leavers:</strong> Final Settlement → update status → archive documents.</li>
+          </ul>
+        </section>
+
+        <section class="border border-gray-100 rounded-xl p-4">
+          <h4 class="font-bold text-slate-800 mb-2">13. Security rules</h4>
+          <ul class="list-disc pl-5 space-y-1">
+            <li>Never share the Supabase <strong>secret</strong> key in the browser or chat.</li>
+            <li>Log out on shared computers.</li>
+            <li>Treat employee personal data as confidential (Civil ID, salary, passport).</li>
+            <li>Review Security / Audit log if available in the app.</li>
+          </ul>
+        </section>
+
+        <section class="border border-gray-100 rounded-xl p-4">
+          <h4 class="font-bold text-slate-800 mb-2">14. Shortcuts</h4>
+          <ul class="list-disc pl-5 space-y-1">
+            <li><kbd class="bg-gray-100 px-1 rounded border text-xs">Ctrl/⌘ + K</kbd> — Search modules, employees, invoices</li>
+            <li><kbd class="bg-gray-100 px-1 rounded border text-xs">Esc</kbd> — Close search / panels</li>
+            <li>Bell — compliance & payment alerts</li>
+            <li>AR — Arabic RTL UI toggle</li>
+          </ul>
+        </section>
+
+        <p class="text-xs text-gray-400 pt-2">Document control: maintain this SOP when processes change. Kuwait labour/VAT interpretation should be validated with your PRO / legal advisor for formal disputes.</p>
+      </div>
+      <button onclick="closeModal()" class="mt-4 w-full bg-slate-800 text-white py-2.5 rounded-xl font-semibold text-sm">Close SOP</button>
     </div>`;
   }
 
@@ -2661,6 +2780,20 @@ function openModal(type, payload) {
           <button type="submit" class="flex-1 bg-purple-600 text-white py-2 rounded-lg font-semibold">Generate Word</button>
         </div>
       </form>
+    </div>`;
+  }
+
+  else if (type === 'shortcutsHelp') {
+    html = `<div class="p-6">
+      <div class="flex justify-between mb-4"><h3 class="text-xl font-bold"><i class="fas fa-keyboard text-gray-700 mr-2"></i>Keyboard shortcuts</h3><button onclick="closeModal()"><i class="fas fa-times"></i></button></div>
+      <div class="space-y-2 text-sm">
+        <div class="flex justify-between border-b py-2"><span>Command palette / Search</span><kbd class="bg-gray-100 px-2 py-0.5 rounded border text-xs font-mono">Ctrl / ⌘ + K</kbd></div>
+        <div class="flex justify-between border-b py-2"><span>Close palette / panels</span><kbd class="bg-gray-100 px-2 py-0.5 rounded border text-xs font-mono">Esc</kbd></div>
+        <div class="flex justify-between border-b py-2"><span>Navigate search results</span><kbd class="bg-gray-100 px-2 py-0.5 rounded border text-xs font-mono">↑ ↓ Enter</kbd></div>
+        <div class="flex justify-between border-b py-2"><span>Print current view</span><kbd class="bg-gray-100 px-2 py-0.5 rounded border text-xs font-mono">Ctrl / ⌘ + P</kbd></div>
+      </div>
+      <p class="text-xs text-gray-500 mt-4">Use the bell for document & invoice alerts · Density toggle for compact tables · AR for Arabic RTL.</p>
+      <button onclick="closeModal()" class="mt-4 w-full bg-gray-900 text-white py-2.5 rounded-xl font-semibold text-sm">Got it</button>
     </div>`;
   }
 
@@ -2828,6 +2961,24 @@ function closeModal() {
 document.getElementById('modalBackdrop').addEventListener('click', e => {
   if (e.target.id === 'modalBackdrop') closeModal();
 });
+
+function printSop() {
+  const el = document.getElementById('sopContent');
+  if (!el) return;
+  const w = window.open('', '_blank');
+  w.document.write(`<!DOCTYPE html><html><head><title>GCC HR AI — SOP</title>
+    <style>body{font-family:system-ui,sans-serif;max-width:800px;margin:24px auto;padding:0 16px;line-height:1.5;color:#111}
+    h1{font-size:1.4rem} h4{margin:1rem 0 .35rem} section{margin-bottom:1rem;page-break-inside:avoid}
+    ul,ol{margin:.25rem 0 .5rem 1.25rem} kbd{border:1px solid #ccc;padding:0 4px;border-radius:3px;font-size:12px}
+    @media print{body{margin:0}}</style></head><body>
+    <h1>GCC HR AI Premium — Standard Operating Procedure</h1>
+    <p style="color:#666;font-size:13px">Kuwait HR / Payroll / Finance · Version 1.0</p>
+    ${el.innerHTML}
+    </body></html>`);
+  w.document.close();
+  w.focus();
+  setTimeout(() => { w.print(); }, 300);
+}
 
 function toggleOptionsField() {
   const type = document.getElementById('cfType')?.value;
@@ -4130,6 +4281,194 @@ function getKuwaitizationStats() {
   return { kw, total, pct: Math.round((kw / total) * 100) };
 }
 
+// -------------------- Command palette, alerts, charts, density --------------------
+let dashCharts = { nat: null, att: null };
+let cmdIndex = 0;
+let cmdItems = [];
+
+function openCommandPalette() {
+  document.getElementById('cmdPalette').classList.remove('hidden');
+  const input = document.getElementById('cmdInput');
+  input.value = '';
+  runCommandSearch('');
+  setTimeout(() => input.focus(), 50);
+}
+function closeCommandPalette() {
+  document.getElementById('cmdPalette').classList.add('hidden');
+}
+function runCommandSearch(q) {
+  q = (q || '').toLowerCase().trim();
+  const modules = [
+    { t: 'Dashboard', s: 'dashboard', icon: 'fa-home' },
+    { t: 'Employees', s: 'employees', icon: 'fa-users' },
+    { t: 'Payroll', s: 'payroll', icon: 'fa-money-bill-wave' },
+    { t: 'Calculator', s: 'calculator', icon: 'fa-calculator' },
+    { t: 'Accounting', s: 'accounting', icon: 'fa-balance-scale' },
+    { t: 'P&L Report', s: 'pnl', icon: 'fa-chart-pie' },
+    { t: 'Project P&L', s: 'projectpnl', icon: 'fa-sitemap' },
+    { t: 'Invoices', s: 'invoices', icon: 'fa-file-invoice' },
+    { t: 'Document Expiry', s: 'compliance', icon: 'fa-id-card' },
+    { t: 'Leave', s: 'leave', icon: 'fa-calendar-check' },
+    { t: 'Mobilization', s: 'mobilization', icon: 'fa-plane-departure' },
+    { t: 'WPS Export', s: 'wps', icon: 'fa-university' },
+    { t: 'Settings', s: 'settings', icon: 'fa-cog' },
+    { t: 'Reminders', s: 'reminders', icon: 'fa-bell' }
+  ];
+  const results = [];
+  modules.forEach(m => {
+    if (!q || m.t.toLowerCase().includes(q)) results.push({ type: 'module', label: m.t, sub: 'Go to module', action: () => { switchSection(m.s); closeCommandPalette(); }, icon: m.icon });
+  });
+  data.employees.forEach(e => {
+    const hay = (e.name + ' ' + e.id + ' ' + (e.project||'') + ' ' + (e.nationality||'')).toLowerCase();
+    if (!q || hay.includes(q)) results.push({ type: 'employee', label: e.name, sub: e.id + ' · ' + (e.project||''), action: () => { closeCommandPalette(); openModal('viewEmployee', e.id); }, icon: 'fa-user' });
+  });
+  (data.invoices||[]).forEach(inv => {
+    const hay = (inv.client + ' ' + inv.number + ' ' + (inv.project||'')).toLowerCase();
+    if (!q || hay.includes(q)) results.push({ type: 'invoice', label: inv.number + ' — ' + inv.client, sub: inv.status + ' · ' + currency() + ' ' + inv.amount, action: () => { closeCommandPalette(); switchSection('invoices'); }, icon: 'fa-file-invoice' });
+  });
+  (data.projects||[]).forEach(p => {
+    if (!q || (p.name||'').toLowerCase().includes(q)) results.push({ type: 'project', label: p.name, sub: 'Project', action: () => { closeCommandPalette(); switchSection('projects'); }, icon: 'fa-project-diagram' });
+  });
+  cmdItems = results.slice(0, 25);
+  cmdIndex = 0;
+  renderCmdResults();
+}
+function renderCmdResults() {
+  const el = document.getElementById('cmdResults');
+  if (!cmdItems.length) {
+    el.innerHTML = '<div class="text-center text-gray-400 py-8 text-sm">No matches</div>';
+    return;
+  }
+  el.innerHTML = cmdItems.map((item, i) => `
+    <button type="button" class="cmd-row w-full text-left flex items-center gap-3 px-3 py-2.5 rounded-xl ${i===cmdIndex?'bg-teal-50 ring-1 ring-teal-200':''} hover:bg-gray-50" data-idx="${i}">
+      <i class="fas ${item.icon} text-gray-400 w-5 text-center"></i>
+      <div class="flex-1 min-w-0">
+        <div class="text-sm font-semibold truncate">${item.label}</div>
+        <div class="text-[11px] text-gray-500 truncate">${item.sub}</div>
+      </div>
+      <span class="text-[10px] text-gray-400 uppercase">${item.type}</span>
+    </button>
+  `).join('');
+  el.querySelectorAll('.cmd-row').forEach(btn => {
+    btn.addEventListener('click', () => { const i = +btn.dataset.idx; if (cmdItems[i]) cmdItems[i].action(); });
+  });
+}
+function cmdKeyNav(e) {
+  if (e.key === 'Escape') { closeCommandPalette(); return; }
+  if (e.key === 'ArrowDown') { e.preventDefault(); cmdIndex = Math.min(cmdItems.length - 1, cmdIndex + 1); renderCmdResults(); }
+  if (e.key === 'ArrowUp') { e.preventDefault(); cmdIndex = Math.max(0, cmdIndex - 1); renderCmdResults(); }
+  if (e.key === 'Enter' && cmdItems[cmdIndex]) { e.preventDefault(); cmdItems[cmdIndex].action(); }
+}
+
+function getSystemAlerts() {
+  const alerts = [];
+  getExpiringCivilIds(30).forEach(e => {
+    alerts.push({ level: e.daysLeft < 0 ? 'danger' : 'warn', text: `Civil ID: ${e.name} — ${e.daysLeft < 0 ? 'expired' : e.daysLeft + 'd left'}`, go: () => switchSection('compliance') });
+  });
+  (data.invoices||[]).filter(i => i.status !== 'Paid').slice(0, 8).forEach(i => {
+    alerts.push({ level: 'warn', text: `Unpaid invoice ${i.number} — ${i.client}`, go: () => switchSection('invoices') });
+  });
+  (data.supplierBills||[]).filter(b => b.status !== 'Paid').slice(0, 5).forEach(b => {
+    alerts.push({ level: 'info', text: `Supplier due: ${b.supplier}`, go: () => switchSection('suppliers') });
+  });
+  data.employees.filter(e => ((e.leaveEntitlement||30)-(e.leaveUsed||0)) < 3).forEach(e => {
+    alerts.push({ level: 'info', text: `Low leave balance: ${e.name}`, go: () => switchSection('leave') });
+  });
+  return alerts;
+}
+function updateNotifBadge() {
+  const n = getSystemAlerts().length;
+  const badge = document.getElementById('notifBadge');
+  if (!badge) return;
+  if (n > 0) { badge.classList.remove('hidden'); badge.textContent = n > 99 ? '99+' : n; }
+  else badge.classList.add('hidden');
+}
+function toggleNotifications() {
+  const panel = document.getElementById('notifPanel');
+  panel.classList.toggle('hidden');
+  if (!panel.classList.contains('hidden')) {
+    const alerts = getSystemAlerts();
+    document.getElementById('notifList').innerHTML = alerts.length ? alerts.map(a => {
+      const color = a.level === 'danger' ? 'border-red-200 bg-red-50' : a.level === 'warn' ? 'border-amber-200 bg-amber-50' : 'border-blue-100 bg-blue-50';
+      return `<button onclick="this.closest('#notifPanel').classList.add('hidden'); (${a.go})()" class="w-full text-left border ${color} rounded-xl px-3 py-2 text-xs hover:opacity-90">${a.text}</button>`;
+    }).join('') : '<div class="text-gray-400 text-center py-6 text-xs">No alerts — all clear</div>';
+  }
+}
+
+function renderDashboardCharts() {
+  if (typeof Chart === 'undefined') return;
+  const natMap = {};
+  data.employees.forEach(e => {
+    const n = e.nationality || 'Other';
+    natMap[n] = (natMap[n] || 0) + 1;
+  });
+  const natLabels = Object.keys(natMap);
+  const natVals = Object.values(natMap);
+  const present = data.employees.filter(e => e.status === 'Present').length;
+  const absent = data.employees.filter(e => e.status === 'Absent').length;
+  const leave = data.employees.filter(e => e.status === 'On Leave').length;
+
+  const natCtx = document.getElementById('chartNationality');
+  const attCtx = document.getElementById('chartAttendance');
+  if (dashCharts.nat) dashCharts.nat.destroy();
+  if (dashCharts.att) dashCharts.att.destroy();
+  if (natCtx) {
+    dashCharts.nat = new Chart(natCtx, {
+      type: 'doughnut',
+      data: { labels: natLabels.length ? natLabels : ['No data'], datasets: [{ data: natVals.length ? natVals : [1], backgroundColor: ['#0d9488','#8b5cf6','#3b82f6','#f59e0b','#ef4444','#ec4899','#6366f1'], borderWidth: 0 }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { boxWidth: 12, font: { size: 11 } } } } }
+    });
+  }
+  if (attCtx) {
+    dashCharts.att = new Chart(attCtx, {
+      type: 'bar',
+      data: { labels: ['Present', 'Absent', 'On Leave'], datasets: [{ data: [present, absent, leave], backgroundColor: ['#10b981','#ef4444','#f59e0b'], borderRadius: 8, borderWidth: 0 }] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+    });
+  }
+}
+
+function renderOnboarding() {
+  const box = document.getElementById('onboardingBox');
+  const list = document.getElementById('onboardingList');
+  if (!box || !list) return;
+  const checks = [
+    { ok: data.employees.length > 0, text: 'Add employees', go: "openModal('addEmployee')" },
+    { ok: (data.customFields||[]).length > 0, text: 'Review custom fields', go: "switchSection('customfields')" },
+    { ok: (data.invoices||[]).length > 0 || (data.journalEntries||[]).length > 0, text: 'Create first invoice or journal entry', go: "switchSection('invoices')" },
+    { ok: (data.cashTxns||[]).length > 0 || data.cashOpening > 0, text: 'Set cash/bank opening balance', go: "switchSection('cashbooks')" },
+    { ok: data.employees.some(e => e.email), text: 'Add employee emails for payslips', go: "switchSection('employees')" }
+  ];
+  const pending = checks.filter(c => !c.ok);
+  if (pending.length === 0) { box.classList.add('hidden'); return; }
+  box.classList.remove('hidden');
+  list.innerHTML = checks.map(c => `<li class="flex items-center gap-2">
+    <i class="fas ${c.ok?'fa-check-circle text-emerald-500':'fa-circle text-gray-300'}"></i>
+    ${c.ok ? `<span class="line-through text-gray-400">${c.text}</span>` : `<button onclick="${c.go}" class="text-teal-700 font-semibold hover:underline">${c.text}</button>`}
+  </li>`).join('');
+}
+
+function toggleDensity() {
+  document.body.classList.toggle('compact');
+  const on = document.body.classList.contains('compact');
+  localStorage.setItem('gcc_hr_density', on ? 'compact' : 'comfy');
+  const icon = document.getElementById('densityIcon');
+  if (icon) icon.className = on ? 'fas fa-expand-alt' : 'fas fa-compress-alt';
+  showToast(on ? 'Compact density' : 'Comfortable density', 'info');
+}
+
+// Global keyboard
+document.addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+    e.preventDefault();
+    if (currentRole) openCommandPalette();
+  }
+  if (e.key === 'Escape') {
+    closeCommandPalette();
+    document.getElementById('notifPanel')?.classList.add('hidden');
+  }
+});
+
 // -------------------- Init --------------------
 function init() {
   loadData();
@@ -4139,13 +4478,20 @@ function init() {
   updateCurrencyLabels();
   applyLanguage();
   refreshCompanySwitcher();
+  if (localStorage.getItem('gcc_hr_density') === 'compact') {
+    document.body.classList.add('compact');
+    const icon = document.getElementById('densityIcon');
+    if (icon) icon.className = 'fas fa-expand-alt';
+  }
   document.getElementById('sidebarCompanyName').textContent = data.companyName;
   document.getElementById('hrNameSidebar').textContent = data.hrName;
   document.getElementById('hrTitleSidebar').textContent = data.hrTitle;
   document.getElementById('hrAvatar').textContent = data.hrName.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
   renderDashboard();
+  updateNotifBadge();
   updateDateTime();
   setInterval(updateDateTime, 30000);
+  setInterval(updateNotifBadge, 60000);
 }
 
 init();
