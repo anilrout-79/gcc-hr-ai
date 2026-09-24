@@ -857,42 +857,56 @@
           <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
             <div>
               <h3 class="text-lg font-bold">Contracts & HR Documents</h3>
-              <p class="text-sm text-gray-500">Bilingual (English / Arabic) templates · Customizable forms</p>
-            </div>
-            <div class="flex flex-wrap gap-2">
-              <button onclick="openModal('generateContract')" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-semibold"><i class="fas fa-file-contract mr-1"></i> Employment Contract</button>
-              <button onclick="openModal('generateOffer')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-sm font-semibold"><i class="fas fa-file-alt mr-1"></i> Offer Letter</button>
-              <button onclick="openModal('generateWarning')" class="bg-amber-600 hover:bg-amber-700 text-white px-3 py-2 rounded-lg text-sm font-semibold"><i class="fas fa-exclamation-triangle mr-1"></i> Warning Letter</button>
-              <button onclick="openModal('generateCertificate')" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-lg text-sm font-semibold"><i class="fas fa-certificate mr-1"></i> Certificate</button>
+              <p class="text-sm text-gray-500">Select company · auto-fill employee · bilingual Word download</p>
             </div>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div class="border border-blue-200 bg-blue-50 rounded-xl p-4 cursor-pointer hover:shadow-md transition" onclick="openModal('generateContract')">
-              <div class="text-blue-600 text-2xl mb-2"><i class="fas fa-file-contract"></i></div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mb-6">
+            <button type="button" onclick="openModal('generateContract')" class="text-left border border-blue-200 bg-blue-50 rounded-xl p-4 hover:shadow-md transition">
+              <div class="text-blue-600 text-xl mb-1"><i class="fas fa-file-contract"></i></div>
               <div class="font-bold text-sm">Employment Contract</div>
-              <div class="text-xs text-gray-500 mt-1">EN + AR · Kuwait Labour Law terms</div>
-            </div>
-            <div class="border border-emerald-200 bg-emerald-50 rounded-xl p-4 cursor-pointer hover:shadow-md transition" onclick="openModal('generateOffer')">
-              <div class="text-emerald-600 text-2xl mb-2"><i class="fas fa-file-alt"></i></div>
+              <div class="text-xs text-gray-500 mt-1">EN+AR · Law 6/2010 full terms</div>
+            </button>
+            <button type="button" onclick="openModal('generateOffer')" class="text-left border border-emerald-200 bg-emerald-50 rounded-xl p-4 hover:shadow-md transition">
+              <div class="text-emerald-600 text-xl mb-1"><i class="fas fa-file-signature"></i></div>
               <div class="font-bold text-sm">Offer Letter</div>
-              <div class="text-xs text-gray-500 mt-1">EN + AR · Position & salary</div>
-            </div>
-            <div class="border border-amber-200 bg-amber-50 rounded-xl p-4 cursor-pointer hover:shadow-md transition" onclick="openModal('generateWarning')">
-              <div class="text-amber-600 text-2xl mb-2"><i class="fas fa-exclamation-triangle"></i></div>
-              <div class="font-bold text-sm">Warning Letter</div>
-              <div class="text-xs text-gray-500 mt-1">EN + AR · Disciplinary</div>
-            </div>
-            <div class="border border-purple-200 bg-purple-50 rounded-xl p-4 cursor-pointer hover:shadow-md transition" onclick="openModal('generateCertificate')">
-              <div class="text-purple-600 text-2xl mb-2"><i class="fas fa-certificate"></i></div>
-              <div class="font-bold text-sm">Experience / Salary Cert</div>
-              <div class="text-xs text-gray-500 mt-1">EN + AR · Official stamp ready</div>
-            </div>
+              <div class="text-xs text-gray-500 mt-1">Provisional / conditional offer</div>
+            </button>
+            <button type="button" onclick="openModal('generateTermination')" class="text-left border border-rose-200 bg-rose-50 rounded-xl p-4 hover:shadow-md transition">
+              <div class="text-rose-600 text-xl mb-1"><i class="fas fa-user-times"></i></div>
+              <div class="font-bold text-sm">Termination Notice</div>
+              <div class="text-xs text-gray-500 mt-1">EN+AR · 3 months notice</div>
+            </button>
+            <button type="button" onclick="openModal('generateDeemedResign')" class="text-left border border-orange-200 bg-orange-50 rounded-xl p-4 hover:shadow-md transition">
+              <div class="text-orange-600 text-xl mb-1"><i class="fas fa-user-slash"></i></div>
+              <div class="font-bold text-sm">Deemed Resignation</div>
+              <div class="text-xs text-gray-500 mt-1">EN+AR · Art. 42 absence</div>
+            </button>
+            <button type="button" onclick="openModal('generateDisciplinary')" class="text-left border border-amber-200 bg-amber-50 rounded-xl p-4 hover:shadow-md transition">
+              <div class="text-amber-600 text-xl mb-1"><i class="fas fa-exclamation-triangle"></i></div>
+              <div class="font-bold text-sm">Disciplinary Notice</div>
+              <div class="text-xs text-gray-500 mt-1">Warning / suspension form</div>
+            </button>
+            <button type="button" onclick="openModal('generateCertificate')" class="text-left border border-purple-200 bg-purple-50 rounded-xl p-4 hover:shadow-md transition">
+              <div class="text-purple-600 text-xl mb-1"><i class="fas fa-certificate"></i></div>
+              <div class="font-bold text-sm">Experience Certificate</div>
+              <div class="text-xs text-gray-500 mt-1">To whom it may concern</div>
+            </button>
+            <button type="button" onclick="openModal('generateLeaveForm')" class="text-left border border-sky-200 bg-sky-50 rounded-xl p-4 hover:shadow-md transition">
+              <div class="text-sky-600 text-xl mb-1"><i class="fas fa-plane"></i></div>
+              <div class="font-bold text-sm">Leave Request Form</div>
+              <div class="text-xs text-gray-500 mt-1">EN+AR · travel & approvals</div>
+            </button>
+            <button type="button" onclick="openModal('generateWarning')" class="text-left border border-gray-200 bg-gray-50 rounded-xl p-4 hover:shadow-md transition">
+              <div class="text-gray-600 text-xl mb-1"><i class="fas fa-file-alt"></i></div>
+              <div class="font-bold text-sm">Simple Warning Letter</div>
+              <div class="text-xs text-gray-500 mt-1">Short letter format</div>
+            </button>
           </div>
 
           <div class="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 rounded-xl p-4 mb-5 text-sm">
-            <i class="fas fa-magic text-indigo-600 mr-1"></i>
-            <strong>Custom design:</strong> Select language (English / Arabic / Bilingual), choose template style, and AI will auto-fill employee data. Admin can add custom fields that appear on documents via <strong>Admin Controls</strong>.
+            <i class="fas fa-building text-indigo-600 mr-1"></i>
+            <strong>Company name</strong> is taken from <em>Settings</em> (and editable on each form). Select employee to auto-fill; generate Word in EN / AR / bilingual.
           </div>
 
           <h4 class="font-semibold mb-3">Generated Documents</h4>
@@ -1264,7 +1278,7 @@ let STORAGE_KEY = (function() {
 
 // ---- Supabase cloud (fill key if empty) ----
 const SUPABASE_URL = 'https://jlhlayydqcsvmmzdypcr.supabase.co';
-const SUPABASE_KEY = localStorage.getItem('gcc_supabase_key') || ''; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
+const SUPABASE_KEY = 'sb_publishable_sb_publishable_N8t3mr2fEUNbGQuV8qThSg_ECIYi7V7'; ''; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
 let supabaseClient = null;
 try {
   if (window.supabase && SUPABASE_URL && SUPABASE_KEY) {
@@ -2525,44 +2539,91 @@ function openModal(type, payload) {
       </div>`;
   }
 
-  else if (type === 'generateContract' || type === 'generateOffer') {
-    const isContract = type === 'generateContract';
+  else if (type === 'generateOffer') {
+    // Reuse HR letter form pipeline
+    return openModal('generateOfferForm');
+  }
+
+  else if (type === 'generateOfferForm') {
+    const empOpts = data.employees.map(e => `<option value="${e.id}">${e.name} (${e.id})</option>`).join('');
+    const today = new Date().toISOString().slice(0, 10);
+    html = `<div class="p-6">
+      <div class="flex justify-between mb-3"><h3 class="text-xl font-bold">Offer Letter</h3><button onclick="closeModal()"><i class="fas fa-times"></i></button></div>
+      <form onsubmit="event.preventDefault(); generateDoc(this, 'Offer Letter')">
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="text-xs font-semibold">Company</label><input name="companyName" class="w-full border rounded-lg px-3 py-2 text-sm" value="${data.companyName||''}"></div>
+          <div><label class="text-xs font-semibold">Letter date</label><input type="date" name="letterDate" value="${today}" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+          <div class="col-span-2"><label class="text-xs font-semibold">Select employee</label>
+            <select id="docEmpSelect" onchange="autoFillHrDoc(this.value)" class="w-full border rounded-lg px-3 py-2 text-sm"><option value="">— Select —</option>${empOpts}</select></div>
+          <div><label class="text-xs font-semibold">Employee name *</label><input name="employeeName" id="docName" required class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+          <div><label class="text-xs font-semibold">Passport No</label><input name="passportNo" id="docPpt" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+          <div><label class="text-xs font-semibold">Position *</label><input name="jobTitle" id="docTitle" required class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+          <div><label class="text-xs font-semibold">Basic salary (KD)</label><input type="number" name="basicSalary" id="docBasic" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+          <div><label class="text-xs font-semibold">Contract period</label><input name="period" value="Open" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+          <div><label class="text-xs font-semibold">Food / Accommodation</label><input name="allowanceNote" value="By Employer" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+          <div class="col-span-2"><label class="text-xs font-semibold">Signatory</label><input name="signatory" value="${data.hrName||''} — ${data.hrTitle||'Recruitment Manager'}" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+        </div>
+        <div class="flex gap-3 mt-4">
+          <button type="button" onclick="closeModal()" class="flex-1 bg-gray-100 py-2.5 rounded-lg font-semibold">Cancel</button>
+          <button type="submit" class="flex-1 bg-emerald-600 text-white py-2.5 rounded-lg font-semibold">Generate Word</button>
+        </div>
+      </form>
+    </div>`;
+  }
+
+  else if (type === 'generateContract') {
+    const empOpts = data.employees.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
     html = `
       <div class="p-6">
-        <div class="flex items-center justify-between mb-5">
-          <h3 class="text-xl font-bold">${isContract ? 'Create Employment Contract' : 'Create Offer Letter'}</h3>
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-xl font-bold">Create Employment Contract</h3>
           <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xl"></i></button>
         </div>
-        <form onsubmit="event.preventDefault(); generateDoc(this, '${isContract ? 'Employment Contract' : 'Offer Letter'}')">
-          <div class="grid grid-cols-2 gap-3 mb-4">
+        <p class="text-xs text-gray-500 mb-3">Bilingual EN + AR Kuwait labour contract. Select employee to auto-fill, edit fields, then Generate Word.</p>
+        <form onsubmit="event.preventDefault(); generateDoc(this, 'Employment Contract')">
+          <div class="grid grid-cols-2 gap-3 mb-3">
             <div>
-              <label class="block text-sm font-semibold mb-1">Language</label>
-              <select name="lang" class="w-full border rounded-lg px-3 py-2">
-                <option value="en">English</option>
-                <option value="ar">Arabic</option>
-                <option value="bi">Bilingual (English + Arabic)</option>
+              <label class="block text-xs font-semibold mb-1">Language</label>
+              <select name="lang" class="w-full border rounded-lg px-3 py-2 text-sm">
+                <option value="bi" selected>Bilingual (English + Arabic)</option>
+                <option value="en">English only</option>
+                <option value="ar">Arabic only</option>
               </select>
             </div>
             <div>
-              <label class="block text-sm font-semibold mb-1">Select Employee (auto-fill)</label>
-              <select id="docEmpSelect" onchange="autoFillDoc(this.value)" class="w-full border rounded-lg px-3 py-2">
+              <label class="block text-xs font-semibold mb-1">Select Employee (auto-fill)</label>
+              <select id="docEmpSelect" onchange="autoFillDoc(this.value)" class="w-full border rounded-lg px-3 py-2 text-sm">
                 <option value="">— Select to auto-fill —</option>
-                ${data.employees.map(e => `<option value="${e.id}">${e.name}</option>`).join('')}
+                ${empOpts}
               </select>
             </div>
           </div>
-          <div class="grid grid-cols-2 gap-3">
-            <div><label class="text-xs font-semibold">Employee Name *</label><input name="employeeName" id="docName" required class="w-full border rounded-lg px-3 py-2 text-sm"></div>
-            <div><label class="text-xs font-semibold">Nationality</label><input name="nationality" id="docNat" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
-            <div><label class="text-xs font-semibold">Job Title *</label><input name="jobTitle" id="docTitle" required class="w-full border rounded-lg px-3 py-2 text-sm"></div>
-            <div><label class="text-xs font-semibold">Department</label><input name="department" id="docDept" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
-            <div><label class="text-xs font-semibold">Basic Salary</label><input type="number" name="basicSalary" id="docBasic" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+          <div class="grid grid-cols-2 gap-3 max-h-[50vh] overflow-y-auto pr-1">
+            <div class="col-span-2 text-[10px] font-bold uppercase text-gray-400 tracking-wide">Employer</div>
+            <div class="col-span-2"><label class="text-xs font-semibold">Employer / Company (EN)</label><input name="employerEn" id="docEmployerEn" class="w-full border rounded-lg px-3 py-2 text-sm" value="${(data.companyName||'') + (data.companyAddress ? ', ' + data.companyAddress : '') || 'ASMACS GENERAL TRADING CO W.L.L, P.O.BOX 47958, FAHAHEEL - 64030, KUWAIT'}"></div>
+            <div class="col-span-2"><label class="text-xs font-semibold">Employer (AR)</label><input name="employerAr" id="docEmployerAr" class="w-full border rounded-lg px-3 py-2 text-sm" value="اسماكس للتجارة العامة ذ م م، ص ب : 47958 ، الفحيحيل-64030 ، الكويت" dir="rtl"></div>
+            <div class="col-span-2 text-[10px] font-bold uppercase text-gray-400 tracking-wide mt-1">Employee</div>
+            <div><label class="text-xs font-semibold">Employee Name (EN) *</label><input name="employeeName" id="docName" required class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+            <div><label class="text-xs font-semibold">Employee Name (AR)</label><input name="employeeNameAr" id="docNameAr" class="w-full border rounded-lg px-3 py-2 text-sm" dir="rtl"></div>
+            <div><label class="text-xs font-semibold">Employee ID</label><input name="empNo" id="docEmpNo" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+            <div><label class="text-xs font-semibold">Date of Birth</label><input type="date" name="dob" id="docDob" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+            <div><label class="text-xs font-semibold">Nationality (EN)</label><input name="nationality" id="docNat" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+            <div><label class="text-xs font-semibold">Nationality (AR)</label><input name="nationalityAr" id="docNatAr" class="w-full border rounded-lg px-3 py-2 text-sm" dir="rtl"></div>
+            <div><label class="text-xs font-semibold">Passport No</label><input name="passportNo" id="docPpt" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+            <div><label class="text-xs font-semibold">Position / Title (EN) *</label><input name="jobTitle" id="docTitle" required class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+            <div><label class="text-xs font-semibold">Position (AR)</label><input name="jobTitleAr" id="docTitleAr" class="w-full border rounded-lg px-3 py-2 text-sm" dir="rtl"></div>
             <div><label class="text-xs font-semibold">Joining Date</label><input type="date" name="joiningDate" id="docJoin" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+            <div><label class="text-xs font-semibold">Basic Salary (KD)</label><input type="number" step="0.001" name="basicSalary" id="docBasic" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+            <div><label class="text-xs font-semibold">Food / Accommodation</label><input name="allowanceNote" id="docAllow" class="w-full border rounded-lg px-3 py-2 text-sm" value="By Employer"></div>
+            <div><label class="text-xs font-semibold">Home address (EN)</label><input name="addressEn" id="docAddrEn" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+            <div><label class="text-xs font-semibold">Home address (AR)</label><input name="addressAr" id="docAddrAr" class="w-full border rounded-lg px-3 py-2 text-sm" dir="rtl"></div>
+            <div><label class="text-xs font-semibold">Department</label><input name="department" id="docDept" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+            <div><label class="text-xs font-semibold">Agreement period</label><input name="period" id="docPeriod" class="w-full border rounded-lg px-3 py-2 text-sm" value="Open"></div>
           </div>
           <div class="bg-indigo-50 border border-indigo-100 rounded-lg p-3 mt-3 text-xs text-gray-600">
-            Document will include company name, HR signature block, and Kuwait Labour Law terms. Custom fields from Admin Controls can be added to employee master and will be available for reference.
+            Generates full bilingual clauses (salary, OT, leave 30 days, probation 100 days, tickets, insurance, Kuwait Law 6/2010) matching your company template. Edit any field before Generate.
           </div>
-          <div class="flex gap-3 mt-5">
+          <div class="flex gap-3 mt-4">
             <button type="button" onclick="closeModal()" class="flex-1 bg-gray-100 py-2.5 rounded-lg font-semibold">Cancel</button>
             <button type="submit" class="flex-1 bg-blue-600 text-white py-2.5 rounded-lg font-semibold"><i class="fas fa-file-word mr-1"></i> Generate Word</button>
           </div>
@@ -2814,29 +2875,69 @@ function openModal(type, payload) {
     </div>`;
   }
 
-  else if (type === 'generateWarning' || type === 'generateCertificate') {
-    const isWarn = type === 'generateWarning';
+  else if (['generateWarning','generateCertificate','generateTermination','generateDeemedResign','generateDisciplinary','generateLeaveForm'].includes(type)) {
+    const meta = {
+      generateWarning: { title: 'Simple Warning Letter', docType: 'Warning Letter', bi: true },
+      generateCertificate: { title: 'Experience Certificate', docType: 'Experience Certificate', bi: false },
+      generateTermination: { title: 'Termination Notice', docType: 'Termination Notice', bi: true },
+      generateDeemedResign: { title: 'Deemed Resignation Notice', docType: 'Deemed Resignation', bi: true },
+      generateDisciplinary: { title: 'Disciplinary Notice', docType: 'Disciplinary Notice', bi: false },
+      generateLeaveForm: { title: 'Leave Request Form', docType: 'Leave Request Form', bi: true }
+    }[type];
+    const empOpts = data.employees.map(e => `<option value="${e.id}">${e.name} (${e.id})</option>`).join('');
+    const today = new Date().toISOString().slice(0, 10);
     html = `<div class="p-6">
-      <div class="flex justify-between mb-4"><h3 class="text-xl font-bold">${isWarn ? 'Warning Letter' : 'Certificate'}</h3><button onclick="closeModal()"><i class="fas fa-times"></i></button></div>
-      <form onsubmit="event.preventDefault(); generateDoc(this, '${isWarn ? 'Warning Letter' : 'Certificate'}')">
-        <div class="mb-3">
-          <label class="text-sm font-semibold">Language</label>
-          <select name="lang" class="w-full border rounded-lg px-3 py-2 mt-1">
-            <option value="en">English</option>
-            <option value="ar">Arabic</option>
-            <option value="bi">Bilingual (EN + AR)</option>
-          </select>
+      <div class="flex justify-between mb-3"><h3 class="text-xl font-bold">${meta.title}</h3><button onclick="closeModal()"><i class="fas fa-times"></i></button></div>
+      <form onsubmit="event.preventDefault(); generateDoc(this, '${meta.docType}')">
+        <div class="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <label class="text-xs font-semibold">Company name</label>
+            <input name="companyName" class="w-full border rounded-lg px-3 py-2 text-sm" value="${data.companyName || ''}">
+          </div>
+          <div>
+            <label class="text-xs font-semibold">Language</label>
+            <select name="lang" class="w-full border rounded-lg px-3 py-2 text-sm">
+              ${meta.bi ? '<option value="bi" selected>Bilingual EN+AR</option>' : ''}
+              <option value="en" ${!meta.bi?'selected':''}>English</option>
+              <option value="ar">Arabic</option>
+            </select>
+          </div>
+          <div class="col-span-2">
+            <label class="text-xs font-semibold">Select employee (auto-fill)</label>
+            <select id="docEmpSelect" onchange="autoFillHrDoc(this.value)" class="w-full border rounded-lg px-3 py-2 text-sm">
+              <option value="">— Select —</option>${empOpts}
+            </select>
+          </div>
+          <div><label class="text-xs font-semibold">Employee name *</label><input name="employeeName" id="docName" required class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+          <div><label class="text-xs font-semibold">Employee ID</label><input name="empNo" id="docEmpNo" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+          <div><label class="text-xs font-semibold">Position</label><input name="jobTitle" id="docTitle" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+          <div><label class="text-xs font-semibold">Department</label><input name="department" id="docDept" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+          <div><label class="text-xs font-semibold">Passport No</label><input name="passportNo" id="docPpt" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+          <div><label class="text-xs font-semibold">Civil ID</label><input name="civilId" id="docCivil" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+          <div><label class="text-xs font-semibold">Nationality</label><input name="nationality" id="docNat" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+          <div><label class="text-xs font-semibold">Letter date</label><input type="date" name="letterDate" value="${today}" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+          <div><label class="text-xs font-semibold">Join date</label><input type="date" name="joiningDate" id="docJoin" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+          <div><label class="text-xs font-semibold">Last working day / end date</label><input type="date" name="lastDay" id="docLastDay" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+          <div><label class="text-xs font-semibold">Basic salary (KD)</label><input type="number" step="0.001" name="basicSalary" id="docBasic" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+          <div><label class="text-xs font-semibold">Leave start</label><input type="date" name="leaveStart" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+          <div><label class="text-xs font-semibold">Leave end</label><input type="date" name="leaveEnd" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+          <div><label class="text-xs font-semibold">Leave type</label>
+            <select name="leaveType" class="w-full border rounded-lg px-3 py-2 text-sm">
+              <option>Vacation</option><option>Personal Time</option><option>Leave without Pay</option><option>Sick</option>
+            </select>
+          </div>
+          <div><label class="text-xs font-semibold">Travel city / country</label><input name="travelDest" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="City, Country"></div>
+          <div><label class="text-xs font-semibold">Disciplinary action</label>
+            <select name="discAction" class="w-full border rounded-lg px-3 py-2 text-sm">
+              <option>1st Written Warning</option><option>2nd Written Warning</option><option>Suspension without pay</option><option>Termination Recommendation</option>
+            </select>
+          </div>
+          <div class="col-span-2"><label class="text-xs font-semibold">Reason / facts / details</label><textarea name="details" id="docDetails" rows="3" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Reason for termination, discipline, absence, certificate notes…"></textarea></div>
+          <div class="col-span-2"><label class="text-xs font-semibold">Signatory name / title</label><input name="signatory" class="w-full border rounded-lg px-3 py-2 text-sm" value="${(data.hrName||'') + (data.hrTitle ? ' — ' + data.hrTitle : '')}"></div>
         </div>
-        <div class="mb-3">
-          <label class="text-sm font-semibold">Employee</label>
-          <select name="employeeName" class="w-full border rounded-lg px-3 py-2 mt-1" required>
-            ${data.employees.map(e => `<option value="${e.name}">${e.name}</option>`).join('')}
-          </select>
-        </div>
-        <div class="mb-3"><label class="text-sm font-semibold">Details / Reason</label><textarea name="details" rows="3" class="w-full border rounded-lg px-3 py-2 mt-1"></textarea></div>
         <div class="flex gap-3 mt-4">
-          <button type="button" onclick="closeModal()" class="flex-1 bg-gray-100 py-2 rounded-lg font-semibold">Cancel</button>
-          <button type="submit" class="flex-1 bg-purple-600 text-white py-2 rounded-lg font-semibold">Generate Word</button>
+          <button type="button" onclick="closeModal()" class="flex-1 bg-gray-100 py-2.5 rounded-lg font-semibold">Cancel</button>
+          <button type="submit" class="flex-1 bg-indigo-600 text-white py-2.5 rounded-lg font-semibold"><i class="fas fa-file-word mr-1"></i> Generate Word</button>
         </div>
       </form>
     </div>`;
@@ -3339,39 +3440,404 @@ function updateMobStages(form, id) {
 function autoFillDoc(id) {
   const e = data.employees.find(x => x.id === id);
   if (!e) return;
-  document.getElementById('docName').value = e.name;
-  document.getElementById('docNat').value = e.nationality;
-  document.getElementById('docTitle').value = e.title;
-  document.getElementById('docDept').value = e.department;
-  document.getElementById('docBasic').value = e.basicSalary;
-  document.getElementById('docJoin').value = e.joinDate;
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v ?? ''; };
+  set('docName', e.name);
+  set('docNameAr', e.nameAr || e.custom?.nameAr || '');
+  set('docEmpNo', e.id);
+  set('docDob', e.dob || e.dateOfBirth || '');
+  set('docNat', e.nationality || '');
+  set('docNatAr', e.nationalityAr || e.custom?.nationalityAr || '');
+  set('docPpt', e.passportNo || e.passport || e.custom?.passportNo || '');
+  set('docTitle', e.title || '');
+  set('docTitleAr', e.titleAr || e.custom?.titleAr || '');
+  set('docDept', e.department || '');
+  set('docBasic', e.basicSalary ?? '');
+  set('docJoin', e.joinDate || '');
+  set('docAddrEn', e.address || e.homeAddress || e.custom?.addressEn || '');
+  set('docAddrAr', e.addressAr || e.custom?.addressAr || '');
+  set('docAllow', e.foodAccommodation || 'By Employer');
+  set('docCivil', e.civilId || e.civilID || e.custom?.civilId || '');
+}
+
+function autoFillHrDoc(id) {
+  autoFillDoc(id);
+}
+
+function _p(text, opts = {}) {
+  const { Document, Packer, Paragraph, TextRun, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle } = docx;
+  return new Paragraph({
+    alignment: opts.align || AlignmentType.LEFT,
+    spacing: { after: opts.after ?? 120, before: opts.before ?? 0 },
+    bidirectional: !!opts.rtl,
+    children: [new TextRun({
+      text: text || '',
+      bold: !!opts.bold,
+      italics: !!opts.italics,
+      size: opts.size || 20,
+      font: opts.rtl ? 'Arial' : 'Times New Roman',
+      rightToLeft: !!opts.rtl
+    })]
+  });
 }
 
 async function generateDoc(form, type) {
   const fd = new FormData(form);
   const law = laborLaws[currentCountry];
-  const { Document, Packer, Paragraph, TextRun, AlignmentType } = docx;
-  const children = [
-    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 200 }, children: [new TextRun({ text: data.companyName, bold: true, size: 32 })] }),
-    new Paragraph({ alignment: AlignmentType.CENTER, spacing: { after: 400 }, children: [new TextRun({ text: type.toUpperCase(), bold: true, size: 28 })] }),
-    new Paragraph({ spacing: { after: 200 }, children: [new TextRun({ text: `Employee: ${fd.get('employeeName')}`, size: 22 })] }),
-    new Paragraph({ spacing: { after: 200 }, children: [new TextRun({ text: `Nationality: ${fd.get('nationality') || '—'}`, size: 22 })] }),
-    new Paragraph({ spacing: { after: 200 }, children: [new TextRun({ text: `Position: ${fd.get('jobTitle')}`, size: 22 })] }),
-    new Paragraph({ spacing: { after: 200 }, children: [new TextRun({ text: `Department: ${fd.get('department') || '—'}`, size: 22 })] }),
-    new Paragraph({ spacing: { after: 200 }, children: [new TextRun({ text: `Basic Salary: ${law.currency} ${fd.get('basicSalary') || 0}`, size: 22 })] }),
-    new Paragraph({ spacing: { after: 200 }, children: [new TextRun({ text: `Joining Date: ${fd.get('joiningDate') || '—'}`, size: 22 })] }),
-    new Paragraph({ spacing: { before: 400 }, children: [new TextRun({ text: `This document is issued in accordance with the Labor Law of ${law.name}.`, size: 20, italics: true })] }),
-    new Paragraph({ spacing: { before: 600 }, children: [new TextRun({ text: data.hrName, bold: true, size: 22 })] }),
-    new Paragraph({ children: [new TextRun({ text: data.hrTitle, size: 18 })] })
-  ];
-  const doc = new Document({ sections: [{ children }] });
+  const { Document, Packer, Paragraph, TextRun, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle } = docx;
+
+  const g = (k) => (fd.get(k) || '').toString().trim();
+  const name = g('employeeName') || 'Employee';
+  const nameAr = g('employeeNameAr') || name;
+  const empNo = g('empNo') || '—';
+  const dob = g('dob') || '—';
+  const nat = g('nationality') || '—';
+  const natAr = g('nationalityAr') || nat;
+  const ppt = g('passportNo') || '—';
+  const title = g('jobTitle') || '—';
+  const titleAr = g('jobTitleAr') || title;
+  const doj = g('joiningDate') || '—';
+  const sal = g('basicSalary') || '0';
+  const allow = g('allowanceNote') || 'By Employer';
+  const addrEn = g('addressEn') || '—';
+  const addrAr = g('addressAr') || addrEn;
+  const period = g('period') || 'Open';
+  const employerEn = g('employerEn') || (data.companyName || 'ASMACS GENERAL TRADING CO W.L.L, P.O.BOX 47958, FAHAHEEL - 64030, KUWAIT');
+  const employerAr = g('employerAr') || 'اسماكس للتجارة العامة ذ م م، ص ب : 47958 ، الفحيحيل-64030 ، الكويت';
+  const lang = g('lang') || 'bi';
+  const showEn = lang === 'en' || lang === 'bi';
+  const showAr = lang === 'ar' || lang === 'bi';
+
+  let children = [];
+
+  if (type === 'Employment Contract') {
+    children.push(_p('EMPLOYMENT CONTRACT', { bold: true, size: 32, align: AlignmentType.CENTER, after: 60 }));
+    if (showAr) children.push(_p('عقد العمل', { bold: true, size: 28, align: AlignmentType.CENTER, rtl: true, after: 200 }));
+
+    if (showEn) {
+      children.push(_p(`This employment contract is executed and entered into by and between ${employerEn} hereinafter referred to as EMPLOYER, and or First Party and`, { after: 80 }));
+    }
+    if (showAr) {
+      children.push(_p(`يتم عقد العمل هذا بين السادة/ ${employerAr} ، المشار اليها فيما بعد باسم صاحب العمل و او بالطرف الاول .`, { rtl: true, after: 160 }));
+    }
+
+    // Party details table-like lines
+    const lines = [
+      [`Name: ${name}`, `الموظف : ${nameAr}`],
+      [`Employee ID: ${empNo}`, `هوية الموظف : ${empNo}`],
+      [`Date of Birth: ${dob}`, `تاريخ الميلاد : ${dob}`],
+      [`Nationality: ${nat}`, `الجنسية : ${natAr}`],
+      [`Passport No: ${ppt}`, `رقم جوازالسفر: ${ppt}`],
+      [`And residing at: Kuwait`, `المقيم: فى الكويت`]
+    ];
+    lines.forEach(([en, ar]) => {
+      if (showEn) children.push(_p(en, { after: 40 }));
+      if (showAr) children.push(_p(ar, { rtl: true, after: 80 }));
+    });
+    if (showEn) children.push(_p('Hereinafter referred to as the EMPLOYEE, and or Second Party.', { after: 120 }));
+    if (showAr) children.push(_p('يشار اليه فيما بعد باسم الموظف واو الطرف الثاني', { rtl: true, after: 200 }));
+
+    // Section A
+    if (showEn) children.push(_p('A. Basic Terms', { bold: true, size: 24, after: 100 }));
+    if (showAr) children.push(_p('ا : الشروط الأساسية', { bold: true, size: 24, rtl: true, after: 120 }));
+
+    const basic = [
+      [`1. Date of Joining: ${doj}`, `1 – تاريخ الالتحاق بالعمل : ${doj}`],
+      [`2. Period of Agreement – ${period}`, `2 - مدة الاتفاق – ${period === 'Open' ? 'الفتح' : period}`],
+      [`3. Home Country's Address: ${addrEn}`, `3- عنوان بلد الام: ${addrAr}`],
+      [`4. Site of Employment- Kuwait`, `4- موقع التوظيف: الكويت`],
+      [`5. Title: ${title}`, `5- مكانة : ${titleAr}`],
+      [`6. The Agreement is effective from the first day of actual and official commencement of employment with the First Party in Kuwait and shall continue thereafter until terminated by either party by giving three month notice in advance.`,
+       `6 - الاتفاق نافذ المفعول اعتبارا من اليوم الأول من البدء الفعلي والرسمي للعمل مع الطرف الأول في الكويت ويستمر بعد ذلك حتى إنهائها من قبل أي من الطرفين من خلال إعطاء إشعار 3 أشهر مقدما`],
+      [`7. Basic monthly salary: KD ${sal} /-\n7.1 Food, Accommodation: ${allow}\n7.2 Vehicle Allowance: NA\n7.3 Mobile Allowance: NA\n(Wages are paid in Kuwaiti Dinars – Wages shall be paid on completion of every calendar month as per the approved and authenticated timesheet signed by Employer's Principal or his Representative)`,
+       `7. الراتب الشهري الأساسي (${sal} دينار الكويتي )\n7.1 الغذاء والسكن: ${allow}\n7.2 بدل السيارة : لا يوجد\n7.3 بدل التلفون : لا يوجد\nيتم دفع الأجور بالدينار الكويتي - دفع الأجور عند الانتهاء من كل شهر ميلادي وفقا لجدول زمني تمت الموافقة والمصادقة عليها`],
+      [`8. Overtime shall be performed as per the requirement and per workload and upon instructions of the immediate supervisor. Overtime shall be paid in accordance with Kuwait Labor Law.`,
+       `8. يجب أداء العمل الإضافي وفقا لمتطلبات وحجم العمل وبناء على تعليمات من الرئيس المباشر. ويدفع للعمل الإضافي وفقا لقانون العمل الكويتي.`],
+      [`9. EMPLOYEE is entitled to 30 days of leave with full pay for each full year of service. However, leave cannot be availed of until the completion of minimum 9 (nine) months from the date of commencement of work, as per Local Labor Law. Leave schedule shall be subject to final approval of the Principal's Representative. The EMPLOYEE cannot accumulate leave or carry it forward for more than 2 years except with the written consent of the EMPLOYER.`,
+       `9 - يحق للموظف الحصول على 30 يوما من إجازة بأجر كامل عن كل سنة كاملة للخدمة. ولكن لا يمكن استفادة الاجازة حتى انتهاء 9 (تسعة) أشهر من تاريخ بدء العمل، وفقا لقانون العمل المحلية. لا يجوز للموظف ان يجمع الاجازة أو دفعها إلى الأمام لأكثر من سنتين إلا بموافقة خطية من صاحب العمل.`],
+      [`10. EMPLOYEE is entitled to sick leave in accordance with Kuwait Labor Law. At the discretion of the EMPLOYER, the EMPLOYEE is required to provide medical certificate issued by a recognized Clinic / Hospital.`,
+       `10 - يحق للموظف الحصول على إجازة مرضية وفقا للقانون العمل الكويتي. ويطلب من الموظف تقديم شهادة طبية صادرة عن العيادة او المستشفى المعترفة بها.`],
+      [`11. Periods of leave without pay must have prior approval by the EMPLOYER and his Principal and must be in accordance with EMPLOYER policies and procedures.`,
+       `11 – يجب ان تكون فترات الإجازة بدون راتب حاصلة على موافقة مسبقة من صاحب العمل وموكله.`],
+      [`12. The period of probation shall be 100 days commencing from the first day of actual and official commencement of employment with the EMPLOYER in Kuwait. During the probation period, if the Employer finds that the Employee is not qualified as claimed or unable to perform his work, the Employer may terminate his services with immediate effect without assigning any reason.`,
+       `12 - تكون مدة الاختبار 100 يوما، تبدأ من اليوم الأول من البدء الفعلي والرسمي للعمل مع صاحب العمل في الكويت. خلال فترة الاختبار، يجوز لصاحب العمل إنهاء خدماته فورا دون إبداء أي أسباب إذا لم يكن مؤهلا.`],
+      [`13. The Employee shall abide by the policies, rules and regulations issued by the Employer from time to time in conformity with Kuwaiti Labor Laws, and shall respect local traditions and customs.`,
+       `13 - يجب على الموظف الالتزام بالسياسات والقواعد والأنظمة الصادرة من قبل صاحب العمل من وقت لآخر وفقا لقوانين العمل الكويتية، وتحترم التقاليد والعادات المحلية.`],
+      [`14. The Employee undertakes not to reveal/divulge either directly or indirectly any information concerning the Employer, its business or clients, during or after employment.`,
+       `14 - الموظف يتعهد بعدم كشف - سواء بشكل مباشر أو غير مباشر- عن أي معلومات تتعلق بصاحب العمل أو أعماله أو عملائه أثناء أو بعد فترة العمل.`],
+      [`15. Employee shall not take up any part time employment or do business with any third party during validity of this Agreement. Violation may result in immediate termination and liability for damages.`,
+       `15 - واتفق على ان الموظف لا يبدأ بعمل جزئي أو أعمال مع طرف ثالث خلال سريان هذا الاتفاق. وعلى صاحب العمل الحق فى انهاء الخدمة مباشرة عند المخالفة.`]
+    ];
+    basic.forEach(([en, ar]) => {
+      if (showEn) children.push(_p(en, { after: 80 }));
+      if (showAr) children.push(_p(ar, { rtl: true, after: 120 }));
+    });
+
+    if (showEn) children.push(_p('B. The EMPLOYER shall provide the EMPLOYEE', { bold: true, size: 24, before: 120, after: 100 }));
+    if (showAr) children.push(_p('ب - يجب على صاحب العمل ان يوفر للموظف :', { bold: true, size: 24, rtl: true, after: 120 }));
+
+    const employerProv = [
+      [`1. Air Ticket of economy class from his country of origin to Kuwait for the first time (applicable only for staff arriving from Overseas).`,
+       `1 - تذكرة سفر على الدرجة الاقتصادية من بلده الأصلي إلى الكويت للمرة الأولى (ينطبق على القادمين من وراء البحار فقط).`],
+      [`2. Demobilization airline ticket of economy class to his Country of Origin upon termination/non-renewal of employment contract by Employer.`,
+       `2 - تذكرة طيران التسريح الدرجة الاقتصادية إلى بلده الأصلي عند انتهاء او عدم تجديد عقد العمل.`],
+      [`3. Safe equipment and healthy living environment.`, `3- معدات آمنة وبيئة صحية معيشية`],
+      [`4. EMPLOYEE is responsible to comply with all applicable safety instructions. EMPLOYER is not responsible for injuries/death caused by negligence of the Employee or outside of work.`,
+       `4– والموظف مسؤول عن الامتثال لجميع تعليمات السلامة. وصاحب العمل غير مسئول عن الإصابات او الوفاة الناجمة عن إهمال الموظف أو خارج العمل.`],
+      [`5. EMPLOYER shall arrange insurance coverage as prescribed by the relevant authorities for treatment at government medical facilities as per Kuwait Ministry of Health (KMOH) scheme. Additional charges outside the scheme shall be borne by the EMPLOYEE.`,
+       `5- يجب على صاحب العمل ترتيب التغطية التأمينية وفقا لوزارة الصحة الكويتية. الرسوم الإضافية خارج النطاق يتحملها الموظف.`],
+      [`6. Worker's compensation for service-connected illness, injury or death shall be considered in accordance with Kuwait Private Labor laws.`,
+       `6 - فوائد تعويض العمال للمرض أو الإصابة أو الوفاة المتعلقة بالخدمة وفقا لقانون العمل الخاص بالكويت.`],
+      [`7. In case of EMPLOYEE's death, the EMPLOYER shall bear the repatriation expenses of the remains and personal properties to his native country in consultation with the EMPLOYEE's Embassy.`,
+       `7 - في حالة وفاة الموظف، يتحمل صاحب العمل نفقات إعادة الجثمان وأملاكه الشخصية لأقاربه في بلده الأصلي بالتشاور مع السفارة.`]
+    ];
+    employerProv.forEach(([en, ar]) => {
+      if (showEn) children.push(_p(en, { after: 80 }));
+      if (showAr) children.push(_p(ar, { rtl: true, after: 120 }));
+    });
+
+    if (showEn) children.push(_p('C. Settlement of Disputes', { bold: true, size: 24, before: 120, after: 80 }));
+    if (showAr) children.push(_p('ت : تسوية المنازعات', { bold: true, size: 24, rtl: true, after: 100 }));
+    if (showEn) children.push(_p('This Agreement shall be construed in accordance with laws of Kuwait. Disputes shall first be resolved amicably; otherwise through the appropriate authorities or courts in Kuwait.', { after: 80 }));
+    if (showAr) children.push(_p('وتفسر هذه الاتفاقية وفقا لقوانين الكويت. وينبغي أن تحل الخلافات بشكل ودي أولا، واذا فشلت تسوى من خلال السلطات أو المحاكم المختصة في الكويت.', { rtl: true, after: 120 }));
+
+    if (showEn) children.push(_p('D. Circumstances not covered under this Agreement', { bold: true, size: 24, before: 80, after: 80 }));
+    if (showAr) children.push(_p('ث : الظروف غير مشمولة بموجب هذا الاتفاق', { bold: true, size: 24, rtl: true, after: 100 }));
+    if (showEn) children.push(_p('In respect of any other matters not covered under this Agreement, the relevant provisions of the Kuwait Private Sector Labor Law No.6/2010 shall automatically apply.', { after: 80 }));
+    if (showAr) children.push(_p('بالنسبة لأية مسائل أخرى غير مغطاة، فإن أحكام قانون العمل للقطاع الخاص الكويتي رقم 6/2010 تسري تلقائيا.', { rtl: true, after: 120 }));
+
+    if (showEn) children.push(_p('E. Entire Agreement', { bold: true, size: 24, before: 80, after: 80 }));
+    if (showAr) children.push(_p('ج : اتفاقية كاملة', { bold: true, size: 24, rtl: true, after: 100 }));
+    if (showEn) children.push(_p('This Agreement contains the sole and entire agreement between the parties and supersedes any and all other agreements between them.', { after: 80 }));
+    if (showAr) children.push(_p('ويتضمن هذا الاتفاق الاتفاق الوحيد والكامل بين الطرفين، ويحل محل أي وجميع الاتفاقات الأخرى بينهما.', { rtl: true, after: 120 }));
+
+    if (showEn) children.push(_p('F. Amendment', { bold: true, size: 24, before: 80, after: 80 }));
+    if (showAr) children.push(_p('ح : التعديل', { bold: true, size: 24, rtl: true, after: 100 }));
+    if (showEn) children.push(_p('All amendments to this Agreement shall be in writing and signed by both Parties.', { after: 80 }));
+    if (showAr) children.push(_p('ان التعديلات كلها ينبغي ان تكون خطية وموقعة من الأطراف على حد سواء.', { rtl: true, after: 160 }));
+
+    if (showEn) children.push(_p('In witness whereof, we hereby sign this contract.', { before: 120, after: 200 }));
+    if (showAr) children.push(_p('واثباتا لذلك نحن نوقع فى هذا العقد', { rtl: true, after: 240 }));
+
+    if (showEn) {
+      children.push(_p('EMPLOYER', { bold: true, after: 40 }));
+      children.push(_p("EMPLOYER's Signature: ________________________", { after: 40 }));
+      children.push(_p(`EMPLOYER's Printed Name: ${data.hrName || '________________'}`, { after: 40 }));
+      children.push(_p('Date: ________________', { after: 160 }));
+      children.push(_p('EMPLOYEE', { bold: true, after: 40 }));
+      children.push(_p("EMPLOYEE's Signature: ________________________", { after: 40 }));
+      children.push(_p(`EMPLOYEE's Printed Name: ${name}`, { after: 40 }));
+      children.push(_p('Date: ________________', { after: 80 }));
+    }
+    if (showAr) {
+      children.push(_p('صاحب العمل :', { bold: true, rtl: true, after: 40 }));
+      children.push(_p('توقيع صاحب العمل : ________________________', { rtl: true, after: 40 }));
+      children.push(_p(`اسم صاحب العمل المطبوع : ${data.hrName || '________'}`, { rtl: true, after: 40 }));
+      children.push(_p('التاريخ : ________________', { rtl: true, after: 160 }));
+      children.push(_p('الموظف', { bold: true, rtl: true, after: 40 }));
+      children.push(_p('توقيع الموظف : ________________________', { rtl: true, after: 40 }));
+      children.push(_p(`اسم الموظف المطبوع : ${nameAr}`, { rtl: true, after: 40 }));
+      children.push(_p('التاريخ : ________________', { rtl: true, after: 80 }));
+    }
+  } else {
+    // Generic HR letters — company from form or settings
+    const company = g('companyName') || data.companyName || 'Company';
+    const letterDate = g('letterDate') || new Date().toLocaleDateString('en-GB');
+    const lastDay = g('lastDay') || '—';
+    const civil = g('civilId') || '—';
+    const details = g('details') || '';
+    const signatory = g('signatory') || (data.hrName || 'HR Manager');
+    const leaveStart = g('leaveStart') || '—';
+    const leaveEnd = g('leaveEnd') || '—';
+    const leaveType = g('leaveType') || 'Vacation';
+    const travelDest = g('travelDest') || '—';
+    const discAction = g('discAction') || '1st Written Warning';
+    const dept = g('department') || '—';
+
+    if (type === 'Offer Letter') {
+      children.push(_p(letterDate, { after: 200 }));
+      children.push(_p(`Dear Mr. / Ms. ${name}`, { after: 120 }));
+      if (ppt && ppt !== '—') children.push(_p(`Passport #: ${ppt}`, { after: 120 }));
+      children.push(_p('Provisional / Conditional Offer of Employment', { bold: true, size: 24, after: 160 }));
+      children.push(_p('Referring to the interview held recently, we are pleased to inform you of your selection for the following position, and the terms of employment are as listed below:', { after: 120 }));
+      children.push(_p('Terms of employment:', { bold: true, after: 80 }));
+      children.push(_p(`Position title: ${title}`, { after: 60 }));
+      children.push(_p(`Monthly Basic Salary: KD ${sal}/-`, { after: 60 }));
+      children.push(_p('Probation Period: 100 Working days from the date of joining', { after: 60 }));
+      children.push(_p(`Tenure of contract: ${period || 'Open'}`, { after: 60 }));
+      children.push(_p('Leave schedule: As per Kuwait Labor Law', { after: 60 }));
+      children.push(_p('Local Holidays: As per Kuwait Labor Law', { after: 60 }));
+      children.push(_p('Sick leave: As per Kuwait Labor Law', { after: 60 }));
+      children.push(_p(`Transportation, Food & Accommodation: ${allow || 'By Employer'}`, { after: 60 }));
+      children.push(_p('Medical benefits: Through Kuwait Public Health system', { after: 60 }));
+      children.push(_p('Other Terms: You are not entitled for any other benefits or receive any monies towards any other entitlements other than explicitly mentioned herein.', { after: 120 }));
+      children.push(_p('As acceptance of this provisional / conditional offer of employment, you are requested to sign and return one original.', { after: 120 }));
+      children.push(_p('Welcome aboard!', { after: 160 }));
+      children.push(_p(company, { bold: true, after: 200 }));
+      children.push(_p('I hereby confirm and accept your offer', { after: 80 }));
+      children.push(_p(`(${name})`, { after: 40 }));
+      children.push(_p('Date: ________    Place: ________', { after: 40 }));
+      children.push(_p('Thumb Impression: ________', { after: 120 }));
+      children.push(_p(signatory, { bold: true, after: 40 }));
+      children.push(_p('*This offer is valid only when the transfer of residence / visa has been completed and final approval by client.', { italics: true, size: 18, after: 80 }));
+    }
+
+    else if (type === 'Termination Notice') {
+      if (showEn) {
+        children.push(_p(`To,`, { after: 40 }));
+        children.push(_p(`Mr. / Ms. ${name}`, { bold: true, after: 40 }));
+        children.push(_p(`Passport No.: ${ppt}`, { after: 40 }));
+        children.push(_p(`Position: ${title}`, { after: 80 }));
+        children.push(_p('Sub: Termination of Service', { bold: true, after: 120 }));
+        children.push(_p(`We wish to notify that your employment with ${company} is being terminated due to ${details || 'project requirement'}. Hence please treat this as three months' notice for discontinuation of your service.`, { after: 100 }));
+        children.push(_p(`Your last working day will be ${lastDay}.`, { after: 100 }));
+        children.push(_p('Thank you and all the best in your future endeavors.', { after: 100 }));
+        children.push(_p('Best Regards', { after: 40 }));
+        children.push(_p(company, { bold: true, after: 160 }));
+        children.push(_p(`I acknowledge the receipt of "Termination of Service" letter from ${company} on ${letterDate}.`, { after: 80 }));
+        children.push(_p('Signature: ________________', { after: 40 }));
+        children.push(_p('Date: ________________', { after: 160 }));
+      }
+      if (showAr) {
+        children.push(_p('إلى ،', { rtl: true, after: 40 }));
+        children.push(_p(`السيد / السيدة ${name}`, { bold: true, rtl: true, after: 40 }));
+        children.push(_p(`جواز سفر رقم: ${ppt}`, { rtl: true, after: 40 }));
+        children.push(_p(`المهنة: ${title}`, { rtl: true, after: 80 }));
+        children.push(_p('الموضوع: إنهاء الخدمة', { bold: true, rtl: true, after: 100 }));
+        children.push(_p(`نود أن نخطر بأن يتم إنهاء عملك مع ${company} بسبب ${details || 'مطلب مشروع'}. لذلك نطلب من سيادتكم اعتبار هذا إشعاراً لثلاثة أشهر لوقف الخدمة.`, { rtl: true, after: 100 }));
+        children.push(_p(`سيكون آخر يوم للعمل ${lastDay}.`, { rtl: true, after: 100 }));
+        children.push(_p('نشكركم ونتمنى كل خير في المستقبل.', { rtl: true, after: 100 }));
+        children.push(_p('مع أطيب التحيات', { rtl: true, after: 40 }));
+        children.push(_p(company, { bold: true, rtl: true, after: 160 }));
+        children.push(_p(`أعترف باستلام رسالة "إنهاء الخدمة" من ${company} في ${letterDate}.`, { rtl: true, after: 80 }));
+        children.push(_p('التوقيع: ________________', { rtl: true, after: 40 }));
+        children.push(_p('تاريخ: ________________', { rtl: true, after: 80 }));
+      }
+    }
+
+    else if (type === 'Deemed Resignation') {
+      if (showEn) {
+        children.push(_p(letterDate, { after: 80 }));
+        children.push(_p(`Name: ${name}`, { after: 40 }));
+        children.push(_p(`Position: ${title}`, { after: 40 }));
+        children.push(_p(`Employee #: ${empNo}`, { after: 40 }));
+        children.push(_p(`Civil ID #: ${civil}`, { after: 80 }));
+        children.push(_p('Notice Of Deemed Resignation', { bold: true, size: 24, after: 120 }));
+        children.push(_p('In accordance with Article 42 of Kuwait Labor law, your contract is terminated due to absence from duty without valid excuse and hereby considered as resigned.', { after: 100 }));
+        children.push(_p(`Reason: ${details || 'Absence from work for 7 consecutive days within a year without a valid excuse'}.`, { bold: true, after: 100 }));
+        children.push(_p(`Last working day: ${lastDay}`, { after: 100 }));
+        children.push(_p('Kindly report to the HR department for final clearance and exit procedures.', { after: 120 }));
+        children.push(_p(signatory, { after: 40 }));
+        children.push(_p('HR Department', { after: 120 }));
+        children.push(_p('Employee Signature: ________    Date: ________', { after: 160 }));
+      }
+      if (showAr) {
+        children.push(_p(letterDate, { rtl: true, after: 80 }));
+        children.push(_p(`السيد : ${name}`, { rtl: true, after: 40 }));
+        children.push(_p(`الوظيفة : ${title}`, { rtl: true, after: 40 }));
+        children.push(_p(`الرقم الوظيفي : ${empNo}`, { rtl: true, after: 40 }));
+        children.push(_p(`رقم مدني : ${civil}`, { rtl: true, after: 80 }));
+        children.push(_p('الموضوع : إخطار بما يمكن إعتباره إستقالة', { bold: true, rtl: true, after: 100 }));
+        children.push(_p('يؤسفنا أن نحيطكم علما بأنه تم إنهاء التعاقد معكم وفقا للمادة رقم 42 من قانون العمل الكويتي نظرا لغيابكم المتواصل بدون عذر مقبول والذي يعتبر إستقالة.', { rtl: true, after: 100 }));
+        children.push(_p(`سبب إنهاء التعاقد : ${details || 'الغياب عن العمل لمدة 7 أيام متتالية خلال السنة دون عذر.'}`, { bold: true, rtl: true, after: 100 }));
+        children.push(_p(`نهاية الدوام : ${lastDay}`, { rtl: true, after: 100 }));
+        children.push(_p('يرجى مراجعة الموارد البشرية للبدء في إجراءات إنهاء التعاقد وعمل إخلاء الطرف.', { rtl: true, after: 120 }));
+        children.push(_p('قسم الموارد البشرية', { rtl: true, after: 120 }));
+        children.push(_p('توقيع الموظف : ________    التاريخ : ________', { rtl: true, after: 80 }));
+      }
+    }
+
+    else if (type === 'Disciplinary Notice') {
+      children.push(_p('DISCIPLINARY NOTICE', { bold: true, size: 28, align: AlignmentType.CENTER, after: 200 }));
+      children.push(_p(`Company: ${company}`, { after: 80 }));
+      children.push(_p(`Employee Number: ${empNo}`, { after: 40 }));
+      children.push(_p(`Employee Name: ${name}`, { after: 40 }));
+      children.push(_p(`Department: ${dept}`, { after: 40 }));
+      children.push(_p(`Job Title: ${title}`, { after: 80 }));
+      children.push(_p(`Disciplinary Action: ${discAction}`, { bold: true, after: 100 }));
+      children.push(_p('Reason for Discipline / Facts or Event:', { bold: true, after: 60 }));
+      children.push(_p(details || 'Refer to company disciplinary policy.', { after: 100 }));
+      children.push(_p('Previous Warnings: As per HR file / none stated on this form.', { after: 80 }));
+      children.push(_p('Improvement Required: Employee must comply with established company policy and the disciplinary chart.', { after: 80 }));
+      children.push(_p('Failure to Improve: Further disciplinary action up to and including termination may follow.', { after: 120 }));
+      children.push(_p("Employee's Signature (acknowledge receipt): ________    Date: ________", { after: 80 }));
+      children.push(_p(`HR / Management Signature: ${signatory}    Date: ________`, { after: 80 }));
+    }
+
+    else if (type === 'Experience Certificate') {
+      children.push(_p(`Date: ${letterDate}`, { after: 160 }));
+      children.push(_p('EXPERIENCE CERTIFICATE', { bold: true, size: 28, align: AlignmentType.CENTER, after: 80 }));
+      children.push(_p('To whom it may concern', { bold: true, align: AlignmentType.CENTER, after: 160 }));
+      children.push(_p(`This is to certify that Mr. / Ms. ${name}, Civil ID # ${civil}, Passport # ${ppt}, Nationality - ${nat} was employed by ${company} from ${doj} to ${lastDay} in the position of ${title}.`, { after: 120 }));
+      children.push(_p(details || `Mr. / Ms. ${name} performed duties to the satisfaction of seniors, demonstrated sound knowledge of responsibilities, and maintained professional conduct.`, { after: 120 }));
+      children.push(_p(`We wish all the best to Mr. / Ms. ${name} for future endeavors.`, { after: 160 }));
+      children.push(_p(`For, ${company}`, { after: 40 }));
+      children.push(_p(signatory, { bold: true, after: 40 }));
+      children.push(_p('Human Resources', { after: 80 }));
+    }
+
+    else if (type === 'Leave Request Form') {
+      children.push(_p(`${company} — LEAVE REQUEST FORM`, { bold: true, size: 26, align: AlignmentType.CENTER, after: 60 }));
+      children.push(_p('نموذج طلب إجازة', { bold: true, size: 22, align: AlignmentType.CENTER, rtl: true, after: 160 }));
+      children.push(_p(`Employee Name / اسم الموظف: ${name}`, { after: 60 }));
+      children.push(_p(`Employee ID / الرقم: ${empNo}`, { after: 60 }));
+      children.push(_p(`Department / الإدارة: ${dept}`, { after: 60 }));
+      children.push(_p(`Date of Hire / تاريخ التوظيف: ${doj}`, { after: 60 }));
+      children.push(_p(`Leave type / نوع الإجازة: ${leaveType}`, { after: 60 }));
+      children.push(_p(`Leave start / بداية الإجازة: ${leaveStart}`, { after: 60 }));
+      children.push(_p(`Leave end / نهاية الإجازة: ${leaveEnd}`, { after: 60 }));
+      children.push(_p(`Travel destination / وجهة السفر: ${travelDest}`, { after: 80 }));
+      children.push(_p(`Comments / تعليقات: ${details || '—'}`, { after: 120 }));
+      children.push(_p('Residency Notice: Employees must monitor Kuwait work residency expiry. If residency expires while on leave, re-entry may require a new visa. Contact HR before departure if unsure.', { size: 18, after: 80 }));
+      children.push(_p('إشعار الإقامة: يتحمل الموظف مسؤولية مراقبة انتهاء الإقامة. لن يُسمح بإعادة الدخول دون تأشيرة جديدة إذا انتهت الإقامة أثناء الإجازة.', { rtl: true, size: 18, after: 120 }));
+      children.push(_p('Employee Signature / توقيع الموظف: ________    Submission Date: ________', { after: 100 }));
+      children.push(_p('Project Manager approval / موافقة مدير المشروع: ________    Date: ________', { after: 60 }));
+      children.push(_p('HR Representative / الموارد البشرية: ________    Date: ________', { after: 80 }));
+    }
+
+    else if (type === 'Warning Letter') {
+      children.push(_p(company, { bold: true, size: 26, align: AlignmentType.CENTER, after: 80 }));
+      children.push(_p('WARNING LETTER', { bold: true, size: 26, align: AlignmentType.CENTER, after: 160 }));
+      children.push(_p(`Date: ${letterDate}`, { after: 80 }));
+      children.push(_p(`To: ${name} (${empNo})`, { after: 40 }));
+      children.push(_p(`Position: ${title}`, { after: 100 }));
+      children.push(_p('This letter serves as a formal written warning regarding the following:', { after: 80 }));
+      children.push(_p(details || 'Violation of company policy.', { after: 120 }));
+      children.push(_p('You are required to improve immediately. Further violations may lead to additional disciplinary action up to termination, in accordance with company policy and Kuwait Labor Law.', { after: 120 }));
+      children.push(_p(signatory, { bold: true, after: 40 }));
+      children.push(_p('Employee acknowledgment: ________    Date: ________', { after: 80 }));
+      if (showAr) {
+        children.push(_p('خطاب إنذار', { bold: true, rtl: true, after: 80 }));
+        children.push(_p(`إلى: ${name}`, { rtl: true, after: 60 }));
+        children.push(_p(details || 'مخالفة لسياسة الشركة.', { rtl: true, after: 100 }));
+        children.push(_p('التوقيع: ________', { rtl: true, after: 60 }));
+      }
+    }
+
+    else {
+      children.push(_p(company, { bold: true, size: 28, align: AlignmentType.CENTER, after: 100 }));
+      children.push(_p(type.toUpperCase(), { bold: true, size: 26, align: AlignmentType.CENTER, after: 200 }));
+      children.push(_p(`Employee: ${name}`, { after: 80 }));
+      children.push(_p(`Position: ${title}`, { after: 80 }));
+      children.push(_p(details || '', { after: 120 }));
+      children.push(_p(signatory, { bold: true, after: 40 }));
+    }
+  }
+
+  const doc = new Document({
+    sections: [{
+      properties: {},
+      children
+    }]
+  });
   const blob = await Packer.toBlob(doc);
-  const safe = (fd.get('employeeName') || 'Document').replace(/[^a-z0-9]/gi, '_');
+  const safe = name.replace(/[^a-z0-9]/gi, '_') || 'Document';
   saveAs(blob, `${type.replace(/ /g, '_')}_${safe}.docx`);
-  data.contracts.push({ id: `DOC-${data.contractIdCounter++}`, type, employeeName: fd.get('employeeName'), date: new Date().toLocaleDateString(), lang: fd.get('lang') || 'en' });
+  data.contracts = data.contracts || [];
+  data.contractIdCounter = data.contractIdCounter || 1;
+  data.contracts.push({ id: `DOC-${data.contractIdCounter++}`, type, employeeName: name, date: new Date().toLocaleDateString(), lang });
   saveData();
   closeModal();
-  renderContractsList();
+  if (typeof renderContractsList === 'function') renderContractsList();
   showToast(`${type} generated successfully!`, 'success');
 }
 
