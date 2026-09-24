@@ -10,6 +10,7 @@
 <script src="https://unpkg.com/docx@8.5.0/build/index.umd.js"></script>
 <script src="https://unpkg.com/file-saver@2.0.5/dist/FileSaver.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -331,6 +332,8 @@
         <button onclick="toggleDensity()" class="p-2 text-gray-500 hover:bg-gray-100 rounded-xl" title="Compact / Comfortable density"><i class="fas fa-compress-alt" id="densityIcon"></i></button>
         <button onclick="toggleLanguage()" id="langToggleBtn" class="px-2.5 py-2 border border-gray-200 rounded-xl text-xs font-bold hover:bg-gray-50" title="العربية / English">AR</button>
         <button onclick="toggleDarkMode()" class="p-2 text-gray-500 hover:bg-gray-100 rounded-xl" title="Dark Mode"><i class="fas fa-moon" id="darkIcon"></i></button>
+        <button onclick="typeof saveToCloud==='function'?saveToCloud():alert('Add Supabase config — see SOP §11')" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-2 rounded-xl text-xs font-semibold" title="Save to Supabase cloud"><i class="fas fa-cloud-upload-alt mr-1"></i> Save Cloud</button>
+        <button onclick="typeof loadFromCloud==='function'?loadFromCloud():alert('Add Supabase config — see SOP §11')" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-xl text-xs font-semibold" title="Load from Supabase cloud"><i class="fas fa-cloud-download-alt mr-1"></i> Load Cloud</button>
         <button onclick="exportAllData()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-xl text-xs font-semibold"><i class="fas fa-download mr-1"></i> Backup</button>
         <button onclick="openModal('sopManual')" class="bg-slate-700 hover:bg-slate-800 text-white px-3 py-2 rounded-xl text-xs font-semibold" title="Standard Operating Procedure"><i class="fas fa-book mr-1"></i> SOP</button>
         <button onclick="openModal('aiHelp')" class="bg-gradient-to-r from-teal-500 to-emerald-600 text-white px-3 py-2 rounded-xl text-xs font-semibold"><i class="fas fa-robot mr-1"></i> Help</button>
@@ -1258,6 +1261,62 @@ let STORAGE_KEY = (function() {
     return active === 'default' ? 'gcc_hr_ai_premium_v1' : 'gcc_hr_ai_premium_' + active;
   } catch { return 'gcc_hr_ai_premium_v1'; }
 })();
+
+// ---- Supabase cloud (fill key if empty) ----
+const SUPABASE_URL = 'https://jlhlayydqcsvmmzdypcr.supabase.co';
+const SUPABASE_KEY = localStorage.getItem('gcc_supabase_key') || ''; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
+let supabaseClient = null;
+try {
+  if (window.supabase && SUPABASE_URL && SUPABASE_KEY) {
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  }
+} catch (e) { console.warn('Supabase init skipped', e); }
+
+const CLOUD_KEY = 'default';
+window.saveToCloud = async function () {
+  try {
+    if (!supabaseClient) {
+      alert('Cloud not configured.\n\nIn Console run:\nlocalStorage.setItem("gcc_supabase_key","YOUR_sb_publishable_KEY")\nthen refresh.');
+      return;
+    }
+    if (typeof data === 'undefined') { alert('App data not ready — login first'); return; }
+    const payload = JSON.parse(JSON.stringify(data));
+    const { error } = await supabaseClient.from('app_data').upsert(
+      { company_key: CLOUD_KEY, payload, updated_at: new Date().toISOString() },
+      { onConflict: 'company_key' }
+    );
+    if (error) throw error;
+    if (typeof showToast === 'function') showToast('Saved to cloud', 'success');
+    else alert('Saved to cloud');
+  } catch (e) {
+    console.error(e);
+    alert('Cloud save failed: ' + (e.message || e));
+  }
+};
+window.loadFromCloud = async function () {
+  try {
+    if (!supabaseClient) {
+      alert('Cloud not configured. Set gcc_supabase_key in localStorage first.');
+      return;
+    }
+    const { data: rows, error } = await supabaseClient.from('app_data').select('payload').eq('company_key', CLOUD_KEY).limit(1);
+    if (error) throw error;
+    if (!rows || !rows.length) { alert('No cloud data yet. Save Cloud first.'); return; }
+    Object.keys(rows[0].payload).forEach(k => { data[k] = rows[0].payload[k]; });
+    if (typeof saveData === 'function') saveData();
+    alert('Loaded from cloud — reloading');
+    location.reload();
+  } catch (e) {
+    console.error(e);
+    alert('Cloud load failed: ' + (e.message || e));
+  }
+};
+window.testSupabaseConnection = async function () {
+  if (!supabaseClient) { alert('No Supabase client — set key first'); return; }
+  const { data: d, error } = await supabaseClient.from('companies').select('*').limit(5);
+  if (error) alert('Failed: ' + error.message);
+  else alert('Supabase connected! Companies: ' + (d?.length ?? 0));
+};
 
 const laborLaws = {
   // Kuwait Labour Law No. 6 of 2010 (Private Sector) – researched accurate rates
