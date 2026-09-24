@@ -1282,7 +1282,7 @@ let STORAGE_KEY = (function() {
 
 // ---- Supabase cloud (fill key if empty) ----
 const SUPABASE_URL = 'https://jlhlayydqcsvmmzdypcr.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_sb_publishable_N8t3mr2fEUNbGQuV8qThSg_ECIYi7V7'; ''; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
+const SUPABASE_KEY = localStorage.getItem('gcc_supabase_key') || ''; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
 let supabaseClient = null;
 try {
   if (window.supabase && SUPABASE_URL && SUPABASE_KEY) {
@@ -2583,8 +2583,8 @@ function openModal(type, payload) {
           <h3 class="text-xl font-bold">Create Employment Contract</h3>
           <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xl"></i></button>
         </div>
-        <p class="text-xs text-gray-500 mb-3">Bilingual EN + AR Kuwait labour contract. Select employee to auto-fill, edit fields, then Generate Word.</p>
-        <form onsubmit="event.preventDefault(); generateDoc(this, 'Employment Contract')">
+        <p class="text-xs text-gray-500 mb-3">Select employee → fields auto-fill (highlighted in preview) → Preview → Download Word or Print.</p>
+        <form id="contractForm" onsubmit="event.preventDefault(); previewEmploymentContract(this)">
           <div class="grid grid-cols-2 gap-3 mb-3">
             <div>
               <label class="block text-xs font-semibold mb-1">Language</label>
@@ -2629,7 +2629,7 @@ function openModal(type, payload) {
           </div>
           <div class="flex gap-3 mt-4">
             <button type="button" onclick="closeModal()" class="flex-1 bg-gray-100 py-2.5 rounded-lg font-semibold">Cancel</button>
-            <button type="submit" class="flex-1 bg-blue-600 text-white py-2.5 rounded-lg font-semibold"><i class="fas fa-file-word mr-1"></i> Generate Word</button>
+            <button type="submit" class="flex-1 bg-blue-600 text-white py-2.5 rounded-lg font-semibold"><i class="fas fa-eye mr-1"></i> Preview contract</button>
           </div>
         </form>
       </div>`;
@@ -3484,6 +3484,112 @@ function _p(text, opts = {}) {
   });
 }
 
+function hl(v) {
+  const t = (v == null || v === '') ? '—' : String(v);
+  return `<mark style="background:#fef08a;padding:0 3px;border-radius:2px;font-weight:600">${t}</mark>`;
+}
+
+function buildEmploymentContractPreviewHtml(fd) {
+  const g = (k) => (fd.get(k) || '').toString().trim();
+  const name = g('employeeName') || '—';
+  const nameAr = g('employeeNameAr') || name;
+  const empNo = g('empNo') || '—';
+  const dob = g('dob') || '—';
+  const nat = g('nationality') || '—';
+  const natAr = g('nationalityAr') || nat;
+  const ppt = g('passportNo') || '—';
+  const title = g('jobTitle') || '—';
+  const titleAr = g('jobTitleAr') || title;
+  const doj = g('joiningDate') || '—';
+  const sal = g('basicSalary') || '0';
+  const allow = g('allowanceNote') || 'By Employer';
+  const addrEn = g('addressEn') || '—';
+  const addrAr = g('addressAr') || addrEn;
+  const period = g('period') || 'Open';
+  const employerEn = g('employerEn') || data.companyName || 'Company';
+  const employerAr = g('employerAr') || employerEn;
+  const lang = g('lang') || 'bi';
+  const showEn = lang === 'en' || lang === 'bi';
+  const showAr = lang === 'ar' || lang === 'bi';
+
+  let h = `<div style="font-family:Times New Roman,serif;font-size:13px;line-height:1.45;color:#111">`;
+  h += `<h2 style="text-align:center;margin:0 0 4px">EMPLOYMENT CONTRACT</h2>`;
+  if (showAr) h += `<h2 style="text-align:center;margin:0 0 12px;direction:rtl">عقد العمل</h2>`;
+  h += `<p style="font-size:11px;color:#666;text-align:center"><em>Yellow highlights = data from employee / form (auto-filled)</em></p>`;
+
+  if (showEn) {
+    h += `<p>This employment contract is executed and entered into by and between <strong>${hl(employerEn)}</strong> hereinafter referred to as EMPLOYER, and or First Party and</p>`;
+    h += `<p>Name: ${hl(name)} · Employee ID: ${hl(empNo)} · Date of Birth: ${hl(dob)} · Nationality: ${hl(nat)} · Passport No: ${hl(ppt)}</p>`;
+    h += `<p>And residing at: Kuwait. Hereinafter referred to as the EMPLOYEE, and or Second Party.</p>`;
+    h += `<p><strong>A. Basic Terms</strong></p>`;
+    h += `<p>1. Date of Joining: ${hl(doj)}<br>2. Period of Agreement – ${hl(period)}<br>3. Home Country's Address: ${hl(addrEn)}<br>4. Site of Employment – Kuwait<br>5. Title: ${hl(title)}</p>`;
+    h += `<p>6. The Agreement is effective from the first day of actual and official commencement of employment with the First Party in Kuwait and shall continue thereafter until terminated by either party by giving three month notice in advance.</p>`;
+    h += `<p>7. Basic monthly salary: KD ${hl(sal)} /- &nbsp; Food/Accommodation: ${hl(allow)}. Wages paid in KD on completion of approved timesheet each period set by employer.</p>`;
+    h += `<p>8. Normal workweek: six (6) days, eight (8) hours per day, exclusive of one (1) hour meal break; regular minimum working hours in a calendar month shall not be less than 208 hours. Overtime as per Kuwait Labor Law: <strong>A.</strong> Regular OT/Hour: 25% premium &nbsp; <strong>B.</strong> Day off OT/Hour: 50% premium &nbsp; <strong>C.</strong> Holiday OT/Hour: 100% premium.</p>`;
+    h += `<p>9. 30 days leave with full pay per full year of service; leave only after minimum 9 months. Cannot accumulate leave for more than 2 years except with written consent of EMPLOYER.</p>`;
+    h += `<p>10. Economy class air ticket Kuwait ↔ country of origin while availing eligible vacation every 2 years of continuous service. No ticket if leave taken before 24 months.</p>`;
+    h += `<p>11. Sick leave per Kuwait Labor Law: A. 15 days 100% · B. 10 days 75% · C. 10 days 50% · D. 10 days 25% · E. 30 days without pay. Medical certificate may be required.</p>`;
+    h += `<p>12. Leave without pay requires prior approval. 13. Probation: 100 days; employer may terminate during probation without assigning reason. 14. Abide by policies and local customs.</p>`;
+    h += `<p><strong>B. Termination of Contract</strong> — Neither party may unilaterally cancel except as provided (project completion, crime against honor/trust, moral offenses, assault, breach of contract, repeated violations; or employee resignation with 90 days written notice and clearance). Confidentiality and no part-time work with third parties during agreement.</p>`;
+    h += `<p><strong>C. Other Benefits</strong> — Mobilization ticket (overseas); demobilization ticket on employer termination; food, laundry, AC shared housing; AC transport camp–workplace; safety compliance; KMOH insurance; workers' compensation; death repatriation.</p>`;
+    h += `<p><strong>D–G.</strong> Disputes under Kuwait law; uncovered matters → Law No. 6/2010; entire agreement; amendments in writing signed by both parties.</p>`;
+    h += `<p>In witness whereof, we hereby sign this contract.</p>`;
+    h += `<p><strong>EMPLOYER</strong> Signature: ________ Printed: ${hl(data.hrName || '—')} Date: ________</p>`;
+    h += `<p><strong>EMPLOYEE</strong> Signature: ________ Printed: ${hl(name)} Date: ________</p>`;
+  }
+  if (showAr) {
+    h += `<hr style="margin:16px 0"><div style="direction:rtl;text-align:right">`;
+    h += `<p>يتم عقد العمل هذا بين السادة/ <strong>${hl(employerAr)}</strong> المشار إليها فيما بعد باسم صاحب العمل أو الطرف الأول.</p>`;
+    h += `<p>الموظف: ${hl(nameAr)} · هوية الموظف: ${hl(empNo)} · تاريخ الميلاد: ${hl(dob)} · الجنسية: ${hl(natAr)} · رقم جواز السفر: ${hl(ppt)}</p>`;
+    h += `<p>المقيم في: الكويت. يشار إليه فيما بعد باسم الموظف أو الطرف الثاني.</p>`;
+    h += `<p><strong>أ : الشروط الأساسية</strong></p>`;
+    h += `<p>1 – تاريخ الالتحاق: ${hl(doj)} &nbsp; 2 – مدة الاتفاق: ${hl(period)} &nbsp; 5 – المسمى: ${hl(titleAr)}</p>`;
+    h += `<p>7 – الراتب الشهري الأساسي: ${hl(sal)} دينار كويتي &nbsp; الغذاء والسكن: ${hl(allow)}</p>`;
+    h += `<p>8 – أسبوع العمل العادي 6 أيام × 8 ساعات؛ العمل الإضافي وفق قانون العمل (25% / 50% / 100%). 9 – إجازة 30 يوماً بعد 9 أشهر. 11 – إجازة مرضية وفق القانون. 13 – فترة التجربة 100 يوماً.</p>`;
+    h += `<p><strong>ب / إنهاء العقد</strong> · <strong>ج. الفوائد الأخرى</strong> · تسوية المنازعات وفق قوانين الكويت وقانون العمل رقم 6/2010.</p>`;
+    h += `<p>صاحب العمل: ________ &nbsp; الموظف: ${hl(nameAr)} ________</p>`;
+    h += `</div>`;
+  }
+  h += `</div>`;
+  return h;
+}
+
+function previewEmploymentContract(form) {
+  const fd = new FormData(form);
+  window._pendingContractForm = form;
+  const preview = buildEmploymentContractPreviewHtml(fd);
+  const content = document.getElementById('modalContent');
+  content.innerHTML = `
+    <div class="p-6">
+      <div class="flex justify-between items-start mb-3 gap-2">
+        <div>
+          <h3 class="text-xl font-bold">Contract preview</h3>
+          <p class="text-xs text-gray-500">Yellow = auto-filled from employee / form. Review then download or print.</p>
+        </div>
+        <button onclick="closeModal()" class="text-gray-400"><i class="fas fa-times text-xl"></i></button>
+      </div>
+      <div id="contractPreviewBody" class="border rounded-xl p-4 max-h-[55vh] overflow-y-auto bg-white shadow-inner">${preview}</div>
+      <div class="flex flex-wrap gap-2 mt-4">
+        <button type="button" onclick="openModal('generateContract')" class="flex-1 min-w-[100px] bg-gray-100 py-2.5 rounded-lg font-semibold text-sm">← Edit fields</button>
+        <button type="button" onclick="printContractPreview()" class="flex-1 min-w-[100px] bg-slate-700 text-white py-2.5 rounded-lg font-semibold text-sm"><i class="fas fa-print mr-1"></i>Print</button>
+        <button type="button" onclick="generateDoc(window._pendingContractForm, 'Employment Contract')" class="flex-1 min-w-[100px] bg-blue-600 text-white py-2.5 rounded-lg font-semibold text-sm"><i class="fas fa-file-word mr-1"></i>Download Word</button>
+      </div>
+    </div>`;
+  document.getElementById('modalBackdrop').classList.remove('hidden');
+}
+
+function printContractPreview() {
+  const body = document.getElementById('contractPreviewBody');
+  if (!body) return;
+  const w = window.open('', '_blank');
+  w.document.write(`<!DOCTYPE html><html><head><title>Employment Contract</title>
+    <style>body{font-family:Times New Roman,serif;max-width:800px;margin:24px auto;padding:0 16px}
+    mark{background:#fef08a}</style></head><body>${body.innerHTML}</body></html>`);
+  w.document.close();
+  w.focus();
+  setTimeout(() => w.print(), 300);
+}
+
 async function generateDoc(form, type) {
   const fd = new FormData(form);
   const law = laborLaws[currentCountry];
@@ -3554,12 +3660,14 @@ async function generateDoc(form, type) {
        `6 - الاتفاق نافذ المفعول اعتبارا من اليوم الأول من البدء الفعلي والرسمي للعمل مع الطرف الأول في الكويت ويستمر بعد ذلك حتى إنهائها من قبل أي من الطرفين من خلال إعطاء إشعار 3 أشهر مقدما`],
       [`7. Basic monthly salary: KD ${sal} /-\n7.1 Food, Accommodation: ${allow}\n7.2 Vehicle Allowance: NA\n7.3 Mobile Allowance: NA\n(Wages are paid in Kuwaiti Dinars – Wages shall be paid on completion of every calendar month as per the approved and authenticated timesheet signed by Employer's Principal or his Representative)`,
        `7. الراتب الشهري الأساسي (${sal} دينار الكويتي )\n7.1 الغذاء والسكن: ${allow}\n7.2 بدل السيارة : لا يوجد\n7.3 بدل التلفون : لا يوجد\nيتم دفع الأجور بالدينار الكويتي - دفع الأجور عند الانتهاء من كل شهر ميلادي وفقا لجدول زمني تمت الموافقة والمصادقة عليها`],
-      [`8. Overtime shall be performed as per the requirement and per workload and upon instructions of the immediate supervisor. Overtime shall be paid in accordance with Kuwait Labor Law.`,
-       `8. يجب أداء العمل الإضافي وفقا لمتطلبات وحجم العمل وبناء على تعليمات من الرئيس المباشر. ويدفع للعمل الإضافي وفقا لقانون العمل الكويتي.`],
-      [`9. EMPLOYEE is entitled to 30 days of leave with full pay for each full year of service. However, leave cannot be availed of until the completion of minimum 9 (nine) months from the date of commencement of work, as per Local Labor Law. Leave schedule shall be subject to final approval of the Principal's Representative. The EMPLOYEE cannot accumulate leave or carry it forward for more than 2 years except with the written consent of the EMPLOYER.`,
-       `9 - يحق للموظف الحصول على 30 يوما من إجازة بأجر كامل عن كل سنة كاملة للخدمة. ولكن لا يمكن استفادة الاجازة حتى انتهاء 9 (تسعة) أشهر من تاريخ بدء العمل، وفقا لقانون العمل المحلية. لا يجوز للموظف ان يجمع الاجازة أو دفعها إلى الأمام لأكثر من سنتين إلا بموافقة خطية من صاحب العمل.`],
-      [`10. EMPLOYEE is entitled to sick leave in accordance with Kuwait Labor Law. At the discretion of the EMPLOYER, the EMPLOYEE is required to provide medical certificate issued by a recognized Clinic / Hospital.`,
-       `10 - يحق للموظف الحصول على إجازة مرضية وفقا للقانون العمل الكويتي. ويطلب من الموظف تقديم شهادة طبية صادرة عن العيادة او المستشفى المعترفة بها.`],
+      [`8. The EMPLOYEE's normal workweek shall consist of six (6) days, eight (8) hours per day, exclusive of one (1) hour meal break. Total regular minimum working hours in a calendar month shall not be less than 208 hours. Overtime shall be paid in accordance with Kuwait Labor Law: A. Regular OT/Hour: 25% premium on hourly wages; B. Day off OT/Hour: 50% premium; C. Holiday OT/Hour: 100% premium.`,
+       `8 - يتكون الأسبوع العادي للموظف من ستة أيام و8 ساعات عمل في اليوم شاملة ساعة استراحة. لا تقل ساعات العمل العادية في الشهر الميلادي عن 208 ساعة. يدفع للعمل الإضافي وفق قانون العمل الكويتي: أ) العادي 25% ب) يوم الراحة 50% ج) العطلة 100%.`],
+      [`9. EMPLOYEE is entitled to 30 days of leave with full pay for each full year of service. Leave cannot be availed until completion of minimum 9 (nine) months. Leave cannot be accumulated for more than 2 years except with written consent of the EMPLOYER.`,
+       `9 - يحق للموظف الحصول على 30 يوما من إجازة بأجر كامل عن كل سنة كاملة. لا يمكن الاستفادة من الإجازة حتى انتهاء 9 أشهر. لا يجوز تجميع الإجازة لأكثر من سنتين إلا بموافقة خطية من صاحب العمل.`],
+      [`10. EMPLOYEE is entitled to economy class air ticket from Kuwait to country of origin and back while availing eligible vacation every 2 years of continuous service. If leave is taken before 24 months, EMPLOYER is not responsible for air ticket.`,
+       `10 - يحق للموظف تذكرة طيران على الدرجة السياحية من الكويت إلى بلده الأصلي والعودة عند إجازة مؤهلة كل سنتين من الخدمة المستمرة. إذا أخذت الإجازة قبل 24 شهراً فلا يلتزم صاحب العمل بالتذكرة.`],
+      [`11. Sick leave per Kuwait Labor Law: A. 15 days at 100% pay; B. 10 days at 75%; C. 10 days at 50%; D. 10 days at 25%; E. 30 days without pay. Medical certificate may be required.`,
+       `11 - الإجازة المرضية وفق قانون العمل: أ) 15 يوماً 100% ب) 10 أيام 75% ج) 10 أيام 50% د) 10 أيام 25% هـ) 30 يوماً بدون أجر. قد تُطلب شهادة طبية.`],
       [`11. Periods of leave without pay must have prior approval by the EMPLOYER and his Principal and must be in accordance with EMPLOYER policies and procedures.`,
        `11 – يجب ان تكون فترات الإجازة بدون راتب حاصلة على موافقة مسبقة من صاحب العمل وموكله.`],
       [`12. The period of probation shall be 100 days commencing from the first day of actual and official commencement of employment with the EMPLOYER in Kuwait. During the probation period, if the Employer finds that the Employee is not qualified as claimed or unable to perform his work, the Employer may terminate his services with immediate effect without assigning any reason.`,
