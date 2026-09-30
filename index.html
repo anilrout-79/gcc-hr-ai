@@ -1455,7 +1455,7 @@ let STORAGE_KEY = (function() {
 
 // ---- Supabase cloud (fill key if empty) ----
 const SUPABASE_URL = 'https://jlhlayydqcsvmmzdypcr.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_N8t3mr2fEUNbGQuV8qThSg_ECIYi7V7'; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
+const SUPABASE_KEY = localStorage.getItem('gcc_supabase_key') || ''; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
 let supabaseClient = null;
 try {
   if (window.supabase && SUPABASE_URL && SUPABASE_KEY) {
@@ -4239,7 +4239,22 @@ function openModal(type, payload) {
             <div><label class="text-xs font-semibold">Position / Title (EN) *</label><input name="jobTitle" id="docTitle" required class="w-full border rounded-lg px-3 py-2 text-sm"></div>
             <div><label class="text-xs font-semibold">Position (AR)</label><input name="jobTitleAr" id="docTitleAr" class="w-full border rounded-lg px-3 py-2 text-sm" dir="rtl"></div>
             <div><label class="text-xs font-semibold">Joining Date</label><input type="date" name="joiningDate" id="docJoin" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
-            <div><label class="text-xs font-semibold">Basic Salary (KD)</label><input type="number" step="0.001" name="basicSalary" id="docBasic" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+            <div><label class="text-xs font-semibold">Basic Salary</label><input type="number" step="0.001" name="basicSalary" id="docBasic" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+            <div><label class="text-xs font-semibold">Housing Allowance</label><input type="number" step="0.001" name="housingAllowance" id="docHousing" class="w-full border rounded-lg px-3 py-2 text-sm" value="0"></div>
+            <div><label class="text-xs font-semibold">Transport Allowance</label><input type="number" step="0.001" name="transportAllowance" id="docTransport" class="w-full border rounded-lg px-3 py-2 text-sm" value="0"></div>
+            <div><label class="text-xs font-semibold">Food / Other Allowance</label><input type="number" step="0.001" name="foodAllowance" id="docFood" class="w-full border rounded-lg px-3 py-2 text-sm" value="0"></div>
+            <div><label class="text-xs font-semibold">Civil ID / Residence</label><input name="civilId" id="docCivil" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+            <div><label class="text-xs font-semibold">Contract type</label>
+              <select name="contractType" class="w-full border rounded-lg px-3 py-2 text-sm">
+                <option value="Indefinite-Term">Indefinite-Term</option>
+                <option value="Fixed-Term">Fixed-Term</option>
+              </select>
+            </div>
+            <div><label class="text-xs font-semibold">Fixed term (years)</label><input name="contractYears" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="If fixed"></div>
+            <div><label class="text-xs font-semibold">Contract end date</label><input type="date" name="endDate" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+            <div><label class="text-xs font-semibold">Probation days</label><input type="number" name="probationDays" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+            <div><label class="text-xs font-semibold">Place of work</label><input name="workCity" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Auto by country"></div>
+            <div><label class="text-xs font-semibold">Company license no.</label><input name="licenseNo" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
             <div><label class="text-xs font-semibold">Food / Accommodation</label><input name="allowanceNote" id="docAllow" class="w-full border rounded-lg px-3 py-2 text-sm" value="By Employer"></div>
             <div><label class="text-xs font-semibold">Home address (EN)</label><input name="addressEn" id="docAddrEn" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
             <div><label class="text-xs font-semibold">Home address (AR)</label><input name="addressAr" id="docAddrAr" class="w-full border rounded-lg px-3 py-2 text-sm" dir="rtl"></div>
@@ -5133,11 +5148,40 @@ function autoFillDoc(id) {
   set('docTitleAr', e.titleAr || e.custom?.titleAr || '');
   set('docDept', e.department || '');
   set('docBasic', e.basicSalary ?? '');
+  set('docHousing', e.housingAllowance ?? '');
+  set('docTransport', e.transportAllowance ?? '');
+  set('docFood', e.foodAllowance ?? '');
   set('docJoin', e.joinDate || '');
   set('docAddrEn', e.address || e.homeAddress || e.custom?.addressEn || '');
   set('docAddrAr', e.addressAr || e.custom?.addressAr || '');
   set('docAllow', e.foodAccommodation || 'By Employer');
   set('docCivil', e.civilId || e.civilID || e.custom?.civilId || '');
+  set('docEmployerEn', data.companyName || '');
+  // also fill name= fields used by FormData
+  const form = document.getElementById('contractForm');
+  if (form) {
+    const byName = (n, v) => { const el = form.querySelector(`[name="${n}"]`); if (el) el.value = v ?? ''; };
+    byName('employeeName', e.name);
+    byName('employeeNameAr', e.nameAr || e.custom?.nameAr || '');
+    byName('empNo', e.id);
+    byName('dob', e.dob || e.dateOfBirth || '');
+    byName('nationality', e.nationality || '');
+    byName('nationalityAr', e.nationalityAr || '');
+    byName('passportNo', e.passportNo || e.passport || '');
+    byName('jobTitle', e.title || '');
+    byName('jobTitleAr', e.titleAr || '');
+    byName('basicSalary', e.basicSalary ?? '');
+    byName('housingAllowance', e.housingAllowance ?? 0);
+    byName('transportAllowance', e.transportAllowance ?? 0);
+    byName('foodAllowance', e.foodAllowance ?? 0);
+    byName('joiningDate', e.joinDate || '');
+    byName('addressEn', e.address || '');
+    byName('addressAr', e.addressAr || '');
+    byName('civilId', e.civilId || e.civilID || '');
+    byName('employerEn', (data.companyName || '') + (data.companyAddress ? ', ' + data.companyAddress : ''));
+    byName('probationDays', (laborLaws[currentCountry] || laborLaws.KW).probationDays);
+    byName('workCity', currentCountry === 'SA' ? 'Saudi Arabia' : currentCountry === 'AE' ? 'United Arab Emirates' : 'Kuwait');
+  }
 }
 
 function autoFillHrDoc(id) {
@@ -5168,6 +5212,11 @@ function hl(v) {
 
 function buildEmploymentContractPreviewHtml(fd) {
   const g = (k) => (fd.get(k) || '').toString().trim();
+  const law = laborLaws[currentCountry] || laborLaws.KW;
+  const cur = law.currency || 'KD';
+  const countryBanner = `<div style="text-align:center;margin-bottom:12px;padding:8px;background:#f0fdfa;border-radius:8px;font-size:12px">
+    <strong>UNIFIED EMPLOYMENT CONTRACT</strong> · ${law.name || currentCountry} · Currency ${cur}<br>
+    <span style="color:#666">Yellow fields linked from employee record</span></div>`;
   const name = g('employeeName') || '—';
   const nameAr = g('employeeNameAr') || name;
   const empNo = g('empNo') || '—';
@@ -5297,152 +5346,134 @@ async function generateDoc(form, type) {
   let children = [];
 
   if (type === 'Employment Contract') {
-    children.push(_p('EMPLOYMENT CONTRACT', { bold: true, size: 32, align: AlignmentType.CENTER, after: 60 }));
-    if (showAr) children.push(_p('عقد العمل', { bold: true, size: 28, align: AlignmentType.CENTER, rtl: true, after: 200 }));
-
-    if (showEn) {
-      children.push(_p(`This employment contract is executed and entered into by and between ${employerEn} hereinafter referred to as EMPLOYER, and or First Party and`, { after: 80 }));
-    }
-    if (showAr) {
-      children.push(_p(`يتم عقد العمل هذا بين السادة/ ${employerAr} ، المشار اليها فيما بعد باسم صاحب العمل و او بالطرف الاول .`, { rtl: true, after: 160 }));
-    }
-
-    // Party details table-like lines
-    const lines = [
-      [`Name: ${name}`, `الموظف : ${nameAr}`],
-      [`Employee ID: ${empNo}`, `هوية الموظف : ${empNo}`],
-      [`Date of Birth: ${dob}`, `تاريخ الميلاد : ${dob}`],
-      [`Nationality: ${nat}`, `الجنسية : ${natAr}`],
-      [`Passport No: ${ppt}`, `رقم جوازالسفر: ${ppt}`],
-      [`And residing at: Kuwait`, `المقيم: فى الكويت`]
-    ];
-    lines.forEach(([en, ar]) => {
-      if (showEn) children.push(_p(en, { after: 40 }));
-      if (showAr) children.push(_p(ar, { rtl: true, after: 80 }));
-    });
-    if (showEn) children.push(_p('Hereinafter referred to as the EMPLOYEE, and or Second Party.', { after: 120 }));
-    if (showAr) children.push(_p('يشار اليه فيما بعد باسم الموظف واو الطرف الثاني', { rtl: true, after: 200 }));
-
-    // Section A
-    if (showEn) children.push(_p('A. Basic Terms', { bold: true, size: 24, after: 100 }));
-    if (showAr) children.push(_p('ا : الشروط الأساسية', { bold: true, size: 24, rtl: true, after: 120 }));
-
-    const basic = [
-      [`1. Date of Joining: ${doj}`, `1 – تاريخ الالتحاق بالعمل : ${doj}`],
-      [`2. Period of Agreement – ${period}`, `2 - مدة الاتفاق – ${period === 'Open' ? 'الفتح' : period}`],
-      [`3. Home Country's Address: ${addrEn}`, `3- عنوان بلد الام: ${addrAr}`],
-      [`4. Site of Employment- Kuwait`, `4- موقع التوظيف: الكويت`],
-      [`5. Title: ${title}`, `5- مكانة : ${titleAr}`],
-      [`6. The Agreement is effective from the first day of actual and official commencement of employment with the First Party in Kuwait and shall continue thereafter until terminated by either party by giving three month notice in advance.`,
-       `6 - الاتفاق نافذ المفعول اعتبارا من اليوم الأول من البدء الفعلي والرسمي للعمل مع الطرف الأول في الكويت ويستمر بعد ذلك حتى إنهائها من قبل أي من الطرفين من خلال إعطاء إشعار 3 أشهر مقدما`],
-      [`7. Basic monthly salary: KD ${sal} /-\n7.1 Food, Accommodation: ${allow}\n7.2 Vehicle Allowance: NA\n7.3 Mobile Allowance: NA\n(Wages are paid in Kuwaiti Dinars – Wages shall be paid on completion of every calendar month as per the approved and authenticated timesheet signed by Employer's Principal or his Representative)`,
-       `7. الراتب الشهري الأساسي (${sal} دينار الكويتي )\n7.1 الغذاء والسكن: ${allow}\n7.2 بدل السيارة : لا يوجد\n7.3 بدل التلفون : لا يوجد\nيتم دفع الأجور بالدينار الكويتي - دفع الأجور عند الانتهاء من كل شهر ميلادي وفقا لجدول زمني تمت الموافقة والمصادقة عليها`],
-      [`8. The EMPLOYEE's normal workweek shall consist of six (6) days, eight (8) hours per day, exclusive of one (1) hour meal break. Total regular minimum working hours in a calendar month shall not be less than 208 hours. Overtime shall be paid in accordance with Kuwait Labor Law: A. Regular OT/Hour: 25% premium on hourly wages; B. Day off OT/Hour: 50% premium; C. Holiday OT/Hour: 100% premium.`,
-       `8 - يتكون الأسبوع العادي للموظف من ستة أيام و8 ساعات عمل في اليوم شاملة ساعة استراحة. لا تقل ساعات العمل العادية في الشهر الميلادي عن 208 ساعة. يدفع للعمل الإضافي وفق قانون العمل الكويتي: أ) العادي 25% ب) يوم الراحة 50% ج) العطلة 100%.`],
-      [`9. EMPLOYEE is entitled to 30 days of leave with full pay for each full year of service. Leave cannot be availed until completion of minimum 9 (nine) months. Leave cannot be accumulated for more than 2 years except with written consent of the EMPLOYER.`,
-       `9 - يحق للموظف الحصول على 30 يوما من إجازة بأجر كامل عن كل سنة كاملة. لا يمكن الاستفادة من الإجازة حتى انتهاء 9 أشهر. لا يجوز تجميع الإجازة لأكثر من سنتين إلا بموافقة خطية من صاحب العمل.`],
-      [`10. EMPLOYEE is entitled to economy class air ticket from Kuwait to country of origin and back while availing eligible vacation every 2 years of continuous service. If leave is taken before 24 months, EMPLOYER is not responsible for air ticket.`,
-       `10 - يحق للموظف تذكرة طيران على الدرجة السياحية من الكويت إلى بلده الأصلي والعودة عند إجازة مؤهلة كل سنتين من الخدمة المستمرة. إذا أخذت الإجازة قبل 24 شهراً فلا يلتزم صاحب العمل بالتذكرة.`],
-      [`11. Sick leave per Kuwait Labor Law: A. 15 days at 100% pay; B. 10 days at 75%; C. 10 days at 50%; D. 10 days at 25%; E. 30 days without pay. Medical certificate may be required.`,
-       `11 - الإجازة المرضية وفق قانون العمل: أ) 15 يوماً 100% ب) 10 أيام 75% ج) 10 أيام 50% د) 10 أيام 25% هـ) 30 يوماً بدون أجر. قد تُطلب شهادة طبية.`],
-      [`11. Periods of leave without pay must have prior approval by the EMPLOYER and his Principal and must be in accordance with EMPLOYER policies and procedures.`,
-       `11 – يجب ان تكون فترات الإجازة بدون راتب حاصلة على موافقة مسبقة من صاحب العمل وموكله.`],
-      [`12. The period of probation shall be 100 days commencing from the first day of actual and official commencement of employment with the EMPLOYER in Kuwait. During the probation period, if the Employer finds that the Employee is not qualified as claimed or unable to perform his work, the Employer may terminate his services with immediate effect without assigning any reason.`,
-       `12 - تكون مدة الاختبار 100 يوما، تبدأ من اليوم الأول من البدء الفعلي والرسمي للعمل مع صاحب العمل في الكويت. خلال فترة الاختبار، يجوز لصاحب العمل إنهاء خدماته فورا دون إبداء أي أسباب إذا لم يكن مؤهلا.`],
-      [`13. The Employee shall abide by the policies, rules and regulations issued by the Employer from time to time in conformity with Kuwaiti Labor Laws, and shall respect local traditions and customs.`,
-       `13 - يجب على الموظف الالتزام بالسياسات والقواعد والأنظمة الصادرة من قبل صاحب العمل من وقت لآخر وفقا لقوانين العمل الكويتية، وتحترم التقاليد والعادات المحلية.`],
-      [`14. The Employee undertakes not to reveal/divulge either directly or indirectly any information concerning the Employer, its business or clients, during or after employment.`,
-       `14 - الموظف يتعهد بعدم كشف - سواء بشكل مباشر أو غير مباشر- عن أي معلومات تتعلق بصاحب العمل أو أعماله أو عملائه أثناء أو بعد فترة العمل.`],
-      [`15. Employee shall not take up any part time employment or do business with any third party during validity of this Agreement. Violation may result in immediate termination and liability for damages.`,
-       `15 - واتفق على ان الموظف لا يبدأ بعمل جزئي أو أعمال مع طرف ثالث خلال سريان هذا الاتفاق. وعلى صاحب العمل الحق فى انهاء الخدمة مباشرة عند المخالفة.`]
-    ];
-    basic.forEach(([en, ar]) => {
-      if (showEn) children.push(_p(en, { after: 80 }));
-      if (showAr) children.push(_p(ar, { rtl: true, after: 120 }));
-    });
-
-    if (showEn) children.push(_p('B. The EMPLOYER shall provide the EMPLOYEE', { bold: true, size: 24, before: 120, after: 100 }));
-    if (showAr) children.push(_p('ب - يجب على صاحب العمل ان يوفر للموظف :', { bold: true, size: 24, rtl: true, after: 120 }));
-
-    const employerProv = [
-      [`1. Air Ticket of economy class from his country of origin to Kuwait for the first time (applicable only for staff arriving from Overseas).`,
-       `1 - تذكرة سفر على الدرجة الاقتصادية من بلده الأصلي إلى الكويت للمرة الأولى (ينطبق على القادمين من وراء البحار فقط).`],
-      [`2. Demobilization airline ticket of economy class to his Country of Origin upon termination/non-renewal of employment contract by Employer.`,
-       `2 - تذكرة طيران التسريح الدرجة الاقتصادية إلى بلده الأصلي عند انتهاء او عدم تجديد عقد العمل.`],
-      [`3. Safe equipment and healthy living environment.`, `3- معدات آمنة وبيئة صحية معيشية`],
-      [`4. EMPLOYEE is responsible to comply with all applicable safety instructions. EMPLOYER is not responsible for injuries/death caused by negligence of the Employee or outside of work.`,
-       `4– والموظف مسؤول عن الامتثال لجميع تعليمات السلامة. وصاحب العمل غير مسئول عن الإصابات او الوفاة الناجمة عن إهمال الموظف أو خارج العمل.`],
-      [`5. EMPLOYER shall arrange insurance coverage as prescribed by the relevant authorities for treatment at government medical facilities as per Kuwait Ministry of Health (KMOH) scheme. Additional charges outside the scheme shall be borne by the EMPLOYEE.`,
-       `5- يجب على صاحب العمل ترتيب التغطية التأمينية وفقا لوزارة الصحة الكويتية. الرسوم الإضافية خارج النطاق يتحملها الموظف.`],
-      [`6. Worker's compensation for service-connected illness, injury or death shall be considered in accordance with Kuwait Private Labor laws.`,
-       `6 - فوائد تعويض العمال للمرض أو الإصابة أو الوفاة المتعلقة بالخدمة وفقا لقانون العمل الخاص بالكويت.`],
-      [`7. In case of EMPLOYEE's death, the EMPLOYER shall bear the repatriation expenses of the remains and personal properties to his native country in consultation with the EMPLOYEE's Embassy.`,
-       `7 - في حالة وفاة الموظف، يتحمل صاحب العمل نفقات إعادة الجثمان وأملاكه الشخصية لأقاربه في بلده الأصلي بالتشاور مع السفارة.`]
-    ];
-    employerProv.forEach(([en, ar]) => {
-      if (showEn) children.push(_p(en, { after: 80 }));
-      if (showAr) children.push(_p(ar, { rtl: true, after: 120 }));
-    });
-
-    if (showEn) children.push(_p('C. Settlement of Disputes', { bold: true, size: 24, before: 120, after: 80 }));
-    if (showAr) children.push(_p('ت : تسوية المنازعات', { bold: true, size: 24, rtl: true, after: 100 }));
-    if (showEn) children.push(_p('This Agreement shall be construed in accordance with laws of Kuwait. Disputes shall first be resolved amicably; otherwise through the appropriate authorities or courts in Kuwait.', { after: 80 }));
-    if (showAr) children.push(_p('وتفسر هذه الاتفاقية وفقا لقوانين الكويت. وينبغي أن تحل الخلافات بشكل ودي أولا، واذا فشلت تسوى من خلال السلطات أو المحاكم المختصة في الكويت.', { rtl: true, after: 120 }));
-
-    if (showEn) children.push(_p('D. Circumstances not covered under this Agreement', { bold: true, size: 24, before: 80, after: 80 }));
-    if (showAr) children.push(_p('ث : الظروف غير مشمولة بموجب هذا الاتفاق', { bold: true, size: 24, rtl: true, after: 100 }));
-    if (showEn) children.push(_p('In respect of any other matters not covered under this Agreement, the relevant provisions of the Kuwait Private Sector Labor Law No.6/2010 shall automatically apply.', { after: 80 }));
-    if (showAr) children.push(_p('بالنسبة لأية مسائل أخرى غير مغطاة، فإن أحكام قانون العمل للقطاع الخاص الكويتي رقم 6/2010 تسري تلقائيا.', { rtl: true, after: 120 }));
-
-    if (showEn) children.push(_p('E. Entire Agreement', { bold: true, size: 24, before: 80, after: 80 }));
-    if (showAr) children.push(_p('ج : اتفاقية كاملة', { bold: true, size: 24, rtl: true, after: 100 }));
-    if (showEn) children.push(_p('This Agreement contains the sole and entire agreement between the parties and supersedes any and all other agreements between them.', { after: 80 }));
-    if (showAr) children.push(_p('ويتضمن هذا الاتفاق الاتفاق الوحيد والكامل بين الطرفين، ويحل محل أي وجميع الاتفاقات الأخرى بينهما.', { rtl: true, after: 120 }));
-
-    if (showEn) children.push(_p('F. Amendment', { bold: true, size: 24, before: 80, after: 80 }));
-    if (showAr) children.push(_p('ح : التعديل', { bold: true, size: 24, rtl: true, after: 100 }));
-    if (showEn) children.push(_p('All amendments to this Agreement shall be in writing and signed by both Parties.', { after: 80 }));
-    if (showAr) children.push(_p('ان التعديلات كلها ينبغي ان تكون خطية وموقعة من الأطراف على حد سواء.', { rtl: true, after: 160 }));
-
-    if (showEn) children.push(_p('In witness whereof, we hereby sign this contract.', { before: 120, after: 200 }));
-    if (showAr) children.push(_p('واثباتا لذلك نحن نوقع فى هذا العقد', { rtl: true, after: 240 }));
-
-    if (showEn) {
-      children.push(_p('EMPLOYER', { bold: true, after: 40 }));
-      children.push(_p("EMPLOYER's Signature: ________________________", { after: 40 }));
-      children.push(_p(`EMPLOYER's Printed Name: ${data.hrName || '________________'}`, { after: 40 }));
-      children.push(_p('Date: ________________', { after: 160 }));
-      children.push(_p('EMPLOYEE', { bold: true, after: 40 }));
-      children.push(_p("EMPLOYEE's Signature: ________________________", { after: 40 }));
-      children.push(_p(`EMPLOYEE's Printed Name: ${name}`, { after: 40 }));
-      children.push(_p('Date: ________________', { after: 80 }));
-    }
-    if (showAr) {
-      children.push(_p('صاحب العمل :', { bold: true, rtl: true, after: 40 }));
-      children.push(_p('توقيع صاحب العمل : ________________________', { rtl: true, after: 40 }));
-      children.push(_p(`اسم صاحب العمل المطبوع : ${data.hrName || '________'}`, { rtl: true, after: 40 }));
-      children.push(_p('التاريخ : ________________', { rtl: true, after: 160 }));
-      children.push(_p('الموظف', { bold: true, rtl: true, after: 40 }));
-      children.push(_p('توقيع الموظف : ________________________', { rtl: true, after: 40 }));
-      children.push(_p(`اسم الموظف المطبوع : ${nameAr}`, { rtl: true, after: 40 }));
-      children.push(_p('التاريخ : ________________', { rtl: true, after: 80 }));
-    }
-  } else {
-    // Generic HR letters — company from form or settings
-    const company = g('companyName') || data.companyName || 'Company';
-    const letterDate = g('letterDate') || new Date().toLocaleDateString('en-GB');
-    const lastDay = g('lastDay') || '—';
+    // Unified bilingual template — fields from employee + country rules (KW/SA/AE)
+    const law = laborLaws[currentCountry] || laborLaws.KW;
+    const cur = law.currency || 'KD';
+    const countryName = law.name || currentCountry;
+    const housing = g('housingAllowance') || '0';
+    const transport = g('transportAllowance') || '0';
+    const food = g('foodAllowance') || '0';
+    const totalSal = (parseFloat(sal)||0) + (parseFloat(housing)||0) + (parseFloat(transport)||0) + (parseFloat(food)||0);
     const civil = g('civilId') || '—';
-    const details = g('details') || '';
-    const signatory = g('signatory') || (data.hrName || 'HR Manager');
-    const leaveStart = g('leaveStart') || '—';
-    const leaveEnd = g('leaveEnd') || '—';
-    const leaveType = g('leaveType') || 'Vacation';
-    const travelDest = g('travelDest') || '—';
-    const discAction = g('discAction') || '1st Written Warning';
-    const dept = g('department') || '—';
+    const contractType = g('contractType') || 'Indefinite-Term';
+    const contractYears = g('contractYears') || '';
+    const endDate = g('endDate') || '';
+    const probation = g('probationDays') || String(law.probationDays || 100);
+    const workCity = g('workCity') || (currentCountry === 'SA' ? 'Kingdom of Saudi Arabia' : currentCountry === 'AE' ? 'United Arab Emirates' : 'Kuwait');
+    const licenseNo = g('licenseNo') || data.companyLicense || '—';
+    const leaveDays = law.annualLeaveDays || 30;
+    const notice = law.noticePeriod || '3 months';
+    const otN = law.overtimeMultiplier?.normal || 1.25;
+    const otR = law.overtimeMultiplier?.restDay || 1.5;
+    const otH = law.overtimeMultiplier?.publicHoliday || 2;
 
-    if (type === 'Offer Letter') {
+    let lawTitleEn = 'Private Sector – State of Kuwait (Law No. 6 of 2010)';
+    let lawTitleAr = 'القطاع الأهلي – دولة الكويت (القانون رقم 6 لسنة 2010)';
+    let governingEn = 'Governed by Kuwait Labour Law No. 6 of 2010. Arabic text prevails in case of conflict.';
+    let governingAr = 'يخضع لقانون العمل الكويتي رقم 6 لسنة 2010 ويعتد بالنص العربي عند التعارض.';
+    let preambleEn = 'Both parties, having full legal capacity, agree to enter into this employment contract under the terms stipulated by Kuwait Labor Law No. 6 of 2010 and PAM regulations.';
+    let preambleAr = 'إقراراً بأهليتهما القانونية، اتفق الطرفان على إبرام عقد العمل هذا وفقاً لقانون العمل في القطاع الأهلي رقم (6) لسنة 2010.';
+    if (currentCountry === 'SA') {
+      lawTitleEn = 'Private Sector – Kingdom of Saudi Arabia (Saudi Labour Law)';
+      lawTitleAr = 'القطاع الخاص – المملكة العربية السعودية (نظام العمل)';
+      governingEn = 'Governed by the Saudi Labour Law and applicable regulations. Confirm final text with counsel.';
+      governingAr = 'يخضع لنظام العمل السعودي واللوائح ذات الصلة.';
+      preambleEn = 'Both parties agree to enter into this employment contract under the Saudi Labour Law and company policies.';
+      preambleAr = 'اتفق الطرفان على إبرام عقد العمل هذا وفقاً لنظام العمل السعودي وسياسات الشركة.';
+    } else if (currentCountry === 'AE') {
+      lawTitleEn = 'Private Sector – United Arab Emirates (Federal Decree-Law No. 33 of 2021)';
+      lawTitleAr = 'القطاع الخاص – دولة الإمارات (المرسوم بقانون اتحادي رقم 33 لسنة 2021)';
+      governingEn = 'Governed by UAE Federal Decree-Law No. 33 of 2021 and applicable free-zone rules if any.';
+      governingAr = 'يخضع للمرسوم بقانون اتحادي رقم 33 لسنة 2021 واللوائح المعمول بها.';
+      preambleEn = 'Both parties agree to enter into this employment contract under UAE Federal Labour Law and company policies.';
+      preambleAr = 'اتفق الطرفان على إبرام عقد العمل هذا وفقاً لقانون العمل الإماراتي وسياسات الشركة.';
+    }
+
+    const today = new Date();
+    const day = g('contractDay') || String(today.getDate());
+    const month = g('contractMonth') || today.toLocaleString('en', { month: 'long' });
+    const year = g('contractYear') || String(today.getFullYear());
+
+    children.push(_p('UNIFIED EMPLOYMENT CONTRACT', { bold: true, size: 28, align: AlignmentType.CENTER, after: 40 }));
+    if (showAr) children.push(_p('عقد عمل موحد', { bold: true, size: 26, align: AlignmentType.CENTER, rtl: true, after: 60 }));
+    children.push(_p(lawTitleEn, { size: 18, align: AlignmentType.CENTER, after: 40 }));
+    if (showAr) children.push(_p(lawTitleAr, { size: 18, align: AlignmentType.CENTER, rtl: true, after: 120 }));
+
+    if (showEn) children.push(_p(`This Employment Contract is made on this ${day} day of ${month}, ${year}, by and between the parties below.`, { after: 80 }));
+    if (showAr) children.push(_p(`أُبرم عقد العمل هذا في يوم ${day} من ${month} سنة ${year} بين الطرفين المبينين أدناه.`, { rtl: true, after: 160 }));
+
+    // Bilingual side-by-side via sequential EN then AR blocks (Word-friendly)
+    const bi = (en, ar) => {
+      if (showEn) children.push(_p(en, { after: 60 }));
+      if (showAr) children.push(_p(ar, { rtl: true, after: 120 }));
+    };
+
+    bi(
+      `1. THE EMPLOYER:\nCompany Name: ${employerEn}\nLicense No.: ${licenseNo}\nAddress: ${data.companyAddress || employerEn}\n(Hereinafter the "Employer")`,
+      `1. الطرف الأول (صاحب العمل):\nاسم الشركة: ${employerAr}\nرقم الترخيص: ${licenseNo}\nالعنوان: ${data.companyAddress || employerAr}\n(ويشار إليها بـ "صاحب العمل")`
+    );
+    bi(
+      `2. THE EMPLOYEE:\nFull Name: ${name}\nNationality: ${nat}\nPassport No.: ${ppt}\nCivil ID / Residence: ${civil}\nAddress: ${addrEn}\n(Hereinafter the "Employee")`,
+      `2. الطرف الثاني (العامل):\nالاسم الكامل: ${nameAr}\nالجنسية: ${natAr}\nرقم جواز السفر: ${ppt}\nالرقم المدني / الإقامة: ${civil}\nالعنوان: ${addrAr}\n(ويشار إليه بـ "العامل")`
+    );
+    bi('PREAMBLE:\n' + preambleEn, 'الديباجة:\n' + preambleAr);
+
+    bi(
+      `ARTICLE 1: NATURE OF WORK & JOB TITLE\nThe Employer hires the Employee as ${title}. The Employee shall perform all duties associated with this position as directed by the Employer.`,
+      `المادة الأولى: طبيعة العمل والمسمى الوظيفي\nاستخدم صاحب العمل العامل بمهنة ${titleAr}. ويلتزم العامل بأداء كافة الواجبات التابعة لهذه الوظيفة.`
+    );
+    bi(
+      `ARTICLE 2: PLACE OF WORK\nThe primary place of work is ${workCity}. The Employer may assign the Employee to other branches or project sites within the country as operational requirements dictate.`,
+      `المادة الثانية: مكان العمل\nيكون مقر العمل الأساسي في ${workCity}. ويحق لصاحب العمل تكليف العامل في أي من الفروع أو مواقع المشاريع داخل الدولة.`
+    );
+    bi(
+      `ARTICLE 3: CONTRACT DURATION & TYPE\n3.1 Contract Type: ${contractType}.\n3.2 If Fixed-Term: Duration ${contractYears || '—'} year(s), from ${doj} to ${endDate || '—'}.\n3.3 Renewal: Subject to applicable labour law.`,
+      `المادة الثالثة: مدة العقد ونوعه\n3.1 نوع العقد: ${contractType}.\n3.2 إذا كان محدد المدة: ${contractYears || '—'} سنة/سنوات من ${doj} إلى ${endDate || '—'}.\n3.3 التجديد وفقاً للقانون المعمول به.`
+    );
+    bi(
+      `ARTICLE 4: PROBATIONARY PERIOD\n4.1 Probation period shall be ${probation} actual working days (subject to legal maximum).\n4.2 Either party may terminate during probation according to applicable law.`,
+      `المادة الرابعة: فترة التجربة\n4.1 يخضع العامل لفترة تجربة مدتها ${probation} يوم عمل فعلي.\n4.2 يحق لأي من الطرفين إنهاء العقد خلالها وفقاً للقانون.`
+    );
+    bi(
+      `ARTICLE 5: REMUNERATION & WAGES\n• Basic Salary: ${cur} ${sal}\n• Housing Allowance: ${cur} ${housing}\n• Transport Allowance: ${cur} ${transport}\n• Other / Food: ${cur} ${food}\nTotal Monthly Gross: ${cur} ${totalSal.toFixed(3)}\nWages paid via bank / WPS where mandated.`,
+      `المادة الخامسة: الأجور والرواتب\n• الراتب الأساسي: ${sal} ${cur}\n• بدل السكن: ${housing} ${cur}\n• بدل النقل: ${transport} ${cur}\n• أخرى / طعام: ${food} ${cur}\nالإجمالي الشهري: ${totalSal.toFixed(3)} ${cur}`
+    );
+    bi(
+      `ARTICLE 6: WORKING HOURS & OVERTIME\n6.1 Normal hours: ${law.standardHoursPerDay || 8} hours/day, ${law.standardHoursPerWeek || 48} hours/week.\n6.2 Overtime multipliers (app model): Normal ${otN}x · Rest ${otR}x · Holiday ${otH}x — confirm statutory text.`,
+      `المادة السادسة: ساعات العمل والعمل الإضافي\n6.1 الساعات العادية: ${law.standardHoursPerDay || 8} يومياً / ${law.standardHoursPerWeek || 48} أسبوعياً.\n6.2 العمل الإضافي وفقاً للقانون المعمول به في ${countryName}.`
+    );
+    if (currentCountry === 'KW') {
+      bi(
+        'ARTICLE 7: WORKING HOURS DURING RAMADAN\nNormal working hours during Ramadan shall be reduced to a maximum of 36 hours per week (or 6 hours per day), without reduction in gross monthly remuneration, per Kuwait Labour Law.',
+        'المادة السابعة: ساعات العمل في رمضان\nتخفض ساعات العمل خلال شهر رمضان إلى حد أقصى 36 ساعة أسبوعياً (أو 6 ساعات يومياً) دون تخفيض الأجر الإجمالي.'
+      );
+      bi(
+        'ARTICLE 8: WAGE PROTECTION SYSTEM (WPS)\nThe Employer shall transfer monthly remuneration in Kuwaiti Dinars to a local bank account designated by the Employee, in compliance with WPS requirements of the Central Bank of Kuwait and PAM.',
+        'المادة الثامنة: نظام حماية الأجور (WPS)\nيلتزم صاحب العمل بتحويل الأجر الشهري بالدينار الكويتي إلى حساب مصرفي محلي يحدده العامل وفقاً لنظام حماية الأجور.'
+      );
+    }
+    bi(
+      `ARTICLE: ANNUAL AND OFFICIAL LEAVES\nEntitled to ${leaveDays} days paid annual leave per qualifying year (subject to minimum service rules). Full pay during official public holidays where applicable.`,
+      `المادة: الإجازات السنوية والرسمية\nيستحق إجازة سنوية مدفوعة ${leaveDays} يوماً عن كل سنة مؤهلة، وأجراً عن العطل الرسمية وفق القانون.`
+    );
+    bi(
+      `ARTICLE: SICK LEAVE & END OF SERVICE\nSick leave and end-of-service indemnity shall be calculated in accordance with applicable labour law in ${countryName} (app compliance rules: EOS ${law.eos?.first5YearsDays || 15}/${law.eos?.after5YearsDays || 30} days model).`,
+      `المادة: الإجازة المرضية ونهاية الخدمة\nتنظم الإجازات المرضية ومكافأة نهاية الخدمة طبقاً لقانون العمل المعمول به في ${countryName}.`
+    );
+    bi(
+      `ARTICLE: TERMINATION & NOTICE\nNotice period: ${notice} (or as per contract type and law). Fixed-term contracts end on expiry unless renewed or terminated under law.`,
+      `المادة: الإنهاء ومدة الإخطار\nمدة الإخطار: ${notice} أو وفق نوع العقد والقانون.`
+    );
+    bi(
+      'ARTICLE: REPATRIATION\nFor eligible expatriate employees, return ticket obligations follow applicable law and company policy upon lawful end of service.',
+      'المادة: نفقات العودة\nلغير المواطنين المستحقين، تتحمل تذكرة العودة وفق القانون وسياسة الشركة عند انتهاء الخدمة المشروع.'
+    );
+    bi(
+      'ARTICLE: GOVERNING LAW & SIGNATURES\n' + governingEn + '\n\nEmployer: ____________________\n\nEmployee: ____________________',
+      'المادة: القانون والتوقيعات\n' + governingAr + '\n\nصاحب العمل: ____________________\n\nالعامل: ____________________'
+    );
+  }
+  if (type === 'Offer Letter') {
       children.push(_p(letterDate, { after: 200 }));
       children.push(_p(`Dear Mr. / Ms. ${name}`, { after: 120 }));
       if (ppt && ppt !== '—') children.push(_p(`Passport #: ${ppt}`, { after: 120 }));
