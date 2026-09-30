@@ -982,60 +982,110 @@
         <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
           <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
             <div>
-              <h3 class="text-lg font-bold">Contracts & HR Documents</h3>
-              <p class="text-sm text-gray-500">Select company · auto-fill employee · bilingual Word download</p>
+              <h3 class="text-lg font-bold">Document Center</h3>
+              <p class="text-sm text-gray-500">Standard HR &amp; finance forms · letterhead · auto-fill · Word download</p>
             </div>
+            <button type="button" onclick="openModal('letterheadSettings')" class="bg-slate-900 hover:bg-slate-800 text-white px-3 py-2 rounded-lg text-sm font-semibold">
+              <i class="fas fa-stamp mr-1"></i> Letterhead &amp; logo
+            </button>
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mb-6">
+          <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-5 flex flex-wrap items-center gap-4">
+            <div id="letterheadPreviewMini" class="flex items-center gap-3 min-w-0">
+              <div class="w-12 h-12 rounded-lg bg-white border flex items-center justify-center overflow-hidden flex-shrink-0">
+                <img id="lhLogoThumb" src="" alt="" class="max-h-10 max-w-[48px] object-contain hidden"/>
+                <i id="lhLogoPlaceholder" class="fas fa-building text-slate-300"></i>
+              </div>
+              <div class="min-w-0 text-sm">
+                <div class="font-bold text-slate-800 truncate" id="lhCompanyThumb">Company letterhead</div>
+                <div class="text-xs text-slate-500 truncate" id="lhAddressThumb">Set logo &amp; address for all documents</div>
+              </div>
+            </div>
+            <p class="text-xs text-slate-500 flex-1">All generated Word files use this letterhead when logo/address is set. Employee fields auto-fill from the selected staff record.</p>
+          </div>
+
+          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">HR · Employment</h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mb-5">
             <button type="button" onclick="openModal('generateContract')" class="text-left border border-blue-200 bg-blue-50 rounded-xl p-4 hover:shadow-md transition">
               <div class="text-blue-600 text-xl mb-1"><i class="fas fa-file-contract"></i></div>
               <div class="font-bold text-sm">Employment Contract</div>
-              <div class="text-xs text-gray-500 mt-1">EN+AR · Law 6/2010 full terms</div>
+              <div class="text-xs text-gray-500 mt-1">EN+AR · full terms</div>
             </button>
             <button type="button" onclick="openModal('generateOffer')" class="text-left border border-emerald-200 bg-emerald-50 rounded-xl p-4 hover:shadow-md transition">
               <div class="text-emerald-600 text-xl mb-1"><i class="fas fa-file-signature"></i></div>
               <div class="font-bold text-sm">Offer Letter</div>
-              <div class="text-xs text-gray-500 mt-1">Provisional / conditional offer</div>
-            </button>
-            <button type="button" onclick="openModal('generateTermination')" class="text-left border border-rose-200 bg-rose-50 rounded-xl p-4 hover:shadow-md transition">
-              <div class="text-rose-600 text-xl mb-1"><i class="fas fa-user-times"></i></div>
-              <div class="font-bold text-sm">Termination Notice</div>
-              <div class="text-xs text-gray-500 mt-1">EN+AR · 3 months notice</div>
-            </button>
-            <button type="button" onclick="openModal('generateDeemedResign')" class="text-left border border-orange-200 bg-orange-50 rounded-xl p-4 hover:shadow-md transition">
-              <div class="text-orange-600 text-xl mb-1"><i class="fas fa-user-slash"></i></div>
-              <div class="font-bold text-sm">Deemed Resignation</div>
-              <div class="text-xs text-gray-500 mt-1">EN+AR · Art. 42 absence</div>
-            </button>
-            <button type="button" onclick="openModal('generateDisciplinary')" class="text-left border border-amber-200 bg-amber-50 rounded-xl p-4 hover:shadow-md transition">
-              <div class="text-amber-600 text-xl mb-1"><i class="fas fa-exclamation-triangle"></i></div>
-              <div class="font-bold text-sm">Disciplinary Notice</div>
-              <div class="text-xs text-gray-500 mt-1">Warning / suspension form</div>
+              <div class="text-xs text-gray-500 mt-1">Conditional job offer</div>
             </button>
             <button type="button" onclick="openModal('generateCertificate')" class="text-left border border-purple-200 bg-purple-50 rounded-xl p-4 hover:shadow-md transition">
               <div class="text-purple-600 text-xl mb-1"><i class="fas fa-certificate"></i></div>
               <div class="font-bold text-sm">Experience Certificate</div>
-              <div class="text-xs text-gray-500 mt-1">To whom it may concern</div>
+              <div class="text-xs text-gray-500 mt-1">Service certificate</div>
             </button>
+            <button type="button" onclick="openModal('generateSalaryCert')" class="text-left border border-indigo-200 bg-indigo-50 rounded-xl p-4 hover:shadow-md transition">
+              <div class="text-indigo-600 text-xl mb-1"><i class="fas fa-money-check-alt"></i></div>
+              <div class="font-bold text-sm">Salary Certificate</div>
+              <div class="text-xs text-gray-500 mt-1">Bank / embassy letter</div>
+            </button>
+          </div>
+
+          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">HR · Leave · Discipline · Exit</h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mb-5">
             <button type="button" onclick="openModal('generateLeaveForm')" class="text-left border border-sky-200 bg-sky-50 rounded-xl p-4 hover:shadow-md transition">
               <div class="text-sky-600 text-xl mb-1"><i class="fas fa-plane"></i></div>
-              <div class="font-bold text-sm">Leave Request Form</div>
-              <div class="text-xs text-gray-500 mt-1">EN+AR · travel & approvals</div>
+              <div class="font-bold text-sm">Leave Request</div>
+              <div class="text-xs text-gray-500 mt-1">SCR / leave form</div>
+            </button>
+            <button type="button" onclick="openModal('generateDisciplinary')" class="text-left border border-amber-200 bg-amber-50 rounded-xl p-4 hover:shadow-md transition">
+              <div class="text-amber-600 text-xl mb-1"><i class="fas fa-exclamation-triangle"></i></div>
+              <div class="font-bold text-sm">Disciplinary Notice</div>
+              <div class="text-xs text-gray-500 mt-1">Warning / suspension</div>
             </button>
             <button type="button" onclick="openModal('generateWarning')" class="text-left border border-gray-200 bg-gray-50 rounded-xl p-4 hover:shadow-md transition">
               <div class="text-gray-600 text-xl mb-1"><i class="fas fa-file-alt"></i></div>
-              <div class="font-bold text-sm">Simple Warning Letter</div>
-              <div class="text-xs text-gray-500 mt-1">Short letter format</div>
+              <div class="font-bold text-sm">Warning Letter</div>
+              <div class="text-xs text-gray-500 mt-1">Short formal warning</div>
+            </button>
+            <button type="button" onclick="openModal('generateTermination')" class="text-left border border-rose-200 bg-rose-50 rounded-xl p-4 hover:shadow-md transition">
+              <div class="text-rose-600 text-xl mb-1"><i class="fas fa-user-times"></i></div>
+              <div class="font-bold text-sm">Termination Notice</div>
+              <div class="text-xs text-gray-500 mt-1">Exit letter</div>
+            </button>
+            <button type="button" onclick="openModal('generateDeemedResign')" class="text-left border border-orange-200 bg-orange-50 rounded-xl p-4 hover:shadow-md transition">
+              <div class="text-orange-600 text-xl mb-1"><i class="fas fa-user-slash"></i></div>
+              <div class="font-bold text-sm">Deemed Resignation</div>
+              <div class="text-xs text-gray-500 mt-1">Absence / absconding</div>
+            </button>
+            <button type="button" onclick="openModal('generateClearance')" class="text-left border border-teal-200 bg-teal-50 rounded-xl p-4 hover:shadow-md transition">
+              <div class="text-teal-600 text-xl mb-1"><i class="fas fa-clipboard-check"></i></div>
+              <div class="font-bold text-sm">Exit Clearance</div>
+              <div class="text-xs text-gray-500 mt-1">NOC / clearance checklist</div>
+            </button>
+            <button type="button" onclick="openModal('generateNOC')" class="text-left border border-cyan-200 bg-cyan-50 rounded-xl p-4 hover:shadow-md transition">
+              <div class="text-cyan-600 text-xl mb-1"><i class="fas fa-passport"></i></div>
+              <div class="font-bold text-sm">NOC Letter</div>
+              <div class="text-xs text-gray-500 mt-1">Travel / authority letter</div>
             </button>
           </div>
 
-          <div class="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-100 rounded-xl p-4 mb-5 text-sm">
-            <i class="fas fa-building text-indigo-600 mr-1"></i>
-            <strong>Company name</strong> is taken from <em>Settings</em> (and editable on each form). Select employee to auto-fill; generate Word in EN / AR / bilingual.
+          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">Finance</h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mb-5">
+            <button type="button" onclick="openModal('generateInvoiceDoc')" class="text-left border border-violet-200 bg-violet-50 rounded-xl p-4 hover:shadow-md transition">
+              <div class="text-violet-600 text-xl mb-1"><i class="fas fa-file-invoice-dollar"></i></div>
+              <div class="font-bold text-sm">Tax Invoice</div>
+              <div class="text-xs text-gray-500 mt-1">Client invoice · VAT tag</div>
+            </button>
+            <button type="button" onclick="switchSection('invoices')" class="text-left border border-slate-200 bg-white rounded-xl p-4 hover:shadow-md transition">
+              <div class="text-slate-600 text-xl mb-1"><i class="fas fa-list"></i></div>
+              <div class="font-bold text-sm">Invoice register</div>
+              <div class="text-xs text-gray-500 mt-1">Open full invoices module</div>
+            </button>
           </div>
 
-          <h4 class="font-semibold mb-3">Generated Documents</h4>
+          <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-4 mb-5 text-sm text-indigo-900">
+            <strong>How automation works:</strong> 1) Set letterhead once · 2) Open a form · 3) Select employee (auto-fill) · 4) Edit any field · 5) Preview / download Word. Formats follow company letterhead + standard GCC HR structure.
+          </div>
+
+          <h4 class="font-semibold mb-3">Recently generated</h4>
           <div id="contractsList" class="space-y-3">
             <div class="text-center text-gray-400 py-8"><i class="fas fa-file-contract text-3xl mb-2"></i><p>No documents generated yet</p></div>
           </div>
@@ -1405,7 +1455,7 @@ let STORAGE_KEY = (function() {
 
 // ---- Supabase cloud (fill key if empty) ----
 const SUPABASE_URL = 'https://jlhlayydqcsvmmzdypcr.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_N8t3mr2fEUNbGQuV8qThSg_ECIYi7V7'; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
+const SUPABASE_KEY = localStorage.getItem('gcc_supabase_key') || ''; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
 let supabaseClient = null;
 try {
   if (window.supabase && SUPABASE_URL && SUPABASE_KEY) {
@@ -2231,6 +2281,9 @@ window.refreshComplianceRules = async function () {
 
 let data = {
   companyName: 'Gulf Horizon Services',
+  companyAddress: '',
+  letterheadLogo: '',
+  letterheadFooter: '',
   hrName: 'Mohammed Al-Fahd',
   hrTitle: 'HR Manager',
   employees: [],
@@ -2251,6 +2304,9 @@ function ensureDataShape() {
   if (!Array.isArray(data.contracts)) data.contracts = [];
   if (!Array.isArray(data.customFields)) data.customFields = [];
   if (!Array.isArray(data.employees)) data.employees = [];
+  if (data.companyAddress === undefined) data.companyAddress = '';
+  if (data.letterheadLogo === undefined) data.letterheadLogo = '';
+  if (data.letterheadFooter === undefined) data.letterheadFooter = '';
   if (!Array.isArray(data.projects)) data.projects = [];
   if (!Array.isArray(data.leaveRequests)) data.leaveRequests = [];
   if (!Array.isArray(data.journalEntries)) data.journalEntries = [];
@@ -2437,6 +2493,7 @@ function switchSection(section) {
   if (section === 'attendance') renderAttendance();
   if (section === 'payroll') { renderPayrollSummary(); try { renderPayrollRunsHistory(); } catch (_) {} }
   if (section === 'vat') try { updateVatNotes(); } catch (_) {}
+  if (section === 'contracts') try { refreshLetterheadThumb(); } catch (_) {}
   if (section === 'accounting') try { updateAccountingCountryUI(); renderAccounting(); } catch (_) {}
   if (section === 'settings') loadSettingsForm();
   if (section === 'contracts') renderContractsList();
@@ -4050,6 +4107,96 @@ function openModal(type, payload) {
     </div>`;
   }
 
+
+  else if (type === 'letterheadSettings') {
+    html = `<div class="p-6">
+      <div class="flex justify-between mb-4">
+        <div>
+          <h3 class="text-xl font-bold"><i class="fas fa-stamp text-slate-700 mr-2"></i>Company letterhead</h3>
+          <p class="text-xs text-gray-500">Used on all automated HR &amp; finance Word documents</p>
+        </div>
+        <button onclick="closeModal()"><i class="fas fa-times"></i></button>
+      </div>
+      <div class="space-y-3">
+        <div>
+          <label class="text-xs font-semibold">Company name</label>
+          <input id="lhName" class="w-full border rounded-lg px-3 py-2 text-sm" value="${(data.companyName||'').replace(/"/g,'&quot;')}">
+        </div>
+        <div>
+          <label class="text-xs font-semibold">Address / PO Box / City</label>
+          <textarea id="lhAddress" rows="2" class="w-full border rounded-lg px-3 py-2 text-sm">${(data.companyAddress||'').replace(/</g,'&lt;')}</textarea>
+        </div>
+        <div>
+          <label class="text-xs font-semibold">Footer line (phone · email · CR)</label>
+          <input id="lhFooter" class="w-full border rounded-lg px-3 py-2 text-sm" value="${(data.letterheadFooter||'').replace(/"/g,'&quot;')}" placeholder="Tel · Email · Commercial Registration">
+        </div>
+        <div>
+          <label class="text-xs font-semibold">Logo image</label>
+          <input type="file" id="lhLogoFile" accept="image/*" class="w-full text-sm border rounded-lg px-3 py-2" onchange="previewLetterheadLogoFile(this)">
+          <p class="text-[10px] text-gray-400 mt-1">PNG/JPG · stored in this browser with Save Cloud</p>
+          <div class="mt-2 h-16 flex items-center">${data.letterheadLogo ? `<img src="${data.letterheadLogo}" class="max-h-16 object-contain"/>` : '<span class="text-xs text-gray-400">No logo yet</span>'}</div>
+        </div>
+      </div>
+      <div class="flex gap-2 mt-5">
+        <button type="button" onclick="closeModal()" class="flex-1 bg-gray-100 py-2.5 rounded-lg font-semibold text-sm">Cancel</button>
+        <button type="button" onclick="saveLetterheadSettings()" class="flex-1 bg-slate-900 text-white py-2.5 rounded-lg font-semibold text-sm">Save letterhead</button>
+      </div>
+    </div>`;
+  }
+
+  else if (type === 'generateSalaryCert' || type === 'generateClearance' || type === 'generateNOC' || type === 'generateInvoiceDoc') {
+    const titles = {
+      generateSalaryCert: 'Salary Certificate',
+      generateClearance: 'Exit Clearance Form',
+      generateNOC: 'NOC / Authority Letter',
+      generateInvoiceDoc: 'Tax Invoice'
+    };
+    const docType = titles[type];
+    const empOpts = data.employees.map(e => `<option value="${e.id}">${e.name} (${e.id})</option>`).join('');
+    html = `<div class="p-6">
+      <div class="flex justify-between mb-3">
+        <h3 class="text-xl font-bold">${docType}</h3>
+        <button onclick="closeModal()"><i class="fas fa-times"></i></button>
+      </div>
+      <p class="text-xs text-gray-500 mb-3">Letterhead applies automatically. Select employee to auto-fill.</p>
+      <form onsubmit="event.preventDefault(); generateStandardDoc(this, '${docType}')">
+        <div class="grid grid-cols-2 gap-3 mb-3">
+          <div class="col-span-2">
+            <label class="text-xs font-semibold">Employee</label>
+            <select name="empId" class="w-full border rounded-lg px-3 py-2 text-sm" onchange="fillStandardDocEmp(this)">
+              <option value="">— Select —</option>${empOpts}
+            </select>
+          </div>
+          <div><label class="text-xs font-semibold">Name</label><input name="employeeName" class="w-full border rounded-lg px-3 py-2 text-sm" required></div>
+          <div><label class="text-xs font-semibold">Employee ID</label><input name="empNo" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+          <div><label class="text-xs font-semibold">Job title</label><input name="jobTitle" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+          <div><label class="text-xs font-semibold">Nationality</label><input name="nationality" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+          <div><label class="text-xs font-semibold">Basic salary</label><input name="basicSalary" type="number" step="0.001" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+          <div><label class="text-xs font-semibold">Total salary</label><input name="totalSalary" type="number" step="0.001" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+          <div><label class="text-xs font-semibold">Join date</label><input name="joiningDate" type="date" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+          <div><label class="text-xs font-semibold">Project / site</label><input name="project" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+          ${type === 'generateInvoiceDoc' ? `
+          <div><label class="text-xs font-semibold">Client / Bill to</label><input name="clientName" class="w-full border rounded-lg px-3 py-2 text-sm" required></div>
+          <div><label class="text-xs font-semibold">Invoice no.</label><input name="invoiceNo" class="w-full border rounded-lg px-3 py-2 text-sm" value="INV-${Date.now().toString().slice(-6)}"></div>
+          <div><label class="text-xs font-semibold">Amount</label><input name="amount" type="number" step="0.001" class="w-full border rounded-lg px-3 py-2 text-sm" required></div>
+          <div><label class="text-xs font-semibold">VAT treatment</label>
+            <select name="vatTag" class="w-full border rounded-lg px-3 py-2 text-sm">
+              <option>Taxable</option><option>Zero-rated</option><option>Exempt</option><option>Not applicable</option>
+            </select>
+          </div>
+          <div class="col-span-2"><label class="text-xs font-semibold">Description of services</label><textarea name="description" rows="2" class="w-full border rounded-lg px-3 py-2 text-sm">Manpower / professional services</textarea></div>
+          ` : `
+          <div class="col-span-2"><label class="text-xs font-semibold">Purpose / notes</label><textarea name="notes" rows="2" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Optional"></textarea></div>
+          `}
+        </div>
+        <div class="flex gap-2 mt-4">
+          <button type="button" onclick="closeModal()" class="flex-1 bg-gray-100 py-2.5 rounded-lg font-semibold text-sm">Cancel</button>
+          <button type="submit" class="flex-1 bg-emerald-600 text-white py-2.5 rounded-lg font-semibold text-sm">Generate Word</button>
+        </div>
+      </form>
+    </div>`;
+  }
+
   else if (type === 'generateContract') {
     const empOpts = data.employees.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
     html = `
@@ -5493,6 +5640,128 @@ function updateDateTime() {
   const now = new Date();
   document.getElementById('currentDateTime').textContent = now.toLocaleString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
+
+
+// -------------------- Letterhead & standard docs --------------------
+function refreshLetterheadThumb() {
+  const img = document.getElementById('lhLogoThumb');
+  const ph = document.getElementById('lhLogoPlaceholder');
+  const name = document.getElementById('lhCompanyThumb');
+  const addr = document.getElementById('lhAddressThumb');
+  if (name) name.textContent = data.companyName || 'Company letterhead';
+  if (addr) addr.textContent = data.companyAddress || data.letterheadFooter || 'Set logo & address for all documents';
+  if (img && data.letterheadLogo) {
+    img.src = data.letterheadLogo;
+    img.classList.remove('hidden');
+    if (ph) ph.classList.add('hidden');
+  } else if (img) {
+    img.classList.add('hidden');
+    if (ph) ph.classList.remove('hidden');
+  }
+}
+window.previewLetterheadLogoFile = function (input) {
+  const f = input.files && input.files[0];
+  if (!f) return;
+  const reader = new FileReader();
+  reader.onload = () => { window._pendingLetterheadLogo = reader.result; showToast('Logo ready — click Save letterhead', 'info'); };
+  reader.readAsDataURL(f);
+};
+window.saveLetterheadSettings = function () {
+  data.companyName = document.getElementById('lhName')?.value?.trim() || data.companyName;
+  data.companyAddress = document.getElementById('lhAddress')?.value?.trim() || '';
+  data.letterheadFooter = document.getElementById('lhFooter')?.value?.trim() || '';
+  if (window._pendingLetterheadLogo) {
+    data.letterheadLogo = window._pendingLetterheadLogo;
+    window._pendingLetterheadLogo = null;
+  }
+  const side = document.getElementById('sidebarCompanyName');
+  if (side) side.textContent = data.companyName;
+  saveData();
+  refreshLetterheadThumb();
+  closeModal();
+  showToast('Letterhead saved', 'success');
+};
+window.fillStandardDocEmp = function (sel) {
+  const e = data.employees.find(x => x.id === sel.value);
+  if (!e) return;
+  const form = sel.closest('form');
+  if (!form) return;
+  const set = (n, v) => { const el = form.querySelector(`[name="${n}"]`); if (el) el.value = v ?? ''; };
+  set('employeeName', e.name);
+  set('empNo', e.id);
+  set('jobTitle', e.title);
+  set('nationality', e.nationality);
+  set('basicSalary', e.basicSalary);
+  set('totalSalary', typeof getTotalSalary === 'function' ? getTotalSalary(e) : e.basicSalary);
+  set('joiningDate', e.joinDate);
+  set('project', e.project);
+};
+window.generateStandardDoc = async function (form, docType) {
+  const fd = new FormData(form);
+  const g = (k) => (fd.get(k) || '').toString();
+  if (typeof docx === 'undefined') { showToast('Word library not loaded', 'error'); return; }
+  const { Document, Packer, Paragraph, TextRun, AlignmentType, ImageRun, Header, Footer, BorderStyle } = docx;
+  const children = [];
+  const company = data.companyName || 'Company';
+  const address = data.companyAddress || '';
+  const footer = data.letterheadFooter || '';
+  const push = (text, opts = {}) => children.push(new Paragraph({
+    alignment: opts.align || AlignmentType.LEFT,
+    spacing: { after: opts.after ?? 120 },
+    children: [new TextRun({ text, bold: !!opts.bold, size: opts.size || 22, font: 'Arial' })]
+  }));
+  push(company, { bold: true, size: 28, align: AlignmentType.CENTER });
+  if (address) push(address, { size: 18, align: AlignmentType.CENTER });
+  if (footer) push(footer, { size: 16, align: AlignmentType.CENTER, after: 200 });
+  push(docType.toUpperCase(), { bold: true, size: 26, align: AlignmentType.CENTER, after: 300 });
+  push(`Date: ${new Date().toLocaleDateString('en-GB')}`, { after: 200 });
+  if (docType === 'Tax Invoice') {
+    push(`Invoice No: ${g('invoiceNo')}`);
+    push(`Bill To: ${g('clientName')}`);
+    push(`Description: ${g('description')}`);
+    push(`Amount: ${currency()} ${g('amount')}`);
+    push(`VAT treatment: ${g('vatTag')}`);
+    push(`Reference staff (if any): ${g('employeeName')} (${g('empNo')})`);
+  } else if (docType === 'Salary Certificate') {
+    push('To Whom It May Concern,');
+    push(`This is to certify that ${g('employeeName')} (ID: ${g('empNo')}), nationality ${g('nationality')}, is employed with ${company} as ${g('jobTitle')} since ${g('joiningDate') || '—'}.`);
+    push(`Current basic salary: ${currency()} ${g('basicSalary')}. Total package (approx.): ${currency()} ${g('totalSalary')}.`);
+    push(`Project / location: ${g('project') || '—'}.`);
+    if (g('notes')) push(`Notes: ${g('notes')}`);
+    push('This certificate is issued upon the employee’s request without any liability on the company.');
+  } else if (docType === 'Exit Clearance Form') {
+    push(`Employee: ${g('employeeName')} (${g('empNo')})`);
+    push(`Title: ${g('jobTitle')} · Project: ${g('project')}`);
+    push('Clearance checklist:');
+    ['HR documents', 'IT / assets returned', 'Accommodation', 'Client site clearance', 'Finance / advances', 'Final settlement'].forEach(x => push(`☐  ${x}`));
+    if (g('notes')) push(`Notes: ${g('notes')}`);
+    push('Authorized signatures: HR _____________  Finance _____________  Admin _____________');
+  } else {
+    push('To Whom It May Concern,');
+    push(`We, ${company}, have no objection regarding ${g('employeeName')} (ID: ${g('empNo')}), ${g('jobTitle')}.`);
+    if (g('notes')) push(g('notes'));
+    else push('This NOC is issued for official purposes as requested.');
+    push('Authorized signatory');
+  }
+  push('');
+  push(`For ${company}`, { bold: true });
+  push(data.hrName || 'HR Department');
+  const doc = new Document({
+    sections: [{
+      properties: {},
+      children
+    }]
+  });
+  const blob = await Packer.toBlob(doc);
+  const safe = (g('employeeName') || g('clientName') || 'doc').replace(/\s+/g, '_');
+  saveAs(blob, `${docType.replace(/\s+/g, '_')}_${safe}.docx`);
+  if (!data.generatedDocs) data.generatedDocs = [];
+  data.generatedDocs.unshift({ type: docType, name: g('employeeName') || g('clientName'), date: new Date().toISOString(), by: currentRole });
+  saveData();
+  try { renderContractsList(); } catch (_) {}
+  closeModal();
+  showToast(docType + ' downloaded', 'success');
+};
 
 // -------------------- Country --------------------
 function ensureCountryOptions() {
