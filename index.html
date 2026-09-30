@@ -196,6 +196,20 @@
     body { background: white !important; }
     .section-content { display: block !important; }
   }
+
+  /* Country dropdown: options must not inherit white text on white panel */
+  #countrySelector {
+    color: #e2e8f0;
+  }
+  #countrySelector option {
+    color: #0f172a;
+    background-color: #ffffff;
+  }
+  .dark #countrySelector option {
+    color: #e2e8f0;
+    background-color: #1e293b;
+  }
+
 </style>
 </head>
 <body class="text-gray-800 antialiased">
@@ -300,9 +314,9 @@
     <div class="p-4 border-b border-white/5">
       <label class="text-[10px] text-slate-400 mb-1.5 block uppercase tracking-wider font-semibold">Country</label>
       <select id="countrySelector" class="w-full bg-white/5 text-white rounded-xl px-3 py-2.5 text-sm border border-white/10 focus:outline-none focus:ring-2 focus:ring-teal-400/50">
-        <option value="KW">KW — Kuwait (KD)</option>
-        <option value="SA">SA — Saudi Arabia (SAR)</option>
-        <option value="AE">AE — UAE (AED)</option>
+        <option value="KW" style="color:#0f172a;background:#fff">KW — Kuwait (KD)</option>
+        <option value="SA" style="color:#0f172a;background:#fff">SA — Saudi Arabia (SAR)</option>
+        <option value="AE" style="color:#0f172a;background:#fff">AE — UAE (AED)</option>
       </select>
     </div>
 
@@ -1388,7 +1402,7 @@ let STORAGE_KEY = (function() {
 
 // ---- Supabase cloud (fill key if empty) ----
 const SUPABASE_URL = 'https://jlhlayydqcsvmmzdypcr.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_N8t3mr2fEUNbGQuV8qThSg_ECIYi7V7'; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
+const SUPABASE_KEY = localStorage.getItem('gcc_supabase_key') || ''; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
 let supabaseClient = null;
 try {
   if (window.supabase && SUPABASE_URL && SUPABASE_KEY) {
@@ -5431,7 +5445,7 @@ function ensureCountryOptions() {
     { v: 'AE', t: 'AE — UAE (AED)' }
   ];
   const cur = sel.value || currentCountry || 'KW';
-  sel.innerHTML = want.map(o => `<option value="${o.v}">${o.t}</option>`).join('');
+  sel.innerHTML = want.map(o => `<option value="${o.v}" style="color:#0f172a;background:#fff">${o.t}</option>`).join('');
   if (![...sel.options].some(o => o.value === cur)) sel.value = 'KW';
   else sel.value = cur;
 }
