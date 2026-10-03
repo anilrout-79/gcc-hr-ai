@@ -254,33 +254,32 @@
         </div>
         <div class="space-y-4">
           <div>
-            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Username</label>
-            <input type="text" id="loginUser" value="admin" autocomplete="username"
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Email</label>
+            <input type="email" id="loginUser" value="" autocomplete="username"
               class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500 outline-none transition"
-              placeholder="admin or user">
+              placeholder="you@company.com">
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Password</label>
-            <input type="password" id="loginPass" value="admin123" autocomplete="current-password"
+            <input type="password" id="loginPass" value="" autocomplete="current-password"
               class="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500 outline-none transition"
-              placeholder="Password">
+              placeholder="Password"
+              onkeydown="if(event.key==='Enter')doCloudLogin()">
           </div>
-          <p class="text-[11px] text-slate-400">Quick access by role</p>
-          <div class="grid grid-cols-3 gap-2.5">
-            <button type="button" onclick="doLogin('admin')"
-              class="bg-slate-900 hover:bg-slate-800 text-white py-3 rounded-xl font-semibold text-xs shadow-sm transition">
-              <i class="fas fa-user-shield mr-1 opacity-80"></i> Admin
-            </button>
-            <button type="button" onclick="doLogin('user')"
-              class="bg-teal-600 hover:bg-teal-500 text-white py-3 rounded-xl font-semibold text-xs shadow-sm shadow-teal-600/20 transition">
-              <i class="fas fa-user mr-1 opacity-80"></i> HR
-            </button>
-            <button type="button" onclick="doLogin('accountant')"
-              class="bg-indigo-600 hover:bg-indigo-500 text-white py-3 rounded-xl font-semibold text-xs shadow-sm shadow-indigo-600/20 transition">
-              <i class="fas fa-calculator mr-1 opacity-80"></i> Finance
-            </button>
-          </div>
-          <p class="text-[10px] text-slate-400 text-center pt-2 leading-relaxed">Demo · admin/admin123 · user/user123 · accounts/acc123</p>
+          <button type="button" id="btnCloudLogin" onclick="doCloudLogin()"
+            class="w-full bg-teal-600 hover:bg-teal-500 text-white py-3 rounded-xl font-semibold text-sm shadow-sm shadow-teal-600/20 transition">
+            <i class="fas fa-cloud mr-1"></i> Sign in to workspace
+          </button>
+          <p class="text-[10px] text-slate-400 text-center">Uses Supabase Auth · role from user_profiles</p>
+          <details class="text-[10px] text-slate-400">
+            <summary class="cursor-pointer hover:text-slate-600">Offline demo login (no cloud)</summary>
+            <div class="grid grid-cols-3 gap-2 mt-2">
+              <button type="button" onclick="doLogin('admin')" class="bg-slate-800 text-white py-2 rounded-lg text-[10px]">Demo Admin</button>
+              <button type="button" onclick="doLogin('user')" class="bg-teal-700 text-white py-2 rounded-lg text-[10px]">Demo HR</button>
+              <button type="button" onclick="doLogin('accountant')" class="bg-indigo-700 text-white py-2 rounded-lg text-[10px]">Demo Finance</button>
+            </div>
+            <p class="mt-1 text-center">admin/admin123 · user/user123 · accounts/acc123</p>
+          </details>
         </div>
       </div>
       <p class="text-center text-[11px] text-slate-400 mt-6">Secure session · Data stays in your Supabase project</p>
@@ -1455,7 +1454,7 @@ let STORAGE_KEY = (function() {
 
 // ---- Supabase cloud (fill key if empty) ----
 const SUPABASE_URL = 'https://jlhlayydqcsvmmzdypcr.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_N8t3mr2fEUNbGQuV8qThSg_ECIYi7V7'; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
+const SUPABASE_KEY = localStorage.getItem('gcc_supabase_key') || ''; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
 let supabaseClient = null;
 try {
   if (window.supabase && SUPABASE_URL && SUPABASE_KEY) {
@@ -6696,23 +6695,105 @@ function resetSessionTimer() {
   document.addEventListener(ev, () => { if (currentRole) resetSessionTimer(); }, { passive: true });
 });
 
+function mapProfileRoleToApp(role) {
+  const r = (role || 'hr').toLowerCase();
+  if (r === 'admin') return 'admin';
+  if (r === 'finance' || r === 'accountant') return 'accountant';
+  return 'user'; // hr, manager, ess
+}
+
+async function doCloudLogin() {
+  if (isLockedOut()) return;
+  const email = (document.getElementById('loginUser').value || '').trim();
+  const pass = document.getElementById('loginPass').value || '';
+  if (!email || !pass) {
+    showToast('Enter email and password', 'warning');
+    return;
+  }
+  if (!supabaseClient) {
+    showToast('Cloud not configured — set Supabase key or use Offline demo login', 'error');
+    return;
+  }
+  const btn = document.getElementById('btnCloudLogin');
+  if (btn) { btn.disabled = true; btn.textContent = 'Signing in…'; }
+  try {
+    const { data: authData, error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
+    if (error) throw error;
+    const uid = authData.user?.id;
+    let profileRole = 'hr';
+    let fullName = authData.user?.email || email;
+    if (uid) {
+      const { data: prof, error: pe } = await supabaseClient
+        .from('user_profiles')
+        .select('role, full_name, is_active, company_key')
+        .eq('id', uid)
+        .maybeSingle();
+      if (pe) console.warn('profile load', pe);
+      if (prof) {
+        if (prof.is_active === false) throw new Error('Account is inactive');
+        profileRole = prof.role || 'hr';
+        fullName = prof.full_name || fullName;
+        if (prof.company_key) {
+          try { localStorage.setItem('gcc_active_company', prof.company_key); } catch (_) {}
+        }
+      } else {
+        showToast('No role in user_profiles — defaulting to HR. Ask admin to set role.', 'warning');
+      }
+    }
+    loginFailCount = 0;
+    sessionStorage.setItem('gcc_fail', '0');
+    sessionStorage.removeItem('gcc_lock_until');
+    currentRole = mapProfileRoleToApp(profileRole);
+    window.currentUserEmail = email;
+    window.currentUserName = fullName;
+    window.currentProfileRole = profileRole;
+    finishLogin();
+  } catch (err) {
+    console.error(err);
+    registerFail();
+    logAudit('login_fail', email + ' ' + (err.message || ''));
+    showToast(err.message || 'Sign-in failed', 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-cloud mr-1"></i> Sign in to workspace'; }
+  }
+}
+
 function doLogin(role) {
+  // Offline demo only
   if (isLockedOut()) return;
   const user = (document.getElementById('loginUser').value || '').trim().toLowerCase();
   const pass = document.getElementById('loginPass').value || '';
   let ok = false;
   if (role === 'admin') {
-    ok = (user === 'admin' && pass === 'admin123');
+    ok = (user === 'admin' && pass === 'admin123') || (!user && pass === 'admin123');
   } else if (role === 'accountant') {
-    ok = ((user === 'accounts' || user === 'accountant') && pass === 'acc123');
+    ok = ((user === 'accounts' || user === 'accountant') && pass === 'acc123') || (!user && pass === 'acc123');
   } else {
-    ok = ((user === 'user' && pass === 'user123') || (user === 'admin' && pass === 'admin123'));
+    ok = ((user === 'user' && pass === 'user123') || (user === 'admin' && pass === 'admin123') || (!user && pass === 'user123'));
+  }
+  // Allow demo buttons without filling user if password matches quick pattern
+  if (!ok && role === 'admin' && (pass === 'admin123' || !pass)) {
+    document.getElementById('loginUser').value = 'admin';
+    document.getElementById('loginPass').value = 'admin123';
+    ok = true;
+  }
+  if (!ok && role === 'user' && (pass === 'user123' || !pass)) {
+    document.getElementById('loginUser').value = 'user';
+    document.getElementById('loginPass').value = 'user123';
+    ok = true;
+  }
+  if (!ok && role === 'accountant' && (pass === 'acc123' || !pass)) {
+    document.getElementById('loginUser').value = 'accounts';
+    document.getElementById('loginPass').value = 'acc123';
+    ok = true;
   }
   if (ok) {
     loginFailCount = 0;
     sessionStorage.setItem('gcc_fail', '0');
     sessionStorage.removeItem('gcc_lock_until');
     currentRole = role === 'admin' ? 'admin' : role === 'accountant' ? 'accountant' : 'user';
+    window.currentUserEmail = null;
+    window.currentProfileRole = currentRole;
     finishLogin();
   } else {
     registerFail();
@@ -6724,19 +6805,44 @@ function finishLogin() {
   applyRolePermissions();
   resetSessionTimer();
   logAudit('login', currentRole);
+  const label = window.currentProfileRole || currentRole;
   const msg = currentRole === 'admin' ? 'Logged in as Admin — full access'
-    : currentRole === 'accountant' ? 'Logged in as Accountant — Finance + HR view'
-    : 'Logged in as HR User — limited access';
-  showToast(msg + ` · Session ${SESSION_MINUTES}min`, 'success');
+    : currentRole === 'accountant' ? 'Logged in as Finance — Finance + HR view'
+    : 'Logged in as HR — limited access';
+  showToast(msg + (window.currentUserEmail ? ' · ' + window.currentUserEmail : '') + ` · Session ${SESSION_MINUTES}min`, 'success');
   if (currentRole === 'accountant') switchSection('accounting');
+  try {
+    const greet = document.getElementById('dashGreeting');
+    if (greet && window.currentUserName) greet.textContent = window.currentUserName.split(' ')[0];
+  } catch (_) {}
 }
-function logout() {
+async function logout() {
   logAudit('logout', currentRole);
   currentRole = null;
+  window.currentUserEmail = null;
+  window.currentProfileRole = null;
   if (sessionTimer) clearTimeout(sessionTimer);
+  try { if (supabaseClient) await supabaseClient.auth.signOut(); } catch (_) {}
   document.getElementById('loginScreen').classList.remove('hidden');
   showToast('Logged out', 'info');
 }
+async function tryRestoreCloudSession() {
+  if (!supabaseClient) return;
+  try {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session?.user) return;
+    const uid = session.user.id;
+    const { data: prof } = await supabaseClient.from('user_profiles').select('role, full_name, is_active').eq('id', uid).maybeSingle();
+    if (prof && prof.is_active === false) return;
+    currentRole = mapProfileRoleToApp(prof?.role || 'hr');
+    window.currentUserEmail = session.user.email;
+    window.currentUserName = prof?.full_name || session.user.email;
+    window.currentProfileRole = prof?.role || 'hr';
+    finishLogin();
+  } catch (e) { console.warn('session restore', e); }
+}
+tryRestoreCloudSession();
+
 function applyRolePermissions() {
   const adminNav = document.querySelector('.sidebar-item[data-section="customfields"]');
   if (adminNav) adminNav.style.display = currentRole === 'admin' ? '' : 'none';
