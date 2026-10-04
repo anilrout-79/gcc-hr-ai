@@ -653,23 +653,50 @@
         <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
           <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
             <div>
-              <h3 class="text-lg font-bold">Leave Management & Balances</h3>
-              <p class="text-sm text-gray-500">Accrual · Balances · Requests (Kuwait 30 days/year)</p>
+              <h3 class="text-lg font-bold">Leave &amp; Approvals</h3>
+              <p class="text-sm text-gray-500">Balances · Requests · Approve / Reject · Cloud sync · <span id="leaveCountryHint">Country rules</span></p>
             </div>
-            <div class="flex gap-2">
-              <button onclick="accrueAllLeave()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-sm font-semibold"><i class="fas fa-sync mr-1"></i> Accrue Annual</button>
-              <button onclick="openModal('applyLeave')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-semibold"><i class="fas fa-plus mr-1"></i> Apply Leave</button>
+            <div class="flex flex-wrap gap-2">
+              <button type="button" onclick="loadLeaveFromSupabase()" class="bg-violet-600 hover:bg-violet-700 text-white px-3 py-2 rounded-lg text-sm font-semibold"><i class="fas fa-cloud-download-alt mr-1"></i> Load DB</button>
+              <button type="button" onclick="syncLeaveToSupabase()" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-2 rounded-lg text-sm font-semibold"><i class="fas fa-cloud-upload-alt mr-1"></i> Sync DB</button>
+              <button type="button" onclick="accrueAllLeave()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-sm font-semibold"><i class="fas fa-sync mr-1"></i> Accrue</button>
+              <button type="button" onclick="openModal('applyLeave')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-semibold"><i class="fas fa-plus mr-1"></i> Apply Leave</button>
             </div>
           </div>
-          <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-5 text-sm">
-            <strong>Kuwait Labour Law No. 6/2010 (Art 70):</strong> Annual leave = <strong>30 days</strong>/year. Accrual ≈ 2.5 days/month after eligibility. Encashable on exit.
+
+          <div id="leaveLawBanner" class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-5 text-sm"></div>
+
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+            <div class="bg-amber-50 border border-amber-100 rounded-xl p-4 text-center">
+              <div class="text-2xl font-black text-amber-700" id="leavePendingCount">0</div>
+              <div class="text-[11px] font-semibold uppercase tracking-wide text-amber-800/80">Pending approval</div>
+            </div>
+            <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-4 text-center">
+              <div class="text-2xl font-black text-emerald-700" id="leaveApprovedCount">0</div>
+              <div class="text-[11px] font-semibold uppercase tracking-wide text-emerald-800/80">Approved</div>
+            </div>
+            <div class="bg-red-50 border border-red-100 rounded-xl p-4 text-center">
+              <div class="text-2xl font-black text-red-600" id="leaveRejectedCount">0</div>
+              <div class="text-[11px] font-semibold uppercase tracking-wide text-red-800/80">Rejected</div>
+            </div>
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-center">
+              <div class="text-2xl font-black text-slate-800" id="leaveTotalCount">0</div>
+              <div class="text-[11px] font-semibold uppercase tracking-wide text-slate-500">All requests</div>
+            </div>
           </div>
-          <h4 class="font-semibold mb-3">Leave Balances</h4>
+
+          <div id="leaveApprovalInbox" class="mb-6 hidden">
+            <h4 class="font-semibold mb-2 flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> Approval inbox</h4>
+            <div id="leaveInboxList" class="space-y-2"></div>
+          </div>
+
+          <h4 class="font-semibold mb-3">Leave balances</h4>
           <div class="overflow-x-auto border rounded-xl mb-6 max-h-72">
             <table class="w-full text-sm">
               <thead class="bg-gray-50 text-xs uppercase text-gray-600">
                 <tr>
                   <th class="text-left px-3 py-2">Employee</th>
+                  <th class="text-left px-3 py-2">ID</th>
                   <th class="text-left px-3 py-2">Entitlement</th>
                   <th class="text-left px-3 py-2">Used</th>
                   <th class="text-left px-3 py-2">Balance</th>
@@ -679,7 +706,15 @@
               <tbody id="leaveBalanceBody"></tbody>
             </table>
           </div>
-          <h4 class="font-semibold mb-3">Leave Requests</h4>
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <h4 class="font-semibold">All leave requests</h4>
+            <select id="leaveStatusFilter" onchange="renderLeaveModule()" class="border rounded-lg px-3 py-1.5 text-sm">
+              <option value="all">All statuses</option>
+              <option value="Pending">Pending</option>
+              <option value="Approved">Approved</option>
+              <option value="Rejected">Rejected</option>
+            </select>
+          </div>
           <div id="leaveList" class="space-y-3"></div>
         </div>
       </section>
@@ -723,6 +758,51 @@
               </thead>
               <tbody id="complianceBody"></tbody>
             </table>
+          </div>
+
+          <div class="mt-8 border-t border-slate-100 pt-6">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+              <div>
+                <h4 class="font-bold text-slate-900"><i class="fas fa-folder-open text-teal-600 mr-2"></i>Document vault</h4>
+                <p class="text-xs text-slate-500">Upload Civil ID, passport, contracts to Supabase Storage · free tier</p>
+              </div>
+              <button type="button" onclick="loadDocVaultFromSupabase()" class="bg-violet-600 hover:bg-violet-700 text-white px-3 py-2 rounded-lg text-sm font-semibold">
+                <i class="fas fa-sync mr-1"></i> Refresh vault
+              </button>
+            </div>
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 mb-4">
+              <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                <div>
+                  <label class="text-xs font-semibold text-slate-500">Employee</label>
+                  <select id="vaultEmpId" class="w-full border rounded-lg px-3 py-2 text-sm mt-1"></select>
+                </div>
+                <div>
+                  <label class="text-xs font-semibold text-slate-500">Document type</label>
+                  <select id="vaultDocType" class="w-full border rounded-lg px-3 py-2 text-sm mt-1">
+                    <option value="civil_id">Civil ID / Emirates ID / Iqama</option>
+                    <option value="passport">Passport</option>
+                    <option value="visa">Visa / Residence</option>
+                    <option value="contract">Employment contract</option>
+                    <option value="medical">Medical</option>
+                    <option value="insurance">Insurance</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="text-xs font-semibold text-slate-500">File</label>
+                  <input type="file" id="vaultFile" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx,.webp" class="w-full text-sm mt-1 border rounded-lg px-2 py-1.5 bg-white"/>
+                </div>
+                <div class="flex items-end">
+                  <button type="button" onclick="uploadDocToVault()" class="w-full bg-teal-600 hover:bg-teal-500 text-white px-3 py-2.5 rounded-lg text-sm font-semibold">
+                    <i class="fas fa-cloud-upload-alt mr-1"></i> Upload to cloud
+                  </button>
+                </div>
+              </div>
+              <p class="text-[10px] text-slate-400 mt-2">Max ~5–10 MB recommended. Sign in with email required (F2 RLS).</p>
+            </div>
+            <div id="vaultFileList" class="space-y-2">
+              <div class="text-center text-gray-400 py-6 text-sm">No files loaded — click Refresh vault or upload</div>
+            </div>
           </div>
         </div>
       </section>
@@ -1454,7 +1534,7 @@ let STORAGE_KEY = (function() {
 
 // ---- Supabase cloud (fill key if empty) ----
 const SUPABASE_URL = 'https://jlhlayydqcsvmmzdypcr.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_N8t3mr2fEUNbGQuV8qThSg_ECIYi7V7'; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
+const SUPABASE_KEY = localStorage.getItem('gcc_supabase_key') || ''; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
 let supabaseClient = null;
 try {
   if (window.supabase && SUPABASE_URL && SUPABASE_KEY) {
@@ -2308,6 +2388,7 @@ function ensureDataShape() {
   if (data.letterheadFooter === undefined) data.letterheadFooter = '';
   if (!Array.isArray(data.projects)) data.projects = [];
   if (!Array.isArray(data.leaveRequests)) data.leaveRequests = [];
+  if (!Array.isArray(data.docFiles)) data.docFiles = [];
   if (!Array.isArray(data.journalEntries)) data.journalEntries = [];
   if (!Array.isArray(data.invoices)) data.invoices = [];
   if (!Array.isArray(data.supplierBills)) data.supplierBills = [];
@@ -2496,7 +2577,7 @@ function switchSection(section) {
   if (section === 'accounting') try { updateAccountingCountryUI(); renderAccounting(); } catch (_) {}
   if (section === 'settings') loadSettingsForm();
   if (section === 'contracts') renderContractsList();
-  if (section === 'compliance') renderCompliance();
+  if (section === 'compliance') { renderCompliance(); try { populateVaultEmployeeSelect(); renderDocVaultList(); } catch(_){} }
   if (section === 'wps') renderWPS();
   if (section === 'leave') renderLeaveModule();
   if (section === 'accounting') renderAccounting();
@@ -4272,14 +4353,27 @@ function openModal(type, payload) {
   }
 
   else if (type === 'applyLeave') {
+    const defL = (typeof getDefaultAnnualLeaveDays === 'function') ? getDefaultAnnualLeaveDays() : 30;
+    const opts = data.employees.map(e => {
+      const bal = (e.leaveEntitlement != null ? e.leaveEntitlement : defL) - (e.leaveUsed || 0);
+      return `<option value="${e.id}" data-name="${(e.name||'').replace(/"/g,'&quot;')}">${e.name} (${e.id}) · bal ${bal}</option>`;
+    }).join('');
     html = `<div class="p-6"><div class="flex justify-between mb-4"><h3 class="text-xl font-bold">Apply Leave</h3><button onclick="closeModal()"><i class="fas fa-times"></i></button></div>
+      <p class="text-xs text-gray-500 mb-3">Request goes to <strong>Pending</strong> until HR/Admin approves. Country: ${currentCountry}.</p>
       <form onsubmit="event.preventDefault(); submitLeaveRequest(this)">
         <div class="space-y-3">
-          <div><label class="text-sm font-semibold">Employee</label><select name="employeeName" required class="w-full border rounded-lg px-3 py-2">${data.employees.map(e=>`<option value="${e.name}">${e.name} (bal: ${(e.leaveEntitlement||30)-(e.leaveUsed||0)})</option>`).join('')}</select></div>
-          <div><label class="text-sm font-semibold">Leave Type</label><select name="type" class="w-full border rounded-lg px-3 py-2"><option>Annual Leave</option><option>Sick Leave</option><option>Emergency</option><option>Maternity</option><option>Hajj</option></select></div>
+          <div>
+            <label class="text-sm font-semibold">Employee</label>
+            <select name="employeeId" required class="w-full border rounded-lg px-3 py-2" onchange="const o=this.selectedOptions[0]; this.form.employeeName.value=o?.dataset?.name||''">
+              <option value="">— Select —</option>${opts}
+            </select>
+            <input type="hidden" name="employeeName" value="">
+          </div>
+          <div><label class="text-sm font-semibold">Leave Type</label><select name="type" class="w-full border rounded-lg px-3 py-2"><option>Annual Leave</option><option>Sick Leave</option><option>Emergency</option><option>Unpaid</option><option>Maternity</option><option>Hajj</option></select></div>
           <div class="grid grid-cols-2 gap-3"><div><label class="text-sm font-semibold">From</label><input type="date" name="from" required class="w-full border rounded-lg px-3 py-2"></div><div><label class="text-sm font-semibold">To</label><input type="date" name="to" required class="w-full border rounded-lg px-3 py-2"></div></div>
+          <div><label class="text-sm font-semibold">Reason (optional)</label><textarea name="reason" rows="2" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="e.g. Family travel"></textarea></div>
         </div>
-        <div class="flex gap-3 mt-5"><button type="button" onclick="closeModal()" class="flex-1 bg-gray-100 py-2 rounded-lg font-semibold">Cancel</button><button type="submit" class="flex-1 bg-emerald-600 text-white py-2 rounded-lg font-semibold">Submit</button></div>
+        <div class="flex gap-3 mt-5"><button type="button" onclick="closeModal()" class="flex-1 bg-gray-100 py-2 rounded-lg font-semibold">Cancel</button><button type="submit" class="flex-1 bg-emerald-600 text-white py-2 rounded-lg font-semibold">Submit for approval</button></div>
       </form></div>`;
   }
 
@@ -5817,11 +5911,12 @@ document.getElementById('countrySelector').addEventListener('change', async (e) 
   if (document.getElementById('calcEmployeeSelect')?.value) calculatePayroll();
   try { if (document.getElementById('settleYears')) calcSettlement(); } catch (_) {}
   showToast(`Switched to ${laborLaws[currentCountry]?.name || currentCountry} · ${complianceMeta.source}`, 'info');
+  try { if (!document.getElementById('leave-section')?.classList.contains('hidden')) renderLeaveModule(); } catch (_) {}
 });
 
 // -------------------- Leave Balances & Accrual --------------------
 function ensureLeaveBalances() {
-  const defaultLeave = (laborLaws[currentCountry] && laborLaws[currentCountry].annualLeaveDays) || 30;
+  const defaultLeave = getDefaultAnnualLeaveDays();
   data.employees.forEach(e => {
     if (e.leaveEntitlement === undefined) e.leaveEntitlement = defaultLeave;
     if (e.leaveUsed === undefined) e.leaveUsed = 0;
@@ -5829,39 +5924,100 @@ function ensureLeaveBalances() {
   });
   if (!Array.isArray(data.leaveRequests)) data.leaveRequests = [];
 }
+function getDefaultAnnualLeaveDays() {
+  const law = laborLaws[currentCountry] || laborLaws.KW;
+  return law.annualLeaveDays || 30;
+}
+
+function updateLeaveLawBanner() {
+  const law = laborLaws[currentCountry] || laborLaws.KW;
+  const days = law.annualLeaveDays || 30;
+  const el = document.getElementById('leaveLawBanner');
+  const hint = document.getElementById('leaveCountryHint');
+  if (hint) hint.textContent = (law.name || currentCountry) + ' · ' + days + ' days annual';
+  if (!el) return;
+  if (currentCountry === 'SA') {
+    el.innerHTML = `<strong>Saudi Arabia:</strong> Annual leave typically <strong>${days} days</strong>/year after qualifying service (confirm contract / Saudi Labour Law). Sick leave and Hajj rules may apply separately.`;
+  } else if (currentCountry === 'AE') {
+    el.innerHTML = `<strong>UAE (Decree-Law 33/2021):</strong> Annual leave typically <strong>${days} calendar days</strong> after 1 year of service. Confirm free-zone handbook if applicable.`;
+  } else {
+    el.innerHTML = `<strong>Kuwait Labour Law No. 6/2010:</strong> Annual leave = <strong>${days} days</strong>/year. Accrual ≈ 2.5 days/month after eligibility. Encashable on exit.`;
+  }
+}
+
 function renderLeaveModule() {
   ensureLeaveBalances();
+  updateLeaveLawBanner();
+  const defDays = getDefaultAnnualLeaveDays();
   const tbody = document.getElementById('leaveBalanceBody');
   if (tbody) {
     tbody.innerHTML = data.employees.map(e => {
-      const bal = (e.leaveEntitlement || 30) - (e.leaveUsed || 0);
+      const ent = e.leaveEntitlement != null ? e.leaveEntitlement : defDays;
+      const bal = ent - (e.leaveUsed || 0);
       return `<tr class="border-b border-gray-100">
         <td class="px-3 py-2 font-semibold">${e.name}</td>
-        <td class="px-3 py-2">${e.leaveEntitlement || 30}</td>
+        <td class="px-3 py-2 text-xs text-gray-500">${e.id || '—'}</td>
+        <td class="px-3 py-2">${ent}</td>
         <td class="px-3 py-2">${e.leaveUsed || 0}</td>
         <td class="px-3 py-2 font-bold ${bal < 5 ? 'text-red-600' : 'text-emerald-600'}">${bal}</td>
         <td class="px-3 py-2">${e.leavePending || 0}</td>
       </tr>`;
-    }).join('') || '<tr><td colspan="5" class="text-center py-6 text-gray-400">No employees</td></tr>';
+    }).join('') || '<tr><td colspan="6" class="text-center py-6 text-gray-400">No employees</td></tr>';
   }
+  const reqs = data.leaveRequests || [];
+  const pending = reqs.filter(r => r.status === 'Pending');
+  const approved = reqs.filter(r => r.status === 'Approved');
+  const rejected = reqs.filter(r => r.status === 'Rejected');
+  const set = (id, n) => { const el = document.getElementById(id); if (el) el.textContent = n; };
+  set('leavePendingCount', pending.length);
+  set('leaveApprovedCount', approved.length);
+  set('leaveRejectedCount', rejected.length);
+  set('leaveTotalCount', reqs.length);
+
+  const inbox = document.getElementById('leaveApprovalInbox');
+  const inboxList = document.getElementById('leaveInboxList');
+  if (inbox && inboxList) {
+    if (pending.length) {
+      inbox.classList.remove('hidden');
+      inboxList.innerHTML = pending.slice().reverse().map(r => `
+        <div class="border border-amber-200 bg-amber-50/50 rounded-xl p-4 flex flex-wrap justify-between items-center gap-2">
+          <div>
+            <div class="font-semibold text-slate-900">${r.employeeName} <span class="text-xs font-normal text-slate-500">${r.employeeId || ''}</span></div>
+            <div class="text-xs text-slate-600 mt-0.5">${r.type} · ${r.from} → ${r.to} · <strong>${r.days}</strong> day(s)</div>
+            ${r.reason ? `<div class="text-xs text-slate-500 mt-1">Reason: ${r.reason}</div>` : ''}
+          </div>
+          <div class="flex items-center gap-2">
+            <button type="button" onclick="decideLeave('${r.id}','Approved')" class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg font-semibold">Approve</button>
+            <button type="button" onclick="decideLeave('${r.id}','Rejected')" class="text-xs bg-white border border-red-200 text-red-600 px-3 py-1.5 rounded-lg font-semibold">Reject</button>
+          </div>
+        </div>`).join('');
+    } else {
+      inbox.classList.add('hidden');
+      inboxList.innerHTML = '';
+    }
+  }
+
   const list = document.getElementById('leaveList');
   if (!list) return;
-  const reqs = data.leaveRequests || [];
-  if (!reqs.length) {
-    list.innerHTML = '<div class="text-center text-gray-400 py-8">No leave requests yet. Click Apply Leave.</div>';
+  const filter = document.getElementById('leaveStatusFilter')?.value || 'all';
+  let shown = reqs.slice().reverse();
+  if (filter !== 'all') shown = shown.filter(r => r.status === filter);
+  if (!shown.length) {
+    list.innerHTML = '<div class="text-center text-gray-400 py-8">No leave requests' + (filter !== 'all' ? ' for this filter' : '. Click Apply Leave.') + '</div>';
     return;
   }
-  list.innerHTML = reqs.slice().reverse().map(r => `
-    <div class="border rounded-xl p-4 flex flex-wrap justify-between items-center gap-2">
+  list.innerHTML = shown.map(r => `
+    <div class="border rounded-xl p-4 flex flex-wrap justify-between items-center gap-2 hover:border-slate-300 transition">
       <div>
-        <div class="font-semibold">${r.employeeName}</div>
-        <div class="text-xs text-gray-500">${r.type} · ${r.from} → ${r.to} · ${r.days} day(s)</div>
+        <div class="font-semibold">${r.employeeName} <span class="text-xs font-normal text-gray-400">${r.employeeId || ''}</span></div>
+        <div class="text-xs text-gray-500">${r.type} · ${r.from} → ${r.to} · ${r.days} day(s)${r.reason ? ' · ' + r.reason : ''}</div>
+        <div class="text-[10px] text-gray-400 mt-1">Requested ${r.created || '—'}${r.decidedBy ? ' · Decided by ' + r.decidedBy : ''}</div>
       </div>
       <div class="flex items-center gap-2">
         <span class="px-2 py-1 rounded-full text-xs font-semibold ${r.status==='Approved'?'bg-emerald-100 text-emerald-700':r.status==='Rejected'?'bg-red-100 text-red-700':'bg-amber-100 text-amber-700'}">${r.status}</span>
         ${r.status==='Pending' ? `
-          <button onclick="decideLeave('${r.id}','Approved')" class="text-xs bg-emerald-600 text-white px-2 py-1 rounded font-semibold">Approve</button>
-          <button onclick="decideLeave('${r.id}','Rejected')" class="text-xs bg-red-100 text-red-600 px-2 py-1 rounded font-semibold">Reject</button>
+          <button type="button" onclick="decideLeave('${r.id}','Approved')" class="text-xs bg-emerald-600 text-white px-2 py-1 rounded font-semibold">Approve</button>
+          <button type="button" onclick="decideLeave('${r.id}','Rejected')" class="text-xs bg-red-100 text-red-600 px-2 py-1 rounded font-semibold">Reject</button>
         ` : ''}
       </div>
     </div>
@@ -5869,19 +6025,22 @@ function renderLeaveModule() {
 }
 function accrueAllLeave() {
   ensureLeaveBalances();
-  // Monthly accrual ~2.5 days (30/12) — simple annual top-up to 30 for demo
+  const days = getDefaultAnnualLeaveDays();
   data.employees.forEach(e => {
-    e.leaveEntitlement = Math.max(e.leaveEntitlement || 0, 30);
+    e.leaveEntitlement = Math.max(e.leaveEntitlement || 0, days);
   });
   saveData();
   renderLeaveModule();
-  showToast('Annual leave entitlement set/confirmed at 30 days (Kuwait Art 70)', 'success');
+  showToast(`Annual leave entitlement set to ${days} days (${(laborLaws[currentCountry]||{}).name || currentCountry})`, 'success');
 }
-function decideLeave(id, status) {
+async function decideLeave(id, status) {
   const r = (data.leaveRequests || []).find(x => x.id === id);
   if (!r) return;
+  if (r.status !== 'Pending') { showToast('Already decided', 'info'); return; }
   r.status = status;
-  const emp = data.employees.find(e => e.name === r.employeeName);
+  r.decidedAt = new Date().toISOString();
+  r.decidedBy = window.currentUserEmail || currentRole || 'manager';
+  const emp = data.employees.find(e => e.id === r.employeeId || e.name === r.employeeName);
   if (emp) {
     if (status === 'Approved') {
       emp.leaveUsed = (emp.leaveUsed || 0) + (r.days || 0);
@@ -5893,19 +6052,25 @@ function decideLeave(id, status) {
   saveData();
   renderLeaveModule();
   showToast(`Leave ${status.toLowerCase()}`, status === 'Approved' ? 'success' : 'warning');
+  try { await upsertLeaveRequestToSupabase(r); } catch (_) {}
 }
 function submitLeaveRequest(form) {
   ensureLeaveBalances();
   const fd = new FormData(form);
-  const name = fd.get('employeeName');
+  const empId = (fd.get('employeeId') || '').toString();
+  const name = (fd.get('employeeName') || '').toString();
   const from = fd.get('from');
   const to = fd.get('to');
   const type = fd.get('type') || 'Annual Leave';
-  if (!name || !from || !to) { showToast('Fill all fields', 'error'); return; }
+  const reason = (fd.get('reason') || '').toString().trim();
+  if ((!name && !empId) || !from || !to) { showToast('Fill all fields', 'error'); return; }
   const days = Math.max(1, Math.ceil((new Date(to) - new Date(from)) / 86400000) + 1);
-  const emp = data.employees.find(e => e.name === name);
+  let emp = empId ? data.employees.find(e => e.id === empId) : data.employees.find(e => e.name === name);
+  if (!emp && name) emp = data.employees.find(e => e.name === name);
+  const defDays = getDefaultAnnualLeaveDays();
   if (emp) {
-    const bal = (emp.leaveEntitlement || 30) - (emp.leaveUsed || 0);
+    const ent = emp.leaveEntitlement != null ? emp.leaveEntitlement : defDays;
+    const bal = ent - (emp.leaveUsed || 0);
     if (type === 'Annual Leave' && days > bal) {
       showToast(`Insufficient balance (${bal} days left)`, 'error');
       return;
@@ -5913,17 +6078,226 @@ function submitLeaveRequest(form) {
     emp.leavePending = (emp.leavePending || 0) + days;
   }
   if (!data.leaveRequests) data.leaveRequests = [];
-  data.leaveRequests.push({
+  const req = {
     id: 'LV-' + Date.now(),
-    employeeName: name,
-    type, from, to, days,
+    employeeId: emp?.id || empId || '',
+    employeeName: emp?.name || name,
+    type, from, to, days, reason,
     status: 'Pending',
-    created: new Date().toISOString().slice(0,10)
-  });
+    created: new Date().toISOString().slice(0,10),
+    country: currentCountry
+  };
+  data.leaveRequests.push(req);
   saveData();
   closeModal();
   renderLeaveModule();
-  showToast('Leave request submitted', 'success');
+  showToast('Leave request submitted — pending approval', 'success');
+  upsertLeaveRequestToSupabase(req).catch(() => {});
+}
+
+async function upsertLeaveRequestToSupabase(r) {
+  if (!supabaseClient) return;
+  const row = {
+    id: r.id,
+    employee_id: r.employeeId || r.employee_id || 'UNKNOWN',
+    employee_name: r.employeeName || r.employee_name,
+    leave_type: r.type || r.leave_type || 'Annual Leave',
+    date_from: r.from || r.date_from,
+    date_to: r.to || r.date_to,
+    days: r.days,
+    reason: r.reason || null,
+    status: r.status || 'Pending',
+    decided_at: r.decidedAt || null,
+    decided_by: r.decidedBy || null,
+    country_code: r.country || currentCountry || 'KW',
+    updated_at: new Date().toISOString()
+  };
+  const { error } = await supabaseClient.from('leave_requests').upsert(row, { onConflict: 'id' });
+  if (error) console.warn('leave upsert', error);
+}
+
+async function syncLeaveToSupabase() {
+  if (!supabaseClient) { showToast('Configure Supabase first', 'error'); return; }
+  const list = data.leaveRequests || [];
+  if (!list.length) { showToast('No leave requests to sync', 'info'); return; }
+  let ok = 0, fail = 0;
+  for (const r of list) {
+    try {
+      await upsertLeaveRequestToSupabase(r);
+      ok++;
+    } catch (e) { fail++; }
+  }
+  showToast(`Leave sync: ${ok} saved` + (fail ? `, ${fail} failed` : ''), fail ? 'warning' : 'success');
+}
+
+async function loadLeaveFromSupabase() {
+  if (!supabaseClient) { showToast('Configure Supabase first', 'error'); return; }
+  const { data: rows, error } = await supabaseClient.from('leave_requests').select('*').order('requested_at', { ascending: false });
+  if (error) {
+    showToast('Load failed — run AHANORA_leave_requests.sql first? ' + (error.message || ''), 'error');
+    return;
+  }
+  data.leaveRequests = (rows || []).map(r => ({
+    id: r.id,
+    employeeId: r.employee_id,
+    employeeName: r.employee_name,
+    type: r.leave_type,
+    from: r.date_from,
+    to: r.date_to,
+    days: Number(r.days) || 1,
+    reason: r.reason || '',
+    status: r.status,
+    created: (r.requested_at || '').toString().slice(0, 10),
+    decidedAt: r.decided_at,
+    decidedBy: r.decided_by,
+    country: r.country_code
+  }));
+  // rebuild pending on employees (simple)
+  data.employees.forEach(e => { e.leavePending = 0; });
+  data.leaveRequests.filter(r => r.status === 'Pending').forEach(r => {
+    const emp = data.employees.find(e => e.id === r.employeeId || e.name === r.employeeName);
+    if (emp) emp.leavePending = (emp.leavePending || 0) + (r.days || 0);
+  });
+  saveData();
+  renderLeaveModule();
+  showToast(`Loaded ${(rows || []).length} leave requests from cloud`, 'success');
+}
+
+
+// -------------------- Document Vault (Supabase Storage) --------------------
+const VAULT_BUCKET = 'employee-docs';
+
+function populateVaultEmployeeSelect() {
+  const sel = document.getElementById('vaultEmpId');
+  if (!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— Select employee —</option>' +
+    (data.employees || []).map(e => `<option value="${e.id}">${e.name} (${e.id})</option>`).join('');
+  if (cur) sel.value = cur;
+}
+
+function renderDocVaultList() {
+  const box = document.getElementById('vaultFileList');
+  if (!box) return;
+  const files = data.docFiles || [];
+  if (!files.length) {
+    box.innerHTML = '<div class="text-center text-gray-400 py-6 text-sm">No files in vault yet</div>';
+    return;
+  }
+  box.innerHTML = files.slice().reverse().map(f => `
+    <div class="border rounded-xl p-3 flex flex-wrap items-center justify-between gap-2 bg-white">
+      <div class="min-w-0">
+        <div class="font-semibold text-sm text-slate-800 truncate">${f.fileName || f.file_name}</div>
+        <div class="text-xs text-slate-500">${f.employeeName || f.employee_name || ''} · ${f.docType || f.doc_type} · ${(f.createdAt || f.created_at || '').toString().slice(0,10)}</div>
+      </div>
+      <div class="flex gap-2">
+        ${f.publicUrl || f.public_url ? `<a href="${f.publicUrl || f.public_url}" target="_blank" rel="noopener" class="text-xs bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg font-semibold">Open</a>` : ''}
+        <button type="button" onclick="deleteDocFromVault('${f.id}')" class="text-xs text-red-600 bg-red-50 px-3 py-1.5 rounded-lg font-semibold">Delete</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function uploadDocToVault() {
+  if (!supabaseClient) { showToast('Configure Supabase key first', 'error'); return; }
+  const empId = document.getElementById('vaultEmpId')?.value;
+  const docType = document.getElementById('vaultDocType')?.value || 'other';
+  const fileInput = document.getElementById('vaultFile');
+  const file = fileInput?.files?.[0];
+  if (!empId) { showToast('Select employee', 'warning'); return; }
+  if (!file) { showToast('Choose a file', 'warning'); return; }
+  const emp = data.employees.find(e => e.id === empId);
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+  const path = `${empId}/${docType}_${Date.now()}_${safeName}`;
+  showToast('Uploading…', 'info');
+  try {
+    const { error: upErr } = await supabaseClient.storage.from(VAULT_BUCKET).upload(path, file, {
+      cacheControl: '3600',
+      upsert: false
+    });
+    if (upErr) throw upErr;
+    const { data: pub } = supabaseClient.storage.from(VAULT_BUCKET).getPublicUrl(path);
+    const publicUrl = pub?.publicUrl || '';
+    const id = 'DOCFILE-' + Date.now();
+    const row = {
+      id,
+      employee_id: empId,
+      employee_name: emp?.name || '',
+      doc_type: docType,
+      file_name: file.name,
+      storage_path: path,
+      public_url: publicUrl,
+      file_size: file.size,
+      mime_type: file.type || null,
+      uploaded_by: window.currentUserEmail || currentRole || 'user'
+    };
+    const { error: dbErr } = await supabaseClient.from('doc_files').upsert(row, { onConflict: 'id' });
+    if (dbErr) console.warn('doc_files meta', dbErr);
+    if (!data.docFiles) data.docFiles = [];
+    data.docFiles.push({
+      id,
+      employeeId: empId,
+      employeeName: emp?.name || '',
+      docType,
+      fileName: file.name,
+      storagePath: path,
+      publicUrl,
+      createdAt: new Date().toISOString()
+    });
+    saveData();
+    if (fileInput) fileInput.value = '';
+    renderDocVaultList();
+    showToast('File uploaded to vault', 'success');
+  } catch (err) {
+    console.error(err);
+    const msg = err.message || String(err);
+    if (/bucket|not found|404/i.test(msg)) {
+      showToast('Create Storage bucket "employee-docs" in Supabase (see F4 steps)', 'error');
+    } else if (/row-level security|JWT|policy/i.test(msg)) {
+      showToast('Sign in with email first (F2). Check Storage policies.', 'error');
+    } else {
+      showToast('Upload failed: ' + msg, 'error');
+    }
+  }
+}
+
+async function loadDocVaultFromSupabase() {
+  if (!supabaseClient) { showToast('Configure Supabase first', 'error'); return; }
+  try {
+    const { data: rows, error } = await supabaseClient.from('doc_files').select('*').order('created_at', { ascending: false });
+    if (error) throw error;
+    data.docFiles = (rows || []).map(r => ({
+      id: r.id,
+      employeeId: r.employee_id,
+      employeeName: r.employee_name,
+      docType: r.doc_type,
+      fileName: r.file_name,
+      storagePath: r.storage_path,
+      publicUrl: r.public_url,
+      createdAt: r.created_at
+    }));
+    saveData();
+    renderDocVaultList();
+    showToast(`Vault: ${(rows || []).length} file(s)`, 'success');
+  } catch (err) {
+    showToast('Refresh failed — run AHANORA_document_vault.sql? ' + (err.message || ''), 'error');
+  }
+}
+
+async function deleteDocFromVault(id) {
+  if (!confirm('Delete this file from vault?')) return;
+  const f = (data.docFiles || []).find(x => x.id === id);
+  if (!f) return;
+  try {
+    if (supabaseClient && (f.storagePath || f.storage_path)) {
+      await supabaseClient.storage.from(VAULT_BUCKET).remove([f.storagePath || f.storage_path]);
+      await supabaseClient.from('doc_files').delete().eq('id', id);
+    }
+  } catch (e) { console.warn(e); }
+  data.docFiles = (data.docFiles || []).filter(x => x.id !== id);
+  saveData();
+  renderDocVaultList();
+  showToast('Deleted', 'info');
 }
 
 // -------------------- Document Expiry / Compliance --------------------
