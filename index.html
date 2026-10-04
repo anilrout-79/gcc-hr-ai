@@ -248,18 +248,32 @@
   }
   @keyframes sectionFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
-  /* Login */
+  /* Login — must fully cover app until signed in */
   #loginScreen {
-    background: #060a12 !important;
+    position: fixed !important;
+    inset: 0 !important;
+    top: 0 !important; right: 0 !important; bottom: 0 !important; left: 0 !important;
+    z-index: 400 !important;
+    width: 100% !important;
+    height: 100% !important;
+    min-height: 100vh !important;
+    min-height: 100dvh !important;
+    display: flex !important;
+    background: #030712 !important;
+    overflow: auto;
+  }
+  #loginScreen.hidden {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
   }
   #loginScreen > div {
-    min-height: 100vh;
+    min-height: 100%;
   }
   #loginScreen .bg-slate-50 {
     background: linear-gradient(165deg, #f8fafc 0%, #f1f5f9 50%, #ecfdf5 100%) !important;
   }
-
-  /* Compact mode */
+/* Compact mode */
   body.compact .sidebar-item { padding-top: 0.35rem !important; padding-bottom: 0.35rem !important; font-size: 0.75rem; }
 
   /* Print */
@@ -345,6 +359,9 @@
 
   /* Login left — richer mesh */
   #loginScreen {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 400 !important;
     background: #030712 !important;
   }
   #loginBrandPanel {
@@ -1817,7 +1834,7 @@ let STORAGE_KEY = (function() {
 
 // ---- Supabase cloud (fill key if empty) ----
 const SUPABASE_URL = 'https://jlhlayydqcsvmmzdypcr.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_N8t3mr2fEUNbGQuV8qThSg_ECIYi7V7'; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
+const SUPABASE_KEY = localStorage.getItem('gcc_supabase_key') || ''; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
 let supabaseClient = null;
 try {
   if (window.supabase && SUPABASE_URL && SUPABASE_KEY) {
@@ -7725,7 +7742,8 @@ function resetSessionTimer() {
   sessionTimer = setTimeout(() => {
     logAudit('session_timeout', '');
     currentRole = null;
-    document.getElementById('loginScreen').classList.remove('hidden');
+    const ls = document.getElementById('loginScreen');
+    if (ls) { ls.classList.remove('hidden'); ls.style.display = 'flex'; }
     showToast('Session expired — please login again', 'warning');
   }, SESSION_MINUTES * 60 * 1000);
 }
@@ -7840,7 +7858,11 @@ function doLogin(role) {
   }
 }
 function finishLogin() {
-  document.getElementById('loginScreen').classList.add('hidden');
+  const ls = document.getElementById('loginScreen');
+  if (ls) {
+    ls.classList.add('hidden');
+    ls.style.display = 'none';
+  }
   applyRolePermissions();
   resetSessionTimer();
   logAudit('login', currentRole);
@@ -7862,7 +7884,11 @@ async function logout() {
   window.currentProfileRole = null;
   if (sessionTimer) clearTimeout(sessionTimer);
   try { if (supabaseClient) await supabaseClient.auth.signOut(); } catch (_) {}
-  document.getElementById('loginScreen').classList.remove('hidden');
+  const ls = document.getElementById('loginScreen');
+  if (ls) {
+    ls.classList.remove('hidden');
+    ls.style.display = 'flex';
+  }
   showToast('Logged out', 'info');
 }
 async function tryRestoreCloudSession() {
