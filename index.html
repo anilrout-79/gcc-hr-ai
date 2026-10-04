@@ -53,6 +53,7 @@
 
   /* —— Sidebar —— */
   #appSidebar {
+    position: relative !important;
     background: linear-gradient(175deg, #070b14 0%, #0c1424 40%, #0d1f24 100%);
     border-right: 1px solid rgba(255,255,255,0.06);
     box-shadow: 8px 0 40px rgba(0,0,0,0.18);
@@ -319,6 +320,8 @@
 
   /* Sidebar depth */
   #appSidebar {
+    position: relative !important;
+    overflow: hidden;
     background:
       radial-gradient(ellipse 120% 80% at 0% 0%, rgba(45,212,191,0.12), transparent 50%),
       linear-gradient(175deg, #05080f 0%, #0a1220 45%, #0c1c22 100%) !important;
@@ -327,8 +330,10 @@
     content: '';
     pointer-events: none;
     position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, transparent 70%, rgba(0,0,0,0.25));
+    left: 0; right: 0; top: 0; bottom: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(180deg, transparent 70%, rgba(0,0,0,0.2));
     z-index: 0;
   }
   #appSidebar > * { position: relative; z-index: 1; }
@@ -1812,7 +1817,7 @@ let STORAGE_KEY = (function() {
 
 // ---- Supabase cloud (fill key if empty) ----
 const SUPABASE_URL = 'https://jlhlayydqcsvmmzdypcr.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_N8t3mr2fEUNbGQuV8qThSg_ECIYi7V7'; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
+const SUPABASE_KEY = localStorage.getItem('gcc_supabase_key') || ''; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
 let supabaseClient = null;
 try {
   if (window.supabase && SUPABASE_URL && SUPABASE_KEY) {
