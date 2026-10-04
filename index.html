@@ -439,6 +439,26 @@
     letter-spacing: 0.04em;
   }
 
+
+  /* Auth gate: never show app + login together */
+  body:not(.is-authenticated) #appShell {
+    display: none !important;
+  }
+  body.is-authenticated #loginScreen {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+  }
+  body:not(.is-authenticated) #loginScreen {
+    display: flex !important;
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 400 !important;
+  }
+  body.is-authenticated #appShell {
+    display: flex !important;
+  }
+
 </style>
 </head>
 <body class="text-gray-800 antialiased">
@@ -528,7 +548,7 @@
   <div id="modalContent" class="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[92vh] overflow-y-auto"></div>
 </div>
 
-<div class="flex h-screen overflow-hidden">
+<div id="appShell" class="flex h-screen overflow-hidden hidden">
   <!-- SIDEBAR -->
   <aside id="appSidebar" class="w-64 text-white flex flex-col flex-shrink-0">
     <div class="p-5 border-b border-white/5">
@@ -1834,7 +1854,7 @@ let STORAGE_KEY = (function() {
 
 // ---- Supabase cloud (fill key if empty) ----
 const SUPABASE_URL = 'https://jlhlayydqcsvmmzdypcr.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_N8t3mr2fEUNbGQuV8qThSg_ECIYi7V7'; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
+const SUPABASE_KEY = localStorage.getItem('gcc_supabase_key') || ''; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
 let supabaseClient = null;
 try {
   if (window.supabase && SUPABASE_URL && SUPABASE_KEY) {
@@ -7742,8 +7762,11 @@ function resetSessionTimer() {
   sessionTimer = setTimeout(() => {
     logAudit('session_timeout', '');
     currentRole = null;
+    document.body.classList.remove('is-authenticated');
     const ls = document.getElementById('loginScreen');
     if (ls) { ls.classList.remove('hidden'); ls.style.display = 'flex'; }
+    const shell = document.getElementById('appShell');
+    if (shell) { shell.classList.add('hidden'); shell.style.display = 'none'; }
     showToast('Session expired — please login again', 'warning');
   }, SESSION_MINUTES * 60 * 1000);
 }
@@ -7858,10 +7881,16 @@ function doLogin(role) {
   }
 }
 function finishLogin() {
+  document.body.classList.add('is-authenticated');
   const ls = document.getElementById('loginScreen');
   if (ls) {
     ls.classList.add('hidden');
     ls.style.display = 'none';
+  }
+  const shell = document.getElementById('appShell');
+  if (shell) {
+    shell.classList.remove('hidden');
+    shell.style.display = 'flex';
   }
   applyRolePermissions();
   resetSessionTimer();
@@ -7884,10 +7913,16 @@ async function logout() {
   window.currentProfileRole = null;
   if (sessionTimer) clearTimeout(sessionTimer);
   try { if (supabaseClient) await supabaseClient.auth.signOut(); } catch (_) {}
+  document.body.classList.remove('is-authenticated');
   const ls = document.getElementById('loginScreen');
   if (ls) {
     ls.classList.remove('hidden');
     ls.style.display = 'flex';
+  }
+  const shell = document.getElementById('appShell');
+  if (shell) {
+    shell.classList.add('hidden');
+    shell.style.display = 'none';
   }
   showToast('Logged out', 'info');
 }
