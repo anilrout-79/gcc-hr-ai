@@ -643,13 +643,47 @@
       <!-- ==================== ATTENDANCE ==================== -->
       <section id="attendance-section" class="section-content hidden">
         <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
-          <h3 class="text-lg font-bold mb-4">Attendance Overview</h3>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div class="bg-emerald-50 rounded-xl p-5 text-center"><div class="text-3xl font-bold text-emerald-600" id="attPresent">0</div><div class="text-sm text-gray-600">Present</div></div>
-            <div class="bg-red-50 rounded-xl p-5 text-center"><div class="text-3xl font-bold text-red-600" id="attAbsent">0</div><div class="text-sm text-gray-600">Absent</div></div>
-            <div class="bg-amber-50 rounded-xl p-5 text-center"><div class="text-3xl font-bold text-amber-600" id="attLeave">0</div><div class="text-sm text-gray-600">On Leave</div></div>
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+            <div>
+              <h3 class="text-lg font-bold">Daily Attendance</h3>
+              <p class="text-sm text-gray-500">Mark status by date · OT hours · Sync to Postgres (F5)</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+              <button type="button" onclick="loadAttendanceFromSupabase()" class="bg-violet-600 hover:bg-violet-700 text-white px-3 py-2 rounded-lg text-sm font-semibold"><i class="fas fa-cloud-download-alt mr-1"></i> Load DB</button>
+              <button type="button" onclick="syncAttendanceToSupabase()" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-2 rounded-lg text-sm font-semibold"><i class="fas fa-cloud-upload-alt mr-1"></i> Sync DB</button>
+              <button type="button" onclick="markAllAttendancePresent()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-sm font-semibold"><i class="fas fa-check-double mr-1"></i> All Present</button>
+              <button type="button" onclick="saveAttendanceDay()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-sm font-semibold"><i class="fas fa-save mr-1"></i> Save day</button>
+            </div>
           </div>
-          <p class="text-sm text-gray-500">Status is managed from the Employees module. Change an employee’s status to update attendance instantly.</p>
+          <div class="flex flex-wrap gap-3 mb-4 items-end">
+            <div>
+              <label class="text-xs font-semibold text-gray-600">Work date</label>
+              <input type="date" id="attWorkDate" class="border rounded-lg px-3 py-2 text-sm block mt-1" onchange="renderAttendance()">
+            </div>
+            <div class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-600">
+              Sign in with email before Sync/Load (F2 RLS). One row per employee per day.
+            </div>
+          </div>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+            <div class="bg-emerald-50 rounded-xl p-4 text-center border border-emerald-100"><div class="text-2xl font-bold text-emerald-600" id="attPresent">0</div><div class="text-xs text-gray-600">Present</div></div>
+            <div class="bg-red-50 rounded-xl p-4 text-center border border-red-100"><div class="text-2xl font-bold text-red-600" id="attAbsent">0</div><div class="text-xs text-gray-600">Absent</div></div>
+            <div class="bg-amber-50 rounded-xl p-4 text-center border border-amber-100"><div class="text-2xl font-bold text-amber-600" id="attLeave">0</div><div class="text-xs text-gray-600">On Leave</div></div>
+            <div class="bg-indigo-50 rounded-xl p-4 text-center border border-indigo-100"><div class="text-2xl font-bold text-indigo-600" id="attOtHours">0</div><div class="text-xs text-gray-600">OT hours</div></div>
+          </div>
+          <div class="overflow-x-auto border rounded-xl max-h-[480px]">
+            <table class="w-full text-sm">
+              <thead class="bg-gray-50 text-xs uppercase text-gray-600 sticky top-0">
+                <tr>
+                  <th class="text-left px-3 py-2">Employee</th>
+                  <th class="text-left px-3 py-2">Project</th>
+                  <th class="text-left px-3 py-2">Status</th>
+                  <th class="text-left px-3 py-2">OT (hrs)</th>
+                  <th class="text-left px-3 py-2">Notes</th>
+                </tr>
+              </thead>
+              <tbody id="attendanceTableBody"></tbody>
+            </table>
+          </div>
         </div>
       </section>
 
@@ -1572,7 +1606,7 @@ let STORAGE_KEY = (function() {
 
 // ---- Supabase cloud (fill key if empty) ----
 const SUPABASE_URL = 'https://jlhlayydqcsvmmzdypcr.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_N8t3mr2fEUNbGQuV8qThSg_ECIYi7V7'; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
+const SUPABASE_KEY = localStorage.getItem('gcc_supabase_key') || ''; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
 let supabaseClient = null;
 try {
   if (window.supabase && SUPABASE_URL && SUPABASE_KEY) {
@@ -2428,6 +2462,7 @@ function ensureDataShape() {
   if (!Array.isArray(data.leaveRequests)) data.leaveRequests = [];
   if (!Array.isArray(data.docFiles)) data.docFiles = [];
   if (!data.payrollLocks || typeof data.payrollLocks !== 'object') data.payrollLocks = {};
+  if (!Array.isArray(data.attendanceLogs)) data.attendanceLogs = [];
   if (!Array.isArray(data.journalEntries)) data.journalEntries = [];
   if (!Array.isArray(data.invoices)) data.invoices = [];
   if (!Array.isArray(data.supplierBills)) data.supplierBills = [];
@@ -2899,11 +2934,179 @@ function renderProjects() {
 }
 
 // -------------------- Attendance & Payroll Summary --------------------
-function renderAttendance() {
-  document.getElementById('attPresent').textContent = data.employees.filter(e => e.status === 'Present').length;
-  document.getElementById('attAbsent').textContent = data.employees.filter(e => e.status === 'Absent').length;
-  document.getElementById('attLeave').textContent = data.employees.filter(e => e.status === 'On Leave').length;
+function getAttWorkDate() {
+  const el = document.getElementById('attWorkDate');
+  if (el && el.value) return el.value;
+  const d = new Date().toISOString().slice(0, 10);
+  if (el) el.value = d;
+  return d;
 }
+function attLogKey(date, empId) {
+  return date + '|' + empId;
+}
+function getAttendanceForDay(date) {
+  if (!data.attendanceLogs) data.attendanceLogs = [];
+  return data.attendanceLogs.filter(r => r.workDate === date);
+}
+function ensureAttendanceRowsForDay(date) {
+  if (!data.attendanceLogs) data.attendanceLogs = [];
+  const existing = new Set(getAttendanceForDay(date).map(r => r.employeeId));
+  (data.employees || []).forEach(e => {
+    if (existing.has(e.id)) return;
+    // default from employee status if sensible
+    let st = 'Present';
+    if (e.status === 'Absent') st = 'Absent';
+    if (e.status === 'On Leave') st = 'On Leave';
+    data.attendanceLogs.push({
+      id: 'ATT-' + date + '-' + e.id,
+      workDate: date,
+      employeeId: e.id,
+      employeeName: e.name,
+      status: st,
+      overtimeHours: 0,
+      project: e.project || '',
+      notes: '',
+      country: currentCountry
+    });
+  });
+}
+function renderAttendance() {
+  const date = getAttWorkDate();
+  ensureAttendanceRowsForDay(date);
+  const rows = getAttendanceForDay(date);
+  const present = rows.filter(r => r.status === 'Present' || r.status === 'Half Day').length;
+  const absent = rows.filter(r => r.status === 'Absent').length;
+  const leave = rows.filter(r => r.status === 'On Leave').length;
+  const ot = rows.reduce((s, r) => s + (parseFloat(r.overtimeHours) || 0), 0);
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set('attPresent', present);
+  set('attAbsent', absent);
+  set('attLeave', leave);
+  set('attOtHours', ot.toFixed(1));
+  const tbody = document.getElementById('attendanceTableBody');
+  if (!tbody) return;
+  const statusOpts = ['Present', 'Absent', 'On Leave', 'Half Day', 'Holiday', 'Off'];
+  tbody.innerHTML = rows.map(r => {
+    const opts = statusOpts.map(s => `<option value="${s}" ${r.status === s ? 'selected' : ''}>${s}</option>`).join('');
+    return `<tr class="border-b border-gray-100 hover:bg-gray-50">
+      <td class="px-3 py-2 font-semibold">${r.employeeName || ''}<div class="text-xs text-gray-400">${r.employeeId}</div></td>
+      <td class="px-3 py-2 text-xs">${r.project || '—'}</td>
+      <td class="px-3 py-2">
+        <select class="border rounded-lg px-2 py-1 text-xs" onchange="updateAttendanceField('${r.id}','status',this.value)">${opts}</select>
+      </td>
+      <td class="px-3 py-2">
+        <input type="number" step="0.5" min="0" max="24" value="${r.overtimeHours || 0}" class="w-20 border rounded-lg px-2 py-1 text-xs"
+          onchange="updateAttendanceField('${r.id}','overtimeHours',this.value)">
+      </td>
+      <td class="px-3 py-2">
+        <input type="text" value="${(r.notes || '').replace(/"/g, '&quot;')}" class="w-full border rounded-lg px-2 py-1 text-xs"
+          onchange="updateAttendanceField('${r.id}','notes',this.value)" placeholder="—">
+      </td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="5" class="text-center py-8 text-gray-400">No employees</td></tr>';
+}
+function updateAttendanceField(id, field, value) {
+  const r = (data.attendanceLogs || []).find(x => x.id === id);
+  if (!r) return;
+  if (field === 'overtimeHours') r.overtimeHours = parseFloat(value) || 0;
+  else r[field] = value;
+  // mirror status onto employee for dashboard compatibility
+  if (field === 'status') {
+    const emp = data.employees.find(e => e.id === r.employeeId);
+    if (emp && (value === 'Present' || value === 'Absent' || value === 'On Leave')) emp.status = value;
+  }
+  saveData();
+  // light KPI refresh without full redraw of inputs focus loss - recount only
+  const date = r.workDate;
+  const rows = getAttendanceForDay(date);
+  document.getElementById('attPresent').textContent = rows.filter(x => x.status === 'Present' || x.status === 'Half Day').length;
+  document.getElementById('attAbsent').textContent = rows.filter(x => x.status === 'Absent').length;
+  document.getElementById('attLeave').textContent = rows.filter(x => x.status === 'On Leave').length;
+  document.getElementById('attOtHours').textContent = rows.reduce((s, x) => s + (parseFloat(x.overtimeHours) || 0), 0).toFixed(1);
+}
+function markAllAttendancePresent() {
+  const date = getAttWorkDate();
+  ensureAttendanceRowsForDay(date);
+  getAttendanceForDay(date).forEach(r => {
+    r.status = 'Present';
+    const emp = data.employees.find(e => e.id === r.employeeId);
+    if (emp) emp.status = 'Present';
+  });
+  saveData();
+  renderAttendance();
+  showToast('All marked Present for ' + date, 'success');
+}
+function saveAttendanceDay() {
+  saveData();
+  showToast('Attendance saved locally — use Sync DB for Postgres', 'success');
+  syncAttendanceToSupabase();
+}
+async function upsertAttendanceRowToSupabase(r) {
+  if (!supabaseClient) return;
+  const row = {
+    id: r.id,
+    work_date: r.workDate || r.work_date,
+    employee_id: r.employeeId || r.employee_id,
+    employee_name: r.employeeName || r.employee_name,
+    status: r.status || 'Present',
+    overtime_hours: r.overtimeHours != null ? r.overtimeHours : (r.overtime_hours || 0),
+    project: r.project || null,
+    notes: r.notes || null,
+    country_code: r.country || currentCountry || 'KW',
+    recorded_by: window.currentUserEmail || currentRole || null,
+    updated_at: new Date().toISOString()
+  };
+  const { error } = await supabaseClient.from('attendance_logs').upsert(row, { onConflict: 'id' });
+  if (error) throw error;
+}
+async function syncAttendanceToSupabase() {
+  if (!supabaseClient) { showToast('Configure Supabase / sign in first', 'error'); return; }
+  const date = getAttWorkDate();
+  ensureAttendanceRowsForDay(date);
+  const rows = getAttendanceForDay(date);
+  let ok = 0, fail = 0;
+  for (const r of rows) {
+    try { await upsertAttendanceRowToSupabase(r); ok++; }
+    catch (e) { console.warn(e); fail++; }
+  }
+  showToast('Attendance sync ' + date + ': ' + ok + ' saved' + (fail ? ', ' + fail + ' failed (run SQL + sign in?)' : ''), fail ? 'warning' : 'success');
+}
+async function loadAttendanceFromSupabase() {
+  if (!supabaseClient) { showToast('Configure Supabase / sign in first', 'error'); return; }
+  const date = getAttWorkDate();
+  try {
+    const { data: rows, error } = await supabaseClient
+      .from('attendance_logs')
+      .select('*')
+      .eq('work_date', date);
+    if (error) throw error;
+    if (!data.attendanceLogs) data.attendanceLogs = [];
+    // remove local rows for that date then merge
+    data.attendanceLogs = data.attendanceLogs.filter(r => r.workDate !== date);
+    (rows || []).forEach(r => {
+      data.attendanceLogs.push({
+        id: r.id,
+        workDate: r.work_date,
+        employeeId: r.employee_id,
+        employeeName: r.employee_name,
+        status: r.status,
+        overtimeHours: Number(r.overtime_hours) || 0,
+        project: r.project || '',
+        notes: r.notes || '',
+        country: r.country_code
+      });
+      const emp = data.employees.find(e => e.id === r.employee_id);
+      if (emp && (r.status === 'Present' || r.status === 'Absent' || r.status === 'On Leave')) emp.status = r.status;
+    });
+    ensureAttendanceRowsForDay(date);
+    saveData();
+    renderAttendance();
+    showToast('Loaded ' + (rows || []).length + ' attendance row(s) for ' + date, 'success');
+  } catch (err) {
+    showToast('Load failed — run AHANORA_attendance.sql + sign in? ' + (err.message || ''), 'error');
+  }
+}
+
 function renderPayrollSummary() {
   const projSel = document.getElementById('payrollProjectFilter');
   if (projSel && projSel.options.length <= 1) {
