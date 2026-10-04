@@ -874,10 +874,15 @@
             </div>
             <div>
               <label class="text-xs font-semibold text-gray-600">Pay Period</label>
-              <input type="month" id="payrollPeriod" class="border rounded-lg px-3 py-2 text-sm block mt-1" onchange="renderPayrollSummary()">
+              <input type="month" id="payrollPeriod" class="border rounded-lg px-3 py-2 text-sm block mt-1" onchange="renderPayrollSummary(); updatePayrollLockUI()">
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <span id="payrollLockBadge" class="text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-slate-100 text-slate-600">Period unlocked</span>
+              <button type="button" id="btnLockPeriod" onclick="lockPayrollPeriod()" class="text-xs bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-lg font-semibold"><i class="fas fa-lock mr-1"></i>Lock period</button>
+              <button type="button" id="btnUnlockPeriod" onclick="unlockPayrollPeriod()" class="text-xs bg-amber-100 text-amber-900 px-3 py-1.5 rounded-lg font-semibold hidden"><i class="fas fa-lock-open mr-1"></i>Unlock</button>
             </div>
             <div class="bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-800">
-              <i class="fas fa-info-circle mr-1"></i> Bulk run creates payslip records + optional post to Accounting. Email opens your mail client (mailto) with payslip text — for true auto-send connect SMTP later.
+              <i class="fas fa-info-circle mr-1"></i> <strong>F6:</strong> Lock a period after payroll so it cannot be run again. Admin can unlock if a correction is needed.
             </div>
           </div>
           <div class="overflow-x-auto border rounded-xl max-h-96">
@@ -1534,7 +1539,7 @@ let STORAGE_KEY = (function() {
 
 // ---- Supabase cloud (fill key if empty) ----
 const SUPABASE_URL = 'https://jlhlayydqcsvmmzdypcr.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_N8t3mr2fEUNbGQuV8qThSg_ECIYi7V7'; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
+const SUPABASE_KEY = localStorage.getItem('gcc_supabase_key') || ''; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
 let supabaseClient = null;
 try {
   if (window.supabase && SUPABASE_URL && SUPABASE_KEY) {
@@ -2389,6 +2394,7 @@ function ensureDataShape() {
   if (!Array.isArray(data.projects)) data.projects = [];
   if (!Array.isArray(data.leaveRequests)) data.leaveRequests = [];
   if (!Array.isArray(data.docFiles)) data.docFiles = [];
+  if (!data.payrollLocks || typeof data.payrollLocks !== 'object') data.payrollLocks = {};
   if (!Array.isArray(data.journalEntries)) data.journalEntries = [];
   if (!Array.isArray(data.invoices)) data.invoices = [];
   if (!Array.isArray(data.supplierBills)) data.supplierBills = [];
@@ -2571,7 +2577,7 @@ function switchSection(section) {
   if (section === 'mobilization') renderMobilizations();
   if (section === 'projects') renderProjects();
   if (section === 'attendance') renderAttendance();
-  if (section === 'payroll') { renderPayrollSummary(); try { renderPayrollRunsHistory(); } catch (_) {} }
+  if (section === 'payroll') { renderPayrollSummary(); try { renderPayrollRunsHistory(); updatePayrollLockUI(); } catch (_) {} }
   if (section === 'vat') try { updateVatNotes(); } catch (_) {}
   if (section === 'contracts') try { refreshLetterheadThumb(); } catch (_) {}
   if (section === 'accounting') try { updateAccountingCountryUI(); renderAccounting(); } catch (_) {}
@@ -2992,10 +2998,112 @@ function emailAllPayslips() {
   emailPayslip(emps[0].id);
   logAudit('email_payslips_batch', `${emps.length} employees`);
 }
+function getSelectedPayrollPeriod() {
+  return document.getElementById('payrollPeriod')?.value || new Date().toISOString().slice(0, 7);
+}
+function isPayrollPeriodLocked(period) {
+  if (!data.payrollLocks) data.payrollLocks = {};
+  const p = period || getSelectedPayrollPeriod();
+  return !!(data.payrollLocks[p] && data.payrollLocks[p].locked);
+}
+function updatePayrollLockUI() {
+  const period = getSelectedPayrollPeriod();
+  const locked = isPayrollPeriodLocked(period);
+  const badge = document.getElementById('payrollLockBadge');
+  const btnL = document.getElementById('btnLockPeriod');
+  const btnU = document.getElementById('btnUnlockPeriod');
+  const runBtn = document.querySelector('button[onclick="runBulkPayroll()"]');
+  if (badge) {
+    if (locked) {
+      const info = data.payrollLocks[period] || {};
+      badge.className = 'text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-red-100 text-red-800';
+      badge.innerHTML = `<i class="fas fa-lock mr-1"></i>LOCKED ${period}` + (info.lockedBy ? ` · ${info.lockedBy}` : '');
+    } else {
+      badge.className = 'text-xs font-semibold px-2.5 py-1.5 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-100';
+      badge.innerHTML = `<i class="fas fa-lock-open mr-1"></i>Unlocked ${period}`;
+    }
+  }
+  if (btnL) btnL.classList.toggle('hidden', locked);
+  if (btnU) btnU.classList.toggle('hidden', !locked);
+  if (runBtn) {
+    runBtn.disabled = locked;
+    runBtn.classList.toggle('opacity-50', locked);
+    runBtn.classList.toggle('cursor-not-allowed', locked);
+    runBtn.title = locked ? 'Period is locked — unlock to re-run' : 'Run bulk payroll';
+  }
+}
+function lockPayrollPeriod() {
+  if (currentRole === 'user') {
+    showToast('Only Admin / Finance can lock payroll periods', 'warning');
+    return;
+  }
+  const period = getSelectedPayrollPeriod();
+  if (!period) { showToast('Select a pay period', 'warning'); return; }
+  if (!confirm(`Lock payroll period ${period}?\n\nBulk payroll cannot run again for this month until unlocked.`)) return;
+  if (!data.payrollLocks) data.payrollLocks = {};
+  data.payrollLocks[period] = {
+    locked: true,
+    lockedAt: new Date().toISOString(),
+    lockedBy: window.currentUserEmail || currentRole || 'admin'
+  };
+  // mark matching runs
+  (data.payrollRuns || []).forEach(r => {
+    if (r.period === period && r.type !== 'exit') r.locked = true;
+  });
+  saveData();
+  updatePayrollLockUI();
+  renderPayrollRunsHistory();
+  logAudit('payroll_lock', period);
+  showToast(`Period ${period} locked`, 'success');
+  trySyncPayrollLockToSupabase(period, true);
+}
+function unlockPayrollPeriod() {
+  if (currentRole !== 'admin') {
+    showToast('Only Admin can unlock a locked payroll period', 'warning');
+    return;
+  }
+  const period = getSelectedPayrollPeriod();
+  if (!isPayrollPeriodLocked(period)) { showToast('Period is not locked', 'info'); return; }
+  if (!confirm(`Unlock ${period}? Only do this to correct a payroll error.`)) return;
+  if (!data.payrollLocks) data.payrollLocks = {};
+  data.payrollLocks[period] = {
+    locked: false,
+    unlockedAt: new Date().toISOString(),
+    unlockedBy: window.currentUserEmail || currentRole || 'admin'
+  };
+  (data.payrollRuns || []).forEach(r => {
+    if (r.period === period) r.locked = false;
+  });
+  saveData();
+  updatePayrollLockUI();
+  renderPayrollRunsHistory();
+  logAudit('payroll_unlock', period);
+  showToast(`Period ${period} unlocked`, 'info');
+  trySyncPayrollLockToSupabase(period, false);
+}
+async function trySyncPayrollLockToSupabase(period, locked) {
+  if (!supabaseClient) return;
+  try {
+    await supabaseClient.from('payroll_runs').update({
+      status: locked ? 'Locked' : 'Posted',
+      notes: locked ? `Locked by ${window.currentUserEmail || currentRole}` : `Unlocked by ${window.currentUserEmail || currentRole}`
+    }).eq('period', period);
+  } catch (e) { console.warn('payroll lock sync', e); }
+}
+
 async function runBulkPayroll() {
   const emps = getSelectedPayEmployees();
   if (!emps.length) { showToast('No employees to process', 'warning'); return; }
   const period = document.getElementById('payrollPeriod')?.value || new Date().toISOString().slice(0,7);
+  if (typeof isPayrollPeriodLocked === 'function' && isPayrollPeriodLocked(period)) {
+    showToast('Period ' + period + ' is LOCKED. Admin must unlock before re-running payroll.', 'error');
+    try { updatePayrollLockUI(); } catch (_) {}
+    return;
+  }
+  const existingRun = (data.payrollRuns || []).find(r => r.period === period && r.type !== 'exit');
+  if (existingRun) {
+    if (!confirm('A payroll run already exists for ' + period + '.\n\nRun again anyway? (Prefer: Lock period after a final run.)')) return;
+  }
   const filter = document.getElementById('payrollProjectFilter')?.value || 'all';
   const total = emps.reduce((s, e) => s + getTotalSalary(e), 0);
   if (!data.payrollRuns) data.payrollRuns = [];
@@ -3060,6 +3168,10 @@ async function runBulkPayroll() {
   }
   renderPayrollRunsHistory();
   showToast(dbResult.ok ? 'Payroll saved locally + Postgres' : 'Payroll saved locally' + (dbResult.error ? ' (DB failed)' : ''), dbResult.ok ? 'success' : 'info');
+  try { updatePayrollLockUI(); } catch (_) {}
+  if (confirm('Payroll completed for ' + period + '.\n\nLock this period now so it cannot be run again?')) {
+    lockPayrollPeriod();
+  }
 }
 
 /** Insert payroll_runs + payroll_lines in Supabase */
