@@ -282,7 +282,12 @@
           </details>
         </div>
       </div>
-      <p class="text-center text-[11px] text-slate-400 mt-6">Secure session · Data stays in your Supabase project</p>
+      <p class="text-center text-[11px] text-slate-400 mt-4">
+          <button type="button" onclick="openESSPortal()" class="text-teal-700 font-semibold hover:underline">
+            <i class="fas fa-mobile-alt mr-1"></i>Employee self-service (PIN)
+          </button>
+        </p>
+        <p class="text-center text-[11px] text-slate-400 mt-2">Secure session · Data stays in your Supabase project</p>
     </div>
   </div>
 </div>
@@ -1495,29 +1500,57 @@
         </div>
       </section>
 
-      <!-- ESS PORTAL OVERLAY -->
-      <div id="essPortal" class="hidden fixed inset-0 z-[350] bg-gray-100 overflow-y-auto">
-        <div class="max-w-lg mx-auto p-6">
-          <div class="bg-white rounded-2xl shadow-lg p-6 mb-4">
-            <div class="flex justify-between items-center mb-4">
-              <h2 class="text-xl font-bold text-emerald-700"><i class="fas fa-mobile-alt mr-2"></i>Employee Self-Service</h2>
-              <button onclick="closeESSPortal()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xl"></i></button>
+      <!-- ESS PORTAL OVERLAY (F7) -->
+      <div id="essPortal" class="hidden fixed inset-0 z-[350] bg-slate-100 overflow-y-auto">
+        <div class="max-w-lg mx-auto p-4 sm:p-6">
+          <div class="bg-white rounded-2xl shadow-lg border border-slate-200/80 overflow-hidden">
+            <div class="bg-gradient-to-r from-teal-700 to-teal-600 text-white px-5 py-4 flex justify-between items-center">
+              <div>
+                <div class="text-[10px] font-semibold uppercase tracking-wider text-teal-100">AHANORA</div>
+                <h2 class="text-lg font-bold"><i class="fas fa-user-circle mr-1.5"></i>Employee Self-Service</h2>
+              </div>
+              <button type="button" onclick="closeESSPortal()" class="text-white/80 hover:text-white"><i class="fas fa-times text-xl"></i></button>
             </div>
-            <div id="essLoginBox">
-              <label class="text-sm font-semibold">Employee ID</label>
-              <select id="essEmpSelect" class="w-full border rounded-lg px-3 py-2 mb-3 mt-1"></select>
-              <label class="text-sm font-semibold">PIN</label>
-              <input type="password" id="essPin" class="w-full border rounded-lg px-3 py-2 mb-3 mt-1" placeholder="1234" value="1234">
-              <button onclick="essLogin()" class="w-full bg-emerald-600 text-white py-2.5 rounded-lg font-semibold">Login</button>
-            </div>
-            <div id="essContent" class="hidden">
-              <div id="essProfile" class="mb-4"></div>
-              <button onclick="essShowPayslip()" class="w-full bg-blue-50 text-blue-700 border border-blue-200 py-2 rounded-lg font-semibold mb-2">View Payslip</button>
-              <button onclick="essShowLeave()" class="w-full bg-purple-50 text-purple-700 border border-purple-200 py-2 rounded-lg font-semibold mb-2">Leave Balance</button>
-              <pre id="essOutput" class="bg-gray-50 rounded-xl p-3 text-xs mt-3 whitespace-pre-wrap max-h-64 overflow-y-auto"></pre>
-              <button onclick="essLogout()" class="w-full mt-3 bg-gray-100 py-2 rounded-lg text-sm font-semibold">ESS Logout</button>
+            <div class="p-5">
+              <div id="essLoginBox">
+                <p class="text-xs text-slate-500 mb-3">View payslip &amp; leave only. Default PIN <code class="bg-slate-100 px-1 rounded">1234</code> unless HR set a personal PIN.</p>
+                <label class="text-xs font-semibold text-slate-500 uppercase">Employee ID</label>
+                <input type="text" id="essEmpIdInput" class="w-full border rounded-xl px-3 py-2.5 mb-2 mt-1 text-sm" placeholder="e.g. EMP-101" list="essEmpDatalist">
+                <datalist id="essEmpDatalist"></datalist>
+                <select id="essEmpSelect" class="w-full border rounded-xl px-3 py-2 mb-3 text-sm" onchange="document.getElementById('essEmpIdInput').value=this.value">
+                </select>
+                <label class="text-xs font-semibold text-slate-500 uppercase">PIN</label>
+                <input type="password" id="essPin" class="w-full border rounded-xl px-3 py-2.5 mb-3 mt-1 text-sm" placeholder="4–6 digit PIN" inputmode="numeric" onkeydown="if(event.key==='Enter')essLogin()">
+                <button type="button" onclick="essLogin()" class="w-full bg-teal-600 hover:bg-teal-500 text-white py-3 rounded-xl font-semibold text-sm">Sign in</button>
+              </div>
+              <div id="essContent" class="hidden">
+                <div id="essProfile" class="mb-4 p-3 rounded-xl bg-slate-50 border border-slate-100"></div>
+                <div class="grid grid-cols-2 gap-2 mb-3">
+                  <button type="button" onclick="essShowPayslip()" class="bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-100 py-2.5 rounded-xl font-semibold text-xs"><i class="fas fa-file-invoice-dollar mr-1"></i> Payslip</button>
+                  <button type="button" onclick="essShowLeave()" class="bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-100 py-2.5 rounded-xl font-semibold text-xs"><i class="fas fa-calendar-alt mr-1"></i> Leave</button>
+                  <button type="button" onclick="essShowMyRequests()" class="bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-100 py-2.5 rounded-xl font-semibold text-xs"><i class="fas fa-inbox mr-1"></i> My requests</button>
+                  <button type="button" onclick="essShowDocs()" class="bg-teal-50 hover:bg-teal-100 text-teal-900 border border-teal-100 py-2.5 rounded-xl font-semibold text-xs"><i class="fas fa-folder mr-1"></i> My files</button>
+                </div>
+                <div id="essLeaveApplyBox" class="hidden mb-3 border border-purple-100 rounded-xl p-3 bg-purple-50/50">
+                  <div class="text-xs font-bold text-purple-900 mb-2">Request leave (goes to HR Pending)</div>
+                  <div class="grid grid-cols-2 gap-2 mb-2">
+                    <input type="date" id="essLeaveFrom" class="border rounded-lg px-2 py-1.5 text-xs">
+                    <input type="date" id="essLeaveTo" class="border rounded-lg px-2 py-1.5 text-xs">
+                  </div>
+                  <select id="essLeaveType" class="w-full border rounded-lg px-2 py-1.5 text-xs mb-2">
+                    <option>Annual Leave</option><option>Sick Leave</option><option>Emergency</option><option>Unpaid</option>
+                  </select>
+                  <input type="text" id="essLeaveReason" class="w-full border rounded-lg px-2 py-1.5 text-xs mb-2" placeholder="Reason (optional)">
+                  <button type="button" onclick="essSubmitLeave()" class="w-full bg-purple-600 text-white py-2 rounded-lg text-xs font-semibold">Submit for approval</button>
+                </div>
+                <label class="text-[10px] font-semibold text-slate-400 uppercase">Payslip period</label>
+                <input type="month" id="essPayPeriod" class="w-full border rounded-lg px-2 py-1.5 text-xs mb-2 mt-0.5">
+                <pre id="essOutput" class="bg-slate-50 border border-slate-100 rounded-xl p-3 text-xs mt-1 whitespace-pre-wrap max-h-72 overflow-y-auto font-mono"></pre>
+                <button type="button" onclick="essLogout()" class="w-full mt-3 bg-slate-100 hover:bg-slate-200 py-2.5 rounded-xl text-sm font-semibold text-slate-700">Sign out</button>
+              </div>
             </div>
           </div>
+          <p class="text-center text-[10px] text-slate-400 mt-3">ESS lite · Free plan · Payslip &amp; leave only</p>
         </div>
       </div>
 
@@ -1539,7 +1572,7 @@ let STORAGE_KEY = (function() {
 
 // ---- Supabase cloud (fill key if empty) ----
 const SUPABASE_URL = 'https://jlhlayydqcsvmmzdypcr.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_N8t3mr2fEUNbGQuV8qThSg_ECIYi7V7'; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
+const SUPABASE_KEY = localStorage.getItem('gcc_supabase_key') || ''; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
 let supabaseClient = null;
 try {
   if (window.supabase && SUPABASE_URL && SUPABASE_KEY) {
@@ -7057,44 +7090,150 @@ function createNewCompany() {
   location.reload();
 }
 
-// ---- ESS Portal ----
+// ---- ESS Portal (F7 lite) ----
 let essEmployee = null;
-function openESSPortal() {
-  document.getElementById('essPortal').classList.remove('hidden');
-  const sel = document.getElementById('essEmpSelect');
-  sel.innerHTML = data.employees.map(e => `<option value="${e.id}">${e.name} (${e.id})</option>`).join('');
-  document.getElementById('essLoginBox').classList.remove('hidden');
-  document.getElementById('essContent').classList.add('hidden');
+function getEmployeeEssPin(e) {
+  if (!e) return '1234';
+  return String(e.essPin || e.custom?.['ESS PIN'] || e.custom?.essPin || e.custom?.ess_pin || '1234');
 }
-function closeESSPortal() { document.getElementById('essPortal').classList.add('hidden'); essEmployee = null; }
+function openESSPortal() {
+  const portal = document.getElementById('essPortal');
+  if (!portal) return;
+  portal.classList.remove('hidden');
+  const sel = document.getElementById('essEmpSelect');
+  const dl = document.getElementById('essEmpDatalist');
+  const opts = (data.employees || []).map(e => `<option value="${e.id}">${e.name} (${e.id})</option>`).join('');
+  if (sel) sel.innerHTML = '<option value="">— Select —</option>' + opts;
+  if (dl) dl.innerHTML = (data.employees || []).map(e => `<option value="${e.id}">${e.name}</option>`).join('');
+  const period = document.getElementById('essPayPeriod');
+  if (period && !period.value) period.value = new Date().toISOString().slice(0, 7);
+  document.getElementById('essLoginBox')?.classList.remove('hidden');
+  document.getElementById('essContent')?.classList.add('hidden');
+  document.getElementById('essLeaveApplyBox')?.classList.add('hidden');
+  const pinEl = document.getElementById('essPin');
+  if (pinEl) pinEl.value = '';
+}
+function closeESSPortal() {
+  document.getElementById('essPortal')?.classList.add('hidden');
+  essEmployee = null;
+}
 function essLogin() {
-  const id = document.getElementById('essEmpSelect').value;
-  const pin = document.getElementById('essPin').value;
-  const e = data.employees.find(x => x.id === id);
-  if (!e) return;
-  const expected = e.essPin || e.custom?.essPin || '1234';
-  if (String(pin) !== String(expected)) { showToast('Invalid PIN', 'error'); return; }
+  const typed = (document.getElementById('essEmpIdInput')?.value || '').trim();
+  const sel = document.getElementById('essEmpSelect')?.value || '';
+  const id = typed || sel;
+  const pin = document.getElementById('essPin')?.value || '';
+  const e = (data.employees || []).find(x => x.id === id || String(x.id).toLowerCase() === id.toLowerCase());
+  if (!e) { showToast('Employee not found', 'error'); return; }
+  if (String(pin) !== getEmployeeEssPin(e)) { showToast('Invalid PIN', 'error'); return; }
   essEmployee = e;
   document.getElementById('essLoginBox').classList.add('hidden');
   document.getElementById('essContent').classList.remove('hidden');
-  document.getElementById('essProfile').innerHTML = `<div class="font-bold text-lg">${e.name}</div><div class="text-sm text-gray-500">${e.title} · ${e.project}</div>`;
-  document.getElementById('essOutput').textContent = '';
+  document.getElementById('essProfile').innerHTML =
+    '<div class="font-bold text-slate-900">' + e.name + '</div>' +
+    '<div class="text-xs text-slate-500 mt-0.5">' + e.id + ' · ' + (e.title || '—') + ' · ' + (e.project || '—') + '</div>' +
+    '<div class="text-[10px] text-teal-700 mt-1 font-semibold">Self-service · payslip & leave only</div>';
+  document.getElementById('essOutput').textContent = 'Choose Payslip, Leave, My requests, or My files.';
+  try { logAudit('ess_login', e.id); } catch (_) {}
 }
 function essLogout() {
   essEmployee = null;
-  document.getElementById('essLoginBox').classList.remove('hidden');
-  document.getElementById('essContent').classList.add('hidden');
+  document.getElementById('essLoginBox')?.classList.remove('hidden');
+  document.getElementById('essContent')?.classList.add('hidden');
+  document.getElementById('essLeaveApplyBox')?.classList.add('hidden');
+  const out = document.getElementById('essOutput');
+  if (out) out.textContent = '';
 }
 function essShowPayslip() {
   if (!essEmployee) return;
-  document.getElementById('essOutput').textContent = buildPayslipText(essEmployee, new Date().toISOString().slice(0,7));
+  document.getElementById('essLeaveApplyBox')?.classList.add('hidden');
+  const period = document.getElementById('essPayPeriod')?.value || new Date().toISOString().slice(0, 7);
+  const text = typeof buildPayslipText === 'function'
+    ? buildPayslipText(essEmployee, period)
+    : ('Payslip ' + period + '\n' + essEmployee.name);
+  document.getElementById('essOutput').textContent = text;
 }
 function essShowLeave() {
   if (!essEmployee) return;
   const e = essEmployee;
-  const bal = (e.leaveEntitlement||30) - (e.leaveUsed||0);
-  document.getElementById('essOutput').textContent = `Leave Balance\nEntitlement: ${e.leaveEntitlement||30}\nUsed: ${e.leaveUsed||0}\nPending: ${e.leavePending||0}\nAvailable: ${bal}`;
+  const def = (typeof getDefaultAnnualLeaveDays === 'function') ? getDefaultAnnualLeaveDays() : 30;
+  const ent = e.leaveEntitlement != null ? e.leaveEntitlement : def;
+  const bal = ent - (e.leaveUsed || 0);
+  document.getElementById('essLeaveApplyBox')?.classList.remove('hidden');
+  document.getElementById('essOutput').textContent =
+    'LEAVE BALANCE — ' + e.name + '\n' +
+    'Entitlement : ' + ent + ' days\n' +
+    'Used        : ' + (e.leaveUsed || 0) + '\n' +
+    'Pending     : ' + (e.leavePending || 0) + '\n' +
+    'Available   : ' + bal + ' days\n' +
+    'Country     : ' + currentCountry + '\n\n' +
+    'Use the form above to request leave (HR must approve).';
 }
+function essShowMyRequests() {
+  if (!essEmployee) return;
+  document.getElementById('essLeaveApplyBox')?.classList.add('hidden');
+  const mine = (data.leaveRequests || []).filter(r =>
+    r.employeeId === essEmployee.id || r.employeeName === essEmployee.name
+  );
+  if (!mine.length) {
+    document.getElementById('essOutput').textContent = 'No leave requests yet.';
+    return;
+  }
+  document.getElementById('essOutput').textContent = mine.slice().reverse().map(r =>
+    r.status + ' | ' + r.type + ' | ' + r.from + ' -> ' + r.to + ' (' + r.days + 'd)'
+  ).join('\n');
+}
+function essShowDocs() {
+  if (!essEmployee) return;
+  document.getElementById('essLeaveApplyBox')?.classList.add('hidden');
+  const files = (data.docFiles || []).filter(f =>
+    f.employeeId === essEmployee.id || f.employee_id === essEmployee.id
+  );
+  if (!files.length) {
+    document.getElementById('essOutput').textContent = 'No files in vault for you yet.\nAsk HR to upload under Document Expiry → Document vault.';
+    return;
+  }
+  document.getElementById('essOutput').textContent = files.map(f => {
+    const url = f.publicUrl || f.public_url || '';
+    return (f.docType || f.doc_type) + ': ' + (f.fileName || f.file_name) + (url ? '\n  ' + url : '');
+  }).join('\n\n');
+}
+function essSubmitLeave() {
+  if (!essEmployee) return;
+  const from = document.getElementById('essLeaveFrom')?.value;
+  const to = document.getElementById('essLeaveTo')?.value;
+  const type = document.getElementById('essLeaveType')?.value || 'Annual Leave';
+  const reason = document.getElementById('essLeaveReason')?.value || 'ESS request';
+  if (!from || !to) { showToast('Select from / to dates', 'warning'); return; }
+  if (typeof ensureLeaveBalances === 'function') ensureLeaveBalances();
+  const days = Math.max(1, Math.ceil((new Date(to) - new Date(from)) / 86400000) + 1);
+  const def = (typeof getDefaultAnnualLeaveDays === 'function') ? getDefaultAnnualLeaveDays() : 30;
+  const ent = essEmployee.leaveEntitlement != null ? essEmployee.leaveEntitlement : def;
+  const bal = ent - (essEmployee.leaveUsed || 0);
+  if (type === 'Annual Leave' && days > bal) {
+    showToast('Insufficient balance (' + bal + ' days)', 'error');
+    return;
+  }
+  essEmployee.leavePending = (essEmployee.leavePending || 0) + days;
+  if (!data.leaveRequests) data.leaveRequests = [];
+  const req = {
+    id: 'LV-' + Date.now(),
+    employeeId: essEmployee.id,
+    employeeName: essEmployee.name,
+    type: type, from: from, to: to, days: days, reason: reason,
+    status: 'Pending',
+    created: new Date().toISOString().slice(0, 10),
+    country: currentCountry
+  };
+  data.leaveRequests.push(req);
+  saveData();
+  if (typeof upsertLeaveRequestToSupabase === 'function') {
+    upsertLeaveRequestToSupabase(req).catch(function () {});
+  }
+  showToast('Leave submitted — pending HR approval', 'success');
+  essShowMyRequests();
+  try { logAudit('ess_leave_request', essEmployee.id); } catch (_) {}
+}
+
 function markInvoicePaid(id) {
   if (currentRole === 'user') { showToast('HR User cannot mark invoices paid', 'warning'); return; }
   const inv = data.invoices.find(x => x.id === id);
