@@ -1854,7 +1854,7 @@ let STORAGE_KEY = (function() {
 
 // ---- Supabase cloud (fill key if empty) ----
 const SUPABASE_URL = 'https://jlhlayydqcsvmmzdypcr.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_N8t3mr2fEUNbGQuV8qThSg_ECIYi7V7'; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
+const SUPABASE_KEY = localStorage.getItem('gcc_supabase_key') || ''; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
 let supabaseClient = null;
 try {
   if (window.supabase && SUPABASE_URL && SUPABASE_KEY) {
@@ -2736,16 +2736,26 @@ function loadData() {
   if (raw) {
     try {
       const parsed = JSON.parse(raw);
-      data = { ...data, ...parsed };
-    } catch (e) { console.error('Load error', e); }
+      if (parsed && typeof parsed === 'object') {
+        data = { ...data, ...parsed };
+      }
+    } catch (e) {
+      console.error('Load error — localStorage may be corrupt', e);
+      try {
+        localStorage.setItem(STORAGE_KEY + '_backup_corrupt', raw.slice(0, 500000));
+      } catch (_) {}
+    }
   }
-  ensureDataShape();
+  try { ensureDataShape(); } catch (e) { console.warn(e); }
+  if (!Array.isArray(data.employees)) data.employees = [];
+  if (!data.hrName) data.hrName = 'Mohammed Al-Fahd';
+  if (!data.hrTitle) data.hrTitle = 'HR Manager';
+  if (!data.companyName) data.companyName = 'Gulf Horizon Services';
   // Seed sample data if empty
   if (data.employees.length === 0) {
-    seedSampleData();
+    try { seedSampleData(); } catch (e) { console.warn('seed', e); }
   }
-  // Migration: ensure default custom fields exist even if employees already saved
-  ensureDefaultCustomFields();
+  try { ensureDefaultCustomFields(); } catch (e) { console.warn(e); }
 }
 
 function ensureDefaultCustomFields() {
@@ -2867,7 +2877,7 @@ function showToast(msg, type = 'info') {
   const t = document.createElement('div');
   t.className = `toast ${colors[type]} text-white px-4 py-3 rounded-xl shadow-lg flex items-center gap-3 min-w-[280px]`;
   t.innerHTML = `<i class="fas ${icons[type]}"></i><span class="flex-1 text-sm">${msg}</span><button onclick="this.parentElement.remove()" class="opacity-80 hover:opacity-100"><i class="fas fa-times"></i></button>`;
-  document.getElementById('toastContainer').appendChild(t);
+  const _tc = document.getElementById('toastContainer'); if (_tc) _tc.appendChild(t); else console.log('[toast]', msg);
   setTimeout(() => { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; setTimeout(() => t.remove(), 300); }, 3200);
 }
 function updateCurrencyLabels() {
@@ -2920,14 +2930,17 @@ document.querySelectorAll('.sidebar-item').forEach(item => {
 
 // -------------------- Dashboard --------------------
 function renderDashboard() {
-  const emps = data.employees;
-  document.getElementById('statTotalEmp').textContent = emps.length;
-  document.getElementById('dashEmpCount').textContent = emps.length;
-  document.getElementById('statPresent').textContent = emps.filter(e => e.status === 'Present').length;
-  const totalPay = emps.reduce((s, e) => s + getTotalSalary(e), 0);
-  document.getElementById('statPayroll').textContent = totalPay.toLocaleString(undefined, { maximumFractionDigits: 0 });
-  document.getElementById('statCustomFields').textContent = (data.customFields || []).length;
-  document.getElementById('dashGreeting').textContent = data.hrName.split(' ')[0];
+  const emps = Array.isArray(data.employees) ? data.employees : [];
+  const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  setTxt('statTotalEmp', emps.length);
+  setTxt('dashEmpCount', emps.length);
+  setTxt('statPresent', emps.filter(e => e && e.status === 'Present').length);
+  let totalPay = 0;
+  try { totalPay = emps.reduce((s, e) => s + (typeof getTotalSalary === 'function' ? getTotalSalary(e) : 0), 0); } catch (_) {}
+  setTxt('statPayroll', totalPay.toLocaleString(undefined, { maximumFractionDigits: 0 }));
+  setTxt('statCustomFields', (data.customFields || []).length);
+  const firstName = String(data.hrName || 'User').trim().split(/\s+/)[0] || 'User';
+  setTxt('dashGreeting', firstName);
 
   const recent = emps.slice(-5).reverse();
   let recentHtml = recent.length ? recent.map(e => `
@@ -2961,7 +2974,7 @@ function renderDashboard() {
       ${kw.kw}/${kw.total} Kuwaiti (${kw.pct}%)
     </div>`;
   } catch (e) {}
-  document.getElementById('recentEmployees').innerHTML = recentHtml;
+  const recentBox = document.getElementById('recentEmployees'); if (recentBox) recentBox.innerHTML = recentHtml;
   try { renderDashboardCharts(); } catch (e) {}
   try { renderOnboarding(); } catch (e) {}
   try { updateNotifBadge(); } catch (e) {}
@@ -7881,30 +7894,50 @@ function doLogin(role) {
   }
 }
 function finishLogin() {
-  document.body.classList.add('is-authenticated');
-  const ls = document.getElementById('loginScreen');
-  if (ls) {
-    ls.classList.add('hidden');
-    ls.style.display = 'none';
-  }
-  const shell = document.getElementById('appShell');
-  if (shell) {
-    shell.classList.remove('hidden');
-    shell.style.display = 'flex';
-  }
-  applyRolePermissions();
-  resetSessionTimer();
-  logAudit('login', currentRole);
-  const label = window.currentProfileRole || currentRole;
-  const msg = currentRole === 'admin' ? 'Logged in as Admin — full access'
-    : currentRole === 'accountant' ? 'Logged in as Finance — Finance + HR view'
-    : 'Logged in as HR — limited access';
-  showToast(msg + (window.currentUserEmail ? ' · ' + window.currentUserEmail : '') + ` · Session ${SESSION_MINUTES}min`, 'success');
-  if (currentRole === 'accountant') switchSection('accounting');
   try {
-    const greet = document.getElementById('dashGreeting');
-    if (greet && window.currentUserName) greet.textContent = window.currentUserName.split(' ')[0];
-  } catch (_) {}
+    document.body.classList.add('is-authenticated');
+    const ls = document.getElementById('loginScreen');
+    if (ls) {
+      ls.classList.add('hidden');
+      ls.style.display = 'none';
+    }
+    const shell = document.getElementById('appShell');
+    if (shell) {
+      shell.classList.remove('hidden');
+      shell.style.display = 'flex';
+      shell.style.visibility = 'visible';
+      shell.style.opacity = '1';
+    }
+    try { applyRolePermissions(); } catch (e) { console.warn('roles', e); }
+    try { resetSessionTimer(); } catch (e) { console.warn('session', e); }
+    try { logAudit('login', currentRole); } catch (e) {}
+    const msg = currentRole === 'admin' ? 'Logged in as Admin — full access'
+      : currentRole === 'accountant' ? 'Logged in as Finance — Finance + HR view'
+      : 'Logged in as HR — limited access';
+    try {
+      showToast(msg + (window.currentUserEmail ? ' · ' + window.currentUserEmail : '') + ' · Session ' + (typeof SESSION_MINUTES !== 'undefined' ? SESSION_MINUTES : 30) + 'min', 'success');
+    } catch (e) { console.warn('toast', e); }
+    try {
+      if (currentRole === 'accountant') switchSection('accounting');
+      else switchSection('dashboard');
+    } catch (e) { console.warn('section', e); }
+    try { renderDashboard(); } catch (e) { console.warn('dashboard', e); }
+    try {
+      const greet = document.getElementById('dashGreeting');
+      if (greet && window.currentUserName) greet.textContent = String(window.currentUserName).split(' ')[0];
+    } catch (_) {}
+  } catch (e) {
+    console.error('finishLogin failed', e);
+    // Force shell visible even if something failed
+    try {
+      document.body.classList.add('is-authenticated');
+      const shell = document.getElementById('appShell');
+      if (shell) { shell.classList.remove('hidden'); shell.style.display = 'flex'; }
+      const ls = document.getElementById('loginScreen');
+      if (ls) { ls.classList.add('hidden'); ls.style.display = 'none'; }
+    } catch (_) {}
+    alert('Login UI error: ' + (e && e.message ? e.message : e));
+  }
 }
 async function logout() {
   logAudit('logout', currentRole);
@@ -7941,7 +7974,6 @@ async function tryRestoreCloudSession() {
     finishLogin();
   } catch (e) { console.warn('session restore', e); }
 }
-tryRestoreCloudSession();
 
 function applyRolePermissions() {
   const adminNav = document.querySelector('.sidebar-item[data-section="customfields"]');
@@ -7955,14 +7987,18 @@ function requireAdmin(actionName) {
   return true;
 }
 
-const _origOpenModal = openModal;
-openModal = function(type, payload) {
-  if ((type === 'addCustomField') && currentRole !== 'admin') {
-    showToast('Only Admin can add or edit custom fields', 'warning');
-    return;
+try {
+  if (typeof openModal === 'function') {
+    const _origOpenModal = openModal;
+    openModal = function(type, payload) {
+      if ((type === 'addCustomField') && currentRole !== 'admin') {
+        showToast('Only Admin can add or edit custom fields', 'warning');
+        return;
+      }
+      return _origOpenModal(type, payload);
+    };
   }
-  _origOpenModal(type, payload);
-};
+} catch (e) { console.warn('openModal patch', e); }
 
 // Kuwaitization helper on dashboard
 function getKuwaitizationStats() {
@@ -8161,33 +8197,68 @@ document.addEventListener('keydown', e => {
 
 // -------------------- Init --------------------
 async function init() {
-  loadData();
-  ensureLeaveBalances();
-  if (!data.auditLog) data.auditLog = [];
-  if (!data.payrollRuns) data.payrollRuns = [];
-  updateCurrencyLabels();
-  applyLanguage();
-  refreshCompanySwitcher();
-  if (localStorage.getItem('gcc_hr_density') === 'compact') {
-    document.body.classList.add('compact');
-    const icon = document.getElementById('densityIcon');
-    if (icon) icon.className = 'fas fa-expand-alt';
+  try {
+    loadData();
+    if (typeof ensureDataShape === 'function') ensureDataShape();
+    if (!data.hrName) data.hrName = 'HR Manager';
+    if (!data.hrTitle) data.hrTitle = 'HR Manager';
+    if (!data.companyName) data.companyName = 'AHANORA';
+    if (!data.auditLog) data.auditLog = [];
+    if (!data.payrollRuns) data.payrollRuns = [];
+    if (!Array.isArray(data.employees)) data.employees = [];
+    if (!Array.isArray(data.attendanceLogs)) data.attendanceLogs = [];
+    if (!Array.isArray(data.leaveRequests)) data.leaveRequests = [];
+    if (!Array.isArray(data.docFiles)) data.docFiles = [];
+    if (!data.payrollLocks || typeof data.payrollLocks !== 'object') data.payrollLocks = {};
+    try { ensureLeaveBalances(); } catch (e) { console.warn('ensureLeaveBalances', e); }
+    try { updateCurrencyLabels(); } catch (e) { console.warn(e); }
+    try { applyLanguage(); } catch (e) { console.warn(e); }
+    try { refreshCompanySwitcher(); } catch (e) { console.warn(e); }
+    if (localStorage.getItem('gcc_hr_density') === 'compact') {
+      document.body.classList.add('compact');
+      const icon = document.getElementById('densityIcon');
+      if (icon) icon.className = 'fas fa-expand-alt';
+    }
+    const setText = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = val == null ? '' : String(val);
+    };
+    setText('sidebarCompanyName', data.companyName);
+    setText('hrNameSidebar', data.hrName);
+    setText('hrTitleSidebar', data.hrTitle);
+    const av = document.getElementById('hrAvatar');
+    if (av) {
+      const parts = String(data.hrName || 'HR').trim().split(/\s+/).filter(Boolean);
+      av.textContent = parts.map(w => w[0]).join('').substring(0, 2).toUpperCase() || 'HR';
+    }
+    try { renderDashboard(); } catch (e) { console.warn('renderDashboard', e); }
+    try { updateNotifBadge(); } catch (e) { console.warn(e); }
+    try { updateDateTime(); } catch (e) { console.warn(e); }
+    setInterval(() => { try { updateDateTime(); } catch (_) {} }, 30000);
+    setInterval(() => { try { updateNotifBadge(); } catch (_) {} }, 60000);
+    try {
+      if (typeof loadComplianceRulesFromSupabase === 'function') {
+        await loadComplianceRulesFromSupabase(currentCountry);
+      }
+    } catch (e) { console.warn('compliance load', e); }
+    try { ensureLeaveBalances(); } catch (e) { console.warn(e); }
+  } catch (e) {
+    console.error('AHANORA init failed', e);
+    // Last resort: show login so user is not stuck on blank screen
+    try {
+      document.body.classList.remove('is-authenticated');
+      const ls = document.getElementById('loginScreen');
+      if (ls) { ls.classList.remove('hidden'); ls.style.display = 'flex'; }
+    } catch (_) {}
   }
-  document.getElementById('sidebarCompanyName').textContent = data.companyName;
-  document.getElementById('hrNameSidebar').textContent = data.hrName;
-  document.getElementById('hrTitleSidebar').textContent = data.hrTitle;
-  document.getElementById('hrAvatar').textContent = data.hrName.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
-  renderDashboard();
-  updateNotifBadge();
-  updateDateTime();
-  setInterval(updateDateTime, 30000);
-  setInterval(updateNotifBadge, 60000);
-  // Load GCC compliance rules from Supabase (leave / EOS / OT) — falls back to built-in
-  await loadComplianceRulesFromSupabase(currentCountry);
-  ensureLeaveBalances();
 }
 
-init();
+// Safe boot — never leave a blank page
+init().catch(function(e) { console.error('init promise', e); });
+try {
+  if (typeof tryRestoreCloudSession === 'function') tryRestoreCloudSession();
+} catch (e) { console.warn('session restore', e); }
+
 </script>
 </body>
 </html>
