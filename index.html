@@ -2022,7 +2022,7 @@ let STORAGE_KEY = (function() {
 
 // ---- Supabase cloud (fill key if empty) ----
 const SUPABASE_URL = 'https://jlhlayydqcsvmmzdypcr.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_N8t3mr2fEUNbGQuV8qThSg_ECIYi7V7'; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
+const SUPABASE_KEY = localStorage.getItem('gcc_supabase_key') || ''; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
 let supabaseClient = null;
 try {
   if (window.supabase && SUPABASE_URL && SUPABASE_KEY) {
@@ -6349,6 +6349,7 @@ function buildEmploymentContractPreviewHtml(fd) {
     <div class="company">${escHtml(employerEn)}</div>
     <div class="company-ar" dir="rtl">${escHtml(employerAr)}</div>
     <div class="doc-title">EMPLOYMENT CONTRACT · عقد العمل</div>
+    <div class="doc-sub" style="font-weight:700;color:#0f766e">Side-by-side EN | AR · Print-ready</div>
     <div class="doc-sub">Private Sector — State of Kuwait · Law No. 6 of 2010 · القطاع الأهلي — دولة الكويت (القانون رقم 6 لسنة 2010)</div>
     <div class="meta">Date: ${today} · Currency: ${cur}</div>
   </div>`;
