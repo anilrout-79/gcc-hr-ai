@@ -1527,21 +1527,38 @@
             <p class="text-xs text-slate-500 flex-1">All generated Word files use this letterhead when logo/address is set. Employee fields auto-fill from the selected staff record.</p>
           </div>
 
-          <div class="bg-gradient-to-r from-blue-50 to-teal-50 border border-blue-100 rounded-xl p-4 mb-5">
+          <div class="bg-gradient-to-r from-slate-50 to-teal-50 border border-slate-200 rounded-xl p-4 mb-5">
             <div class="flex flex-wrap items-end gap-3">
-              <div class="flex-1 min-w-[200px]">
-                <div class="text-sm font-bold text-slate-800 mb-1"><i class="fas fa-balance-scale text-blue-600 mr-1"></i> Kuwait Labour Law — Employment Agreement</div>
-                <p class="text-xs text-slate-600">Select employee → data fills from database → Preview → Print or Word. Aligned with Law No. 6 of 2010 (Private Sector).</p>
+              <div class="flex-1 min-w-[180px]">
+                <div class="text-sm font-bold text-slate-800 mb-1"><i class="fas fa-globe text-teal-600 mr-1"></i> Country labour-law document pack</div>
+                <p class="text-xs text-slate-600">1) Choose country · 2) Pick form · 3) Select employee · 4) Preview / Print. Templates follow local private-sector rules (KW Law 6/2010, SA Labour Law, UAE Federal Decree-Law 33/2021).</p>
+              </div>
+              <div>
+                <label class="text-[10px] font-semibold text-slate-500 uppercase">Country</label>
+                <select id="hrDocCountry" onchange="renderHrDocCatalog()" class="border rounded-lg px-3 py-2 text-sm block mt-0.5 min-w-[160px]">
+                  <option value="KW">Kuwait</option>
+                  <option value="SA">Saudi Arabia</option>
+                  <option value="AE">UAE</option>
+                </select>
               </div>
               <div>
                 <label class="text-[10px] font-semibold text-slate-500 uppercase">Employee</label>
                 <select id="quickContractEmp" class="border rounded-lg px-3 py-2 text-sm block mt-0.5 min-w-[180px]"></select>
               </div>
-              <button type="button" onclick="quickGenerateKuwaitContract()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold">
-                <i class="fas fa-magic mr-1"></i> Generate contract
-              </button>
+              <div>
+                <label class="text-[10px] font-semibold text-slate-500 uppercase">Category</label>
+                <select id="hrDocCategory" onchange="renderHrDocCatalog()" class="border rounded-lg px-3 py-2 text-sm block mt-0.5 min-w-[140px]">
+                  <option value="all">All forms</option>
+                  <option value="employment">Employment</option>
+                  <option value="leave">Leave</option>
+                  <option value="discipline">Discipline / Exit</option>
+                  <option value="payroll">Payroll / Finance</option>
+                  <option value="admin">Admin / Requests</option>
+                </select>
+              </div>
             </div>
           </div>
+          <div id="hrDocCatalog" class="mb-5"></div>
 
           <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">HR · Employment</h4>
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mb-5">
@@ -2022,7 +2039,7 @@ let STORAGE_KEY = (function() {
 
 // ---- Supabase cloud (fill key if empty) ----
 const SUPABASE_URL = 'https://jlhlayydqcsvmmzdypcr.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_N8t3mr2fEUNbGQuV8qThSg_ECIYi7V7'; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
+const SUPABASE_KEY = localStorage.getItem('gcc_supabase_key') || ''; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
 let supabaseClient = null;
 try {
   if (window.supabase && SUPABASE_URL && SUPABASE_KEY) {
@@ -5244,6 +5261,49 @@ function openModal(type, payload) {
     </div>`;
   }
 
+
+  else if (type === 'hrDocUnified') {
+    const formId = payload || 'offer_letter';
+    const packs = getHrDocTemplates();
+    const code = getHrDocCountry();
+    const pack = packs[code] || packs.KW;
+    const meta = (pack.forms || []).find(f => f.id === formId) || { title: formId };
+    const empOpts = (data.employees || []).map(e => `<option value="${e.id}">${e.name} (${e.id})</option>`).join('');
+    const preEmp = document.getElementById('quickContractEmp')?.value || '';
+    html = `
+      <div class="p-6">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h3 class="text-xl font-bold">${meta.title}</h3>
+            <p class="text-xs text-gray-500">${pack.name} · ${pack.law}</p>
+          </div>
+          <button onclick="closeModal()" class="text-gray-400"><i class="fas fa-times text-xl"></i></button>
+        </div>
+        <form id="hrDocForm" onsubmit="event.preventDefault(); submitHrDocForm('${formId}')">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+            <div class="md:col-span-2">
+              <label class="text-xs font-semibold">Employee *</label>
+              <select name="empId" id="hrDocEmpId" required class="w-full border rounded-lg px-3 py-2 text-sm">
+                <option value="">— Select —</option>
+                ${empOpts}
+              </select>
+            </div>
+            <div><label class="text-xs font-semibold">Extra date / effective</label><input name="effective" type="date" class="w-full border rounded-lg px-3 py-2 text-sm"></div>
+            <div><label class="text-xs font-semibold">Amount / days (if any)</label><input name="amount" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Optional"></div>
+            <div class="md:col-span-2"><label class="text-xs font-semibold">Details / reason / purpose</label><textarea name="details" rows="3" class="w-full border rounded-lg px-3 py-2 text-sm" placeholder="Optional free text for this form"></textarea></div>
+          </div>
+          <div class="flex gap-2">
+            <button type="button" onclick="closeModal()" class="flex-1 bg-gray-100 py-2.5 rounded-lg font-semibold text-sm">Cancel</button>
+            <button type="submit" class="flex-1 bg-teal-600 text-white py-2.5 rounded-lg font-semibold text-sm"><i class="fas fa-eye mr-1"></i> Preview EN | AR</button>
+          </div>
+        </form>
+      </div>`;
+    setTimeout(() => {
+      const sel = document.getElementById('hrDocEmpId');
+      if (sel && preEmp) sel.value = preEmp;
+    }, 30);
+  }
+
   else if (type === 'generateContract') {
     const empOpts = data.employees.map(e => `<option value="${e.id}">${e.name}</option>`).join('');
     html = `
@@ -5820,6 +5880,11 @@ function renderContractsList() {
     qsel.innerHTML = '<option value="">— Select employee —</option>' +
       (data.employees || []).map(e => `<option value="${e.id}">${e.name} (${e.id})</option>`).join('');
   }
+  try {
+    const cc = document.getElementById('hrDocCountry');
+    if (cc && currentCountry) cc.value = currentCountry;
+  } catch (_) {}
+  try { renderHrDocCatalog(); } catch (e) { console.warn(e); }
 
   const el = document.getElementById('contractsList');
   if (!el) return;
@@ -6294,6 +6359,338 @@ function _p(text, opts = {}) {
 function hl(v) {
   const t = (v == null || v === '') ? '—' : String(v);
   return `<mark style="background:#fef08a;padding:0 3px;border-radius:2px;font-weight:600">${t}</mark>`;
+}
+
+
+// ========== GCC HR Document Engine (country-aware) ==========
+function getHrDocCountry() {
+  return document.getElementById('hrDocCountry')?.value || currentCountry || 'KW';
+}
+
+/** Popular HR forms by country — titles + legal basis notes (private sector) */
+function getHrDocTemplates() {
+  const packs = {
+    KW: {
+      code: 'KW', name: 'Kuwait', law: 'Law No. 6 of 2010 (Private Sector)', currency: 'KD',
+      forms: [
+        { id: 'employment_contract', cat: 'employment', icon: 'fa-file-contract', color: 'blue', title: 'Employment Contract', titleAr: 'عقد العمل', desc: 'Full EN|AR terms · Law 6/2010' },
+        { id: 'offer_letter', cat: 'employment', icon: 'fa-file-signature', color: 'emerald', title: 'Offer Letter', titleAr: 'عرض وظيفي', desc: 'Conditional job offer' },
+        { id: 'salary_certificate', cat: 'payroll', icon: 'fa-money-check-alt', color: 'indigo', title: 'Salary Certificate', titleAr: 'شهادة راتب', desc: 'Bank / embassy' },
+        { id: 'experience_certificate', cat: 'employment', icon: 'fa-certificate', color: 'purple', title: 'Experience Certificate', titleAr: 'شهادة خبرة', desc: 'Service certificate' },
+        { id: 'leave_request', cat: 'leave', icon: 'fa-plane-departure', color: 'sky', title: 'Leave Request', titleAr: 'طلب إجازة', desc: 'Annual / unpaid / other' },
+        { id: 'advance_salary', cat: 'payroll', icon: 'fa-hand-holding-usd', color: 'amber', title: 'Salary Advance Request', titleAr: 'طلب سلفة', desc: 'Advance against salary' },
+        { id: 'disciplinary_notice', cat: 'discipline', icon: 'fa-exclamation-triangle', color: 'yellow', title: 'Disciplinary Notice', titleAr: 'إخطار تأديبي', desc: 'Warning / suspension' },
+        { id: 'warning_letter', cat: 'discipline', icon: 'fa-file-alt', color: 'slate', title: 'Warning Letter', titleAr: 'خطاب إنذار', desc: 'Formal written warning' },
+        { id: 'status_change', cat: 'admin', icon: 'fa-exchange-alt', color: 'cyan', title: 'Status Change Record', titleAr: 'سجل تغيير حالة', desc: 'Transfer / promotion / grade' },
+        { id: 'passport_request', cat: 'admin', icon: 'fa-passport', color: 'violet', title: 'Passport Request', titleAr: 'طلب جواز السفر', desc: 'Release / hold request' },
+        { id: 'resignation_letter', cat: 'discipline', icon: 'fa-door-open', color: 'orange', title: 'Resignation Letter', titleAr: 'خطاب استقالة', desc: 'Employee resignation' },
+        { id: 'termination_notice', cat: 'discipline', icon: 'fa-user-times', color: 'rose', title: 'Termination Notice', titleAr: 'إشعار إنهاء خدمة', desc: 'Employer termination' },
+        { id: 'deemed_resignation', cat: 'discipline', icon: 'fa-user-slash', color: 'red', title: 'Deemed Resignation', titleAr: 'استقالة حكمية', desc: 'Absence without leave' },
+        { id: 'exit_clearance', cat: 'discipline', icon: 'fa-clipboard-check', color: 'teal', title: 'Exit Clearance', titleAr: 'إخلاء طرف', desc: 'NOC checklist' },
+        { id: 'noc_letter', cat: 'admin', icon: 'fa-globe', color: 'blue', title: 'NOC Letter', titleAr: 'عدم ممانعة', desc: 'Travel / authority letter' },
+      ]
+    },
+    SA: {
+      code: 'SA', name: 'Saudi Arabia', law: 'Saudi Labour Law (MHRSD) + contractual terms', currency: 'SAR',
+      forms: [
+        { id: 'employment_contract', cat: 'employment', icon: 'fa-file-contract', color: 'blue', title: 'Employment Contract', titleAr: 'عقد العمل', desc: 'Written contract · MHRSD aligned' },
+        { id: 'offer_letter', cat: 'employment', icon: 'fa-file-signature', color: 'emerald', title: 'Offer Letter', titleAr: 'عرض وظيفي', desc: 'Job offer' },
+        { id: 'salary_certificate', cat: 'payroll', icon: 'fa-money-check-alt', color: 'indigo', title: 'Salary Certificate', titleAr: 'تعريف بالراتب', desc: 'Bank / embassy' },
+        { id: 'experience_certificate', cat: 'employment', icon: 'fa-certificate', color: 'purple', title: 'Experience Certificate', titleAr: 'شهادة خبرة', desc: 'Service letter' },
+        { id: 'leave_request', cat: 'leave', icon: 'fa-plane-departure', color: 'sky', title: 'Leave Request', titleAr: 'طلب إجازة', desc: 'Annual leave request' },
+        { id: 'advance_salary', cat: 'payroll', icon: 'fa-hand-holding-usd', color: 'amber', title: 'Salary Advance', titleAr: 'سلفة راتب', desc: 'Advance request' },
+        { id: 'disciplinary_notice', cat: 'discipline', icon: 'fa-exclamation-triangle', color: 'yellow', title: 'Disciplinary Notice', titleAr: 'محضر مخالفة', desc: 'Violation notice' },
+        { id: 'warning_letter', cat: 'discipline', icon: 'fa-file-alt', color: 'slate', title: 'Warning Letter', titleAr: 'إنذار', desc: 'Written warning' },
+        { id: 'status_change', cat: 'admin', icon: 'fa-exchange-alt', color: 'cyan', title: 'Status Change', titleAr: 'تغيير حالة', desc: 'Transfer / promotion' },
+        { id: 'passport_request', cat: 'admin', icon: 'fa-passport', color: 'violet', title: 'Passport Request', titleAr: 'طلب جواز', desc: 'Passport release' },
+        { id: 'resignation_letter', cat: 'discipline', icon: 'fa-door-open', color: 'orange', title: 'Resignation', titleAr: 'استقالة', desc: 'Resignation letter' },
+        { id: 'termination_notice', cat: 'discipline', icon: 'fa-user-times', color: 'rose', title: 'Termination Notice', titleAr: 'إنهاء عقد', desc: 'Contract end / termination' },
+        { id: 'exit_clearance', cat: 'discipline', icon: 'fa-clipboard-check', color: 'teal', title: 'Exit Clearance', titleAr: 'إخلاء طرف', desc: 'Final clearance' },
+        { id: 'noc_letter', cat: 'admin', icon: 'fa-globe', color: 'blue', title: 'NOC Letter', titleAr: 'عدم ممانعة', desc: 'No objection' },
+      ]
+    },
+    AE: {
+      code: 'AE', name: 'United Arab Emirates', law: 'Federal Decree-Law No. 33 of 2021 (Labour Relations)', currency: 'AED',
+      forms: [
+        { id: 'employment_contract', cat: 'employment', icon: 'fa-file-contract', color: 'blue', title: 'Employment Contract', titleAr: 'عقد العمل', desc: 'Limited / unlimited terms' },
+        { id: 'offer_letter', cat: 'employment', icon: 'fa-file-signature', color: 'emerald', title: 'Offer Letter', titleAr: 'عرض عمل', desc: 'Job offer' },
+        { id: 'salary_certificate', cat: 'payroll', icon: 'fa-money-check-alt', color: 'indigo', title: 'Salary Certificate', titleAr: 'شهادة راتب', desc: 'Bank / embassy' },
+        { id: 'experience_certificate', cat: 'employment', icon: 'fa-certificate', color: 'purple', title: 'Experience Certificate', titleAr: 'شهادة خبرة', desc: 'Service certificate' },
+        { id: 'leave_request', cat: 'leave', icon: 'fa-plane-departure', color: 'sky', title: 'Leave Request', titleAr: 'طلب إجازة', desc: 'Annual leave' },
+        { id: 'advance_salary', cat: 'payroll', icon: 'fa-hand-holding-usd', color: 'amber', title: 'Salary Advance', titleAr: 'سلفة', desc: 'Advance request' },
+        { id: 'disciplinary_notice', cat: 'discipline', icon: 'fa-exclamation-triangle', color: 'yellow', title: 'Disciplinary Notice', titleAr: 'إجراء تأديبي', desc: 'Disciplinary action' },
+        { id: 'warning_letter', cat: 'discipline', icon: 'fa-file-alt', color: 'slate', title: 'Warning Letter', titleAr: 'إنذار كتابي', desc: 'Written warning' },
+        { id: 'status_change', cat: 'admin', icon: 'fa-exchange-alt', color: 'cyan', title: 'Status Change', titleAr: 'تغيير الوضع', desc: 'Transfer / role change' },
+        { id: 'passport_request', cat: 'admin', icon: 'fa-passport', color: 'violet', title: 'Passport Request', titleAr: 'طلب جواز', desc: 'Passport custody request' },
+        { id: 'resignation_letter', cat: 'discipline', icon: 'fa-door-open', color: 'orange', title: 'Resignation', titleAr: 'استقالة', desc: 'Resignation letter' },
+        { id: 'termination_notice', cat: 'discipline', icon: 'fa-user-times', color: 'rose', title: 'Termination Notice', titleAr: 'إنهاء خدمة', desc: 'End of employment' },
+        { id: 'exit_clearance', cat: 'discipline', icon: 'fa-clipboard-check', color: 'teal', title: 'Exit Clearance', titleAr: 'إخلاء طرف', desc: 'Clearance form' },
+        { id: 'noc_letter', cat: 'admin', icon: 'fa-globe', color: 'blue', title: 'NOC Letter', titleAr: 'عدم ممانعة', desc: 'No objection letter' },
+      ]
+    }
+  };
+  return packs;
+}
+
+function renderHrDocCatalog() {
+  const box = document.getElementById('hrDocCatalog');
+  if (!box) return;
+  const packs = getHrDocTemplates();
+  const code = getHrDocCountry();
+  const pack = packs[code] || packs.KW;
+  const cat = document.getElementById('hrDocCategory')?.value || 'all';
+  let forms = pack.forms || [];
+  if (cat !== 'all') forms = forms.filter(f => f.cat === cat);
+  const colorMap = {
+    blue: 'border-blue-200 bg-blue-50 text-blue-600',
+    emerald: 'border-emerald-200 bg-emerald-50 text-emerald-600',
+    indigo: 'border-indigo-200 bg-indigo-50 text-indigo-600',
+    purple: 'border-purple-200 bg-purple-50 text-purple-600',
+    sky: 'border-sky-200 bg-sky-50 text-sky-600',
+    amber: 'border-amber-200 bg-amber-50 text-amber-700',
+    yellow: 'border-yellow-200 bg-yellow-50 text-yellow-700',
+    slate: 'border-slate-200 bg-slate-50 text-slate-600',
+    cyan: 'border-cyan-200 bg-cyan-50 text-cyan-700',
+    violet: 'border-violet-200 bg-violet-50 text-violet-600',
+    orange: 'border-orange-200 bg-orange-50 text-orange-600',
+    rose: 'border-rose-200 bg-rose-50 text-rose-600',
+    red: 'border-red-200 bg-red-50 text-red-600',
+    teal: 'border-teal-200 bg-teal-50 text-teal-600'
+  };
+  box.innerHTML = `
+    <div class="flex items-center justify-between mb-2">
+      <div class="text-xs font-bold uppercase tracking-wider text-slate-400">${pack.name} · ${pack.law}</div>
+      <div class="text-[10px] text-slate-400">${forms.length} form(s)</div>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+      ${forms.map(f => {
+        const c = colorMap[f.color] || colorMap.blue;
+        return `<button type="button" onclick="openHrDocForm('${f.id}')" class="text-left border rounded-xl p-4 hover:shadow-md transition ${c.split(' ').filter(x=>x.startsWith('border')||x.startsWith('bg')).join(' ')}">
+          <div class="text-xl mb-1 ${c.split(' ').find(x=>x.startsWith('text'))||''}"><i class="fas ${f.icon}"></i></div>
+          <div class="font-bold text-sm text-slate-800">${f.title}</div>
+          <div class="text-[11px] text-slate-500 mt-0.5" dir="rtl">${f.titleAr || ''}</div>
+          <div class="text-xs text-slate-500 mt-1">${f.desc}</div>
+        </button>`;
+      }).join('')}
+    </div>`;
+}
+
+function submitHrDocForm(formId) {
+  const form = document.getElementById('hrDocForm');
+  if (!form) return;
+  const fd = new FormData(form);
+  const empId = fd.get('empId');
+  const extras = {
+    effective: fd.get('effective') || '',
+    lastDay: fd.get('effective') || '',
+    amount: fd.get('amount') || '',
+    days: fd.get('amount') || '',
+    details: fd.get('details') || '',
+    reason: fd.get('details') || '',
+    purpose: fd.get('details') || '',
+    leaveType: 'Annual leave',
+    dateFrom: '',
+    dateTo: '',
+    incidentDate: fd.get('effective') || '',
+    since: fd.get('effective') || '',
+    returnDate: fd.get('effective') || '',
+    fromStatus: '',
+    toStatus: '',
+    repay: ''
+  };
+  previewHrDoc(formId, empId, extras);
+}
+function openHrDocForm(formId) {
+  if (formId === 'employment_contract') {
+    const empId = document.getElementById('quickContractEmp')?.value;
+    if (empId) { quickGenerateKuwaitContract(); return; }
+    openModal('generateContract');
+    return;
+  }
+  // Unified generator for other forms
+  openModal('hrDocUnified', formId);
+}
+
+function getEmpForHrDoc(id) {
+  return (data.employees || []).find(e => e.id === id) || null;
+}
+
+function buildHrDocSideBySide(formId, emp, extras) {
+  const packs = getHrDocTemplates();
+  const code = getHrDocCountry();
+  const pack = packs[code] || packs.KW;
+  const meta = (pack.forms || []).find(f => f.id === formId) || { title: formId, titleAr: formId };
+  const law = pack.law;
+  const cur = pack.currency;
+  const company = data.companyName || 'Company';
+  const companyAr = data.companyNameAr || company;
+  const hr = data.hrName || 'HR Manager';
+  const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+  const e = emp || {};
+  const name = e.name || extras.employeeName || '—';
+  const nameAr = e.nameAr || name;
+  const title = e.title || e.profession || '—';
+  const dept = e.department || '—';
+  const project = e.project || '—';
+  const basic = e.basicSalary != null ? e.basicSalary : '—';
+  const join = e.joinDate || '—';
+  const nat = e.nationality || '—';
+  const civil = e.civilIdNo || e.civilId || '—';
+  const passport = e.passportNo || '—';
+  const empId = e.id || '—';
+
+  const row = (en, ar) => `<tr><td class="col-en">${en}</td><td class="col-ar" dir="rtl">${ar}</td></tr>`;
+  let rows = '';
+
+  const commonHeader = (purposeEn, purposeAr) => {
+    rows += row(
+      `<strong>Employer:</strong> ${escHtml(company)}<br><strong>Date:</strong> ${today}<br><strong>Reference:</strong> ${escHtml(formId.toUpperCase())}-${escHtml(empId)}`,
+      `<strong>صاحب العمل:</strong> ${escHtml(companyAr)}<br><strong>التاريخ:</strong> ${today}<br><strong>المرجع:</strong> ${escHtml(formId.toUpperCase())}-${escHtml(empId)}`
+    );
+    rows += row(
+      `<strong>Employee:</strong> ${escHtml(name)} (${escHtml(empId)})<br>Title: ${escHtml(title)} · Dept: ${escHtml(dept)} · Project: ${escHtml(project)}<br>Nationality: ${escHtml(nat)} · Civil ID: ${escHtml(civil)} · Passport: ${escHtml(passport)}<br>Join date: ${escHtml(join)} · Basic: ${escHtml(String(basic))} ${cur}`,
+      `<strong>الموظف:</strong> ${escHtml(nameAr)} (${escHtml(empId)})<br>المسمى: ${escHtml(title)} · القسم: ${escHtml(dept)}<br>الجنسية: ${escHtml(nat)} · البطاقة المدنية: ${escHtml(civil)}<br>تاريخ الالتحاق: ${escHtml(join)} · الأساسي: ${escHtml(String(basic))} ${cur}`
+    );
+    rows += row(purposeEn, purposeAr);
+  };
+
+  if (formId === 'offer_letter') {
+    commonHeader(
+      `We are pleased to offer you the position of <strong>${escHtml(title)}</strong> with ${escHtml(company)}, subject to medical fitness, visa/work permit (if applicable), and signing the employment contract. Proposed basic salary: <strong>${escHtml(String(basic))} ${cur}</strong> per month. This offer is valid for 14 days and does not create employment until the contract is signed. Governing framework: ${escHtml(law)}.`,
+      `يسعدنا أن نعرض عليكم وظيفة <strong>${escHtml(title)}</strong> لدى ${escHtml(companyAr)}، بشرط اللياقة الطبية وتأشيرة/تصريح العمل (إن وجد) وتوقيع عقد العمل. الراتب الأساسي المقترح: <strong>${escHtml(String(basic))} ${cur}</strong> شهرياً. يسري هذا العرض لمدة 14 يوماً ولا ينشأ عنه علاقة عمل إلا بعد توقيع العقد. الإطار النظامي: ${escHtml(law)}.`
+    );
+  } else if (formId === 'salary_certificate') {
+    commonHeader(
+      `This is to certify that <strong>${escHtml(name)}</strong> is employed with ${escHtml(company)} as <strong>${escHtml(title)}</strong> since <strong>${escHtml(join)}</strong>. Current basic monthly salary is <strong>${escHtml(String(basic))} ${cur}</strong> (allowances as per contract). This certificate is issued upon the employee's request for official purposes without any liability on the company beyond the facts stated.`,
+      `نشهد بأن السيد/ة <strong>${escHtml(nameAr)}</strong> يعمل/تعمل لدى ${escHtml(companyAr)} بوظيفة <strong>${escHtml(title)}</strong> منذ <strong>${escHtml(join)}</strong>. الراتب الأساسي الشهري الحالي <strong>${escHtml(String(basic))} ${cur}</strong>. صدرت هذه الشهادة بناءً على طلب الموظف للجهات الرسمية دون أدنى مسؤولية على الشركة خلاف ما ورد.`
+    );
+  } else if (formId === 'experience_certificate') {
+    commonHeader(
+      `This is to certify that <strong>${escHtml(name)}</strong> worked with ${escHtml(company)} as <strong>${escHtml(title)}</strong> from <strong>${escHtml(join)}</strong> to ________. During employment, conduct and performance were satisfactory. Issued upon request.`,
+      `نشهد بأن <strong>${escHtml(nameAr)}</strong> قد عمل/عملت لدى ${escHtml(companyAr)} بوظيفة <strong>${escHtml(title)}</strong> من <strong>${escHtml(join)}</strong> إلى ________. كانت السلوكيات والأداء مرضية. صدرت بناءً على الطلب.`
+    );
+  } else if (formId === 'leave_request') {
+    commonHeader(
+      `<strong>Leave request</strong><br>Type: ${escHtml(extras.leaveType || 'Annual leave')}<br>From: ${escHtml(extras.dateFrom || '____/____/________')} To: ${escHtml(extras.dateTo || '____/____/________')}<br>Days: ${escHtml(extras.days || '____')} · Reason: ${escHtml(extras.reason || '________________')}<br>Employee signature: ________ · Supervisor: ________ · HR: ________<br><em>Leave is subject to approval and ${escHtml(law)} / company policy.</em>`,
+      `<strong>طلب إجازة</strong><br>النوع: ${escHtml(extras.leaveType || 'إجازة سنوية')}<br>من: ${escHtml(extras.dateFrom || '____')} إلى: ${escHtml(extras.dateTo || '____')}<br>الأيام: ${escHtml(extras.days || '____')} · السبب: ${escHtml(extras.reason || '________________')}<br>توقيع الموظف: ________ · المدير: ________ · الموارد البشرية: ________`
+    );
+  } else if (formId === 'advance_salary') {
+    commonHeader(
+      `<strong>Salary advance request</strong><br>Amount requested: ${escHtml(extras.amount || '________')} ${cur}<br>Reason: ${escHtml(extras.reason || '________________')}<br>Repayment: deduct from next salary / installments: ${escHtml(extras.repay || '________')}<br>I authorize deduction from my salary. Employee signature: ________ · Approved by: ________`,
+      `<strong>طلب سلفة على الراتب</strong><br>المبلغ: ${escHtml(extras.amount || '________')} ${cur}<br>السبب: ${escHtml(extras.reason || '________________')}<br>السداد: خصم من الراتب / أقساط: ${escHtml(extras.repay || '________')}<br>أفوض الخصم من راتبي. التوقيع: ________ · الاعتماد: ________`
+    );
+  } else if (formId === 'disciplinary_notice' || formId === 'warning_letter') {
+    commonHeader(
+      `<strong>${formId === 'warning_letter' ? 'Written warning' : 'Disciplinary notice'}</strong><br>Date of incident: ${escHtml(extras.incidentDate || '________')}<br>Description: ${escHtml(extras.details || '________________________________')}<br>This notice is issued under company policy and ${escHtml(law)}. Further violations may lead to additional measures up to termination where lawful.<br>Employee acknowledgment: ________ · HR: ${escHtml(hr)}`,
+      `<strong>${formId === 'warning_letter' ? 'إنذار كتابي' : 'إخطار تأديبي'}</strong><br>تاريخ الواقعة: ${escHtml(extras.incidentDate || '________')}<br>الوصف: ${escHtml(extras.details || '________________________________')}<br>يصدر هذا الإخطار وفق سياسة الشركة و${escHtml(law)}. قد يترتب على التكرار إجراءات إضافية بما فيها إنهاء الخدمة حيث يجيز القانون.<br>إقرار الموظف: ________ · الموارد البشرية: ${escHtml(hr)}`
+    );
+  } else if (formId === 'status_change') {
+    commonHeader(
+      `<strong>Employment status change</strong><br>Effective date: ${escHtml(extras.effective || '________')}<br>From: ${escHtml(extras.fromStatus || title + ' / ' + dept)} → To: ${escHtml(extras.toStatus || '________________')}<br>Reason: ${escHtml(extras.reason || 'Promotion / transfer / grade change')}<br>Approved by: ________ · HR records updated: ☐`,
+      `<strong>تغيير حالة التوظيف</strong><br>تاريخ السريان: ${escHtml(extras.effective || '________')}<br>من: ${escHtml(extras.fromStatus || title)} → إلى: ${escHtml(extras.toStatus || '________________')}<br>السبب: ${escHtml(extras.reason || 'ترقية / نقل / درجة')}<br>الاعتماد: ________ · تحديث السجلات: ☐`
+    );
+  } else if (formId === 'passport_request') {
+    commonHeader(
+      `<strong>Passport request</strong><br>I request release / temporary custody of my passport for: ${escHtml(extras.reason || 'renewal / travel / embassy')}.<br>Expected return date: ${escHtml(extras.returnDate || '________')}<br>Employee: ________ · Received by HR: ________ · Returned: ________`,
+      `<strong>طلب جواز السفر</strong><br>أطلب استلام/الاحتفاظ المؤقت بجواز سفري لغرض: ${escHtml(extras.reason || 'تجديد / سفر / سفارة')}.<br>تاريخ الإعادة المتوقع: ${escHtml(extras.returnDate || '________')}<br>الموظف: ________ · الاستلام: ________ · الإعادة: ________`
+    );
+  } else if (formId === 'resignation_letter') {
+    commonHeader(
+      `<strong>Resignation</strong><br>I, <strong>${escHtml(name)}</strong>, hereby resign from my position as ${escHtml(title)} with effect from <strong>${escHtml(extras.effective || '________')}</strong>. Last working day: ${escHtml(extras.lastDay || '________')}. I will complete handover and clearance. Notice period as per contract / ${escHtml(law)}.<br>Employee signature: ________`,
+      `<strong>استقالة</strong><br>أنا <strong>${escHtml(nameAr)}</strong> أتقدم باستقالتي من وظيفة ${escHtml(title)} اعتباراً من <strong>${escHtml(extras.effective || '________')}</strong>. آخر يوم عمل: ${escHtml(extras.lastDay || '________')}. سأتمم التسليم وإخلاء الطرف. فترة الإخطار وفق العقد / ${escHtml(law)}.<br>التوقيع: ________`
+    );
+  } else if (formId === 'termination_notice') {
+    commonHeader(
+      `<strong>Termination / end of employment notice</strong><br>This is to notify <strong>${escHtml(name)}</strong> that employment with ${escHtml(company)} will end on <strong>${escHtml(extras.effective || '________')}</strong>. Reason (as applicable under ${escHtml(law)}): ${escHtml(extras.reason || '________________')}. End-of-service and final dues will be processed as per law and contract after clearance.<br>HR: ${escHtml(hr)} · Employee acknowledgment: ________`,
+      `<strong>إشعار إنهاء خدمة</strong><br>يُخطر بموجب هذا <strong>${escHtml(nameAr)}</strong> بأن علاقة العمل مع ${escHtml(companyAr)} ستنتهي في <strong>${escHtml(extras.effective || '________')}</strong>. السبب (وفق ${escHtml(law)}): ${escHtml(extras.reason || '________________')}. تُسوّى مستحقات نهاية الخدمة بعد إخلاء الطرف.<br>الموارد البشرية: ${escHtml(hr)} · إقرار الموظف: ________`
+    );
+  } else if (formId === 'deemed_resignation') {
+    commonHeader(
+      `<strong>Deemed resignation / absence notice</strong><br>You have been absent without authorized leave since <strong>${escHtml(extras.since || '________')}</strong>. Under applicable labour rules and company policy, continued absence may be treated as resignation / cause for action. Contact HR within 3 working days.<br>HR: ${escHtml(hr)}`,
+      `<strong>إشعار غياب / استقالة حكمية</strong><br>ثبت غيابكم دون إجازة مصرح بها منذ <strong>${escHtml(extras.since || '________')}</strong>. قد يُعامل الاستمرار وفق النظام وسياسة الشركة. يرجى التواصل مع الموارد البشرية خلال 3 أيام عمل.<br>الموارد البشرية: ${escHtml(hr)}`
+    );
+  } else if (formId === 'exit_clearance') {
+    commonHeader(
+      `<strong>Exit clearance</strong><br>☐ IT assets returned · ☐ Tools/uniform · ☐ ID/access cards · ☐ Housing clearance · ☐ Finance (advances/loans) · ☐ Handover complete<br>Last working day: ${escHtml(extras.lastDay || '________')}<br>Dept head: ________ · Finance: ________ · HR: ________ · Employee: ________`,
+      `<strong>إخلاء طرف</strong><br>☐ أصول تقنية · ☐ عهدة/زي · ☐ بطاقات الدخول · ☐ السكن · ☐ المالية · ☐ التسليم<br>آخر يوم عمل: ${escHtml(extras.lastDay || '________')}<br>رئيس القسم: ________ · المالية: ________ · الموارد البشرية: ________ · الموظف: ________`
+    );
+  } else if (formId === 'noc_letter') {
+    commonHeader(
+      `<strong>No Objection Certificate</strong><br>${escHtml(company)} has no objection to <strong>${escHtml(name)}</strong> (${escHtml(title)}) regarding: ${escHtml(extras.purpose || 'travel / personal transaction / as stated')}. This NOC is issued for the stated purpose only and does not create additional obligations.<br>Authorized signatory: ${escHtml(hr)}`,
+      `<strong>شهادة عدم ممانعة</strong><br>لا تمانع ${escHtml(companyAr)} في شأن <strong>${escHtml(nameAr)}</strong> (${escHtml(title)}) بخصوص: ${escHtml(extras.purpose || 'سفر / معاملة شخصية')}. صدرت لذات الغرض دون التزامات إضافية.<br>المفوض: ${escHtml(hr)}`
+    );
+  } else {
+    commonHeader(
+      `Document type: ${escHtml(meta.title)}. Please complete remaining blanks and obtain signatures. Framework: ${escHtml(law)}.`,
+      `نوع المستند: ${escHtml(meta.titleAr || meta.title)}. يرجى إكمال الفراغات والتوقيعات. الإطار: ${escHtml(law)}.`
+    );
+  }
+
+  rows += row(
+    `<strong>Employer / HR</strong><br>Name: ${escHtml(hr)}<br>Signature: _________________<br>Date: ________`,
+    `<strong>صاحب العمل / الموارد البشرية</strong><br>الاسم: ${escHtml(hr)}<br>التوقيع: _________________<br>التاريخ: ________`
+  );
+
+  return `<div class="contract-print">
+    <div class="contract-header">
+      <div class="company">${escHtml(company)}</div>
+      <div class="company-ar" dir="rtl">${escHtml(companyAr)}</div>
+      <div class="doc-title">${escHtml(meta.title)} · ${escHtml(meta.titleAr || '')}</div>
+      <div class="doc-sub">${escHtml(pack.name)} · ${escHtml(law)}</div>
+      <div class="doc-sub" style="font-weight:700;color:#0f766e">Side-by-side EN | AR · Print-ready</div>
+      <div class="meta">Date: ${today} · Currency: ${cur}</div>
+    </div>
+    <table class="side-table">
+      <thead><tr><th class="col-en">English</th><th class="col-ar" dir="rtl">العربية</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <p class="footer-note">System-generated for printing. Verify against official records before signature. Not legal advice.</p>
+  </div>`;
+}
+
+function previewHrDoc(formId, empId, extras) {
+  extras = extras || {};
+  const emp = empId ? getEmpForHrDoc(empId) : null;
+  if (!emp && formId !== 'employment_contract') {
+    showToast('Select an employee', 'warning');
+    return;
+  }
+  const preview = buildHrDocSideBySide(formId, emp, extras);
+  const content = document.getElementById('modalContent');
+  if (!content) return;
+  content.style.maxWidth = '960px';
+  window._pendingHrDoc = { formId, empId, extras, html: preview };
+  content.innerHTML = `
+    <div class="p-6">
+      <div class="flex justify-between items-start mb-3 gap-2">
+        <div>
+          <h3 class="text-xl font-bold">Document preview — side by side</h3>
+          <p class="text-xs text-gray-500">${getHrDocCountry()} · Print-ready EN | AR</p>
+        </div>
+        <button onclick="closeModal()" class="text-gray-400"><i class="fas fa-times text-xl"></i></button>
+      </div>
+      <div id="contractPreviewBody" class="border rounded-xl p-3 max-h-[60vh] overflow-y-auto bg-white shadow-inner">
+        <style>
+          #contractPreviewBody .contract-header{text-align:center;margin-bottom:10px;border-bottom:2px solid #0f766e;padding-bottom:8px}
+          #contractPreviewBody .contract-header .company{font-size:15px;font-weight:700}
+          #contractPreviewBody .contract-header .company-ar{font-size:14px;font-weight:700}
+          #contractPreviewBody .contract-header .doc-title{font-size:16px;font-weight:800;margin-top:8px}
+          #contractPreviewBody .contract-header .doc-sub,#contractPreviewBody .contract-header .meta{font-size:11px;color:#64748b;margin-top:3px}
+          #contractPreviewBody table.side-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:12px}
+          #contractPreviewBody table.side-table th{background:#0f766e;color:#fff;padding:6px 8px;width:50%;border:1px solid #0f766e}
+          #contractPreviewBody table.side-table td{vertical-align:top;padding:8px;border:1px solid #cbd5e1;width:50%;line-height:1.4}
+          #contractPreviewBody table.side-table td.col-en{border-right:2px solid #0f766e}
+          #contractPreviewBody table.side-table td.col-ar{text-align:right;font-family:Tahoma,Segoe UI,Arial,sans-serif}
+          #contractPreviewBody .footer-note{font-size:10px;color:#94a3b8;margin-top:8px;text-align:center}
+        </style>
+        ${preview}
+      </div>
+      <div class="flex flex-wrap gap-2 mt-4">
+        <button type="button" onclick="closeModal()" class="flex-1 min-w-[100px] bg-gray-100 py-2.5 rounded-lg font-semibold text-sm">Close</button>
+        <button type="button" onclick="printContractPreview()" class="flex-1 min-w-[100px] bg-slate-800 text-white py-2.5 rounded-lg font-semibold text-sm"><i class="fas fa-print mr-1"></i>Print / PDF</button>
+      </div>
+    </div>`;
+  document.getElementById('modalBackdrop').classList.remove('hidden');
 }
 
 function buildEmploymentContractPreviewHtml(fd) {
