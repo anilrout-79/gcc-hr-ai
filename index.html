@@ -714,6 +714,7 @@
 
       <div class="px-4 mt-4 mb-1 text-xs text-gray-500 uppercase tracking-wider">Documents</div>
       <a class="sidebar-item flex items-center gap-3 px-5 py-2.5" data-section="contracts"><i class="fas fa-file-contract w-5"></i> <span data-i18n="nav_contracts">Contracts</span></a>
+      <a class="sidebar-item flex items-center gap-3 px-5 py-2.5" data-section="reports"><i class="fas fa-chart-bar w-5"></i> <span data-i18n="nav_reports">Reports</span></a>
       <a class="sidebar-item flex items-center gap-3 px-5 py-2.5" data-section="mobilization"><i class="fas fa-plane-departure w-5"></i> <span data-i18n="nav_mobilization">Mobilization</span></a>
 
       <div class="px-4 mt-4 mb-1 text-xs text-gray-500 uppercase tracking-wider">Growth</div>
@@ -1649,6 +1650,60 @@
       </section>
 
       <!-- ==================== MOBILIZATION ==================== -->
+      <section id="reports-section" class="section-content hidden">
+        <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
+          <div class="flex flex-wrap items-end justify-between gap-3 mb-5">
+            <div>
+              <h3 class="text-lg font-bold"><i class="fas fa-chart-bar text-teal-600 mr-2"></i>Reports Centre</h3>
+              <p class="text-sm text-gray-500">HR · Payroll · Finance — country-specific balances and registers</p>
+            </div>
+            <div class="flex flex-wrap gap-2 items-end">
+              <div>
+                <label class="text-[10px] font-semibold text-slate-500 uppercase">Country</label>
+                <select id="reportCountry" onchange="renderReportCatalog()" class="border rounded-lg px-3 py-2 text-sm block mt-0.5">
+                  <option value="KW">Kuwait</option>
+                  <option value="SA">Saudi Arabia</option>
+                  <option value="AE">UAE</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-[10px] font-semibold text-slate-500 uppercase">Area</label>
+                <select id="reportArea" onchange="renderReportCatalog()" class="border rounded-lg px-3 py-2 text-sm block mt-0.5">
+                  <option value="all">All</option>
+                  <option value="hr">HR</option>
+                  <option value="payroll">Payroll</option>
+                  <option value="finance">Finance</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-[10px] font-semibold text-slate-500 uppercase">Period (YYYY-MM)</label>
+                <input type="month" id="reportPeriod" class="border rounded-lg px-3 py-2 text-sm block mt-0.5" />
+              </div>
+              <div>
+                <label class="text-[10px] font-semibold text-slate-500 uppercase">Project</label>
+                <select id="reportProject" class="border rounded-lg px-3 py-2 text-sm block mt-0.5 min-w-[140px]">
+                  <option value="all">All projects</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div id="reportCatalog" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-6"></div>
+          <div id="reportOutput" class="hidden border border-slate-200 rounded-xl overflow-hidden">
+            <div class="flex flex-wrap items-center justify-between gap-2 px-4 py-3 bg-slate-50 border-b">
+              <div>
+                <div class="font-bold text-slate-800" id="reportOutputTitle">Report</div>
+                <div class="text-xs text-slate-500" id="reportOutputMeta"></div>
+              </div>
+              <div class="flex gap-2">
+                <button type="button" onclick="printActiveReport()" class="bg-slate-800 text-white px-3 py-2 rounded-lg text-sm font-semibold"><i class="fas fa-print mr-1"></i>Print / PDF</button>
+                <button type="button" onclick="exportActiveReportExcel()" class="bg-emerald-600 text-white px-3 py-2 rounded-lg text-sm font-semibold"><i class="fas fa-file-excel mr-1"></i>Excel</button>
+              </div>
+            </div>
+            <div id="reportOutputBody" class="p-4 overflow-x-auto max-h-[55vh] overflow-y-auto text-sm"></div>
+          </div>
+        </div>
+      </section>
+
       <section id="mobilization-section" class="section-content hidden">
         <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
           <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
@@ -2039,7 +2094,7 @@ let STORAGE_KEY = (function() {
 
 // ---- Supabase cloud (fill key if empty) ----
 const SUPABASE_URL = 'https://jlhlayydqcsvmmzdypcr.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_N8t3mr2fEUNbGQuV8qThSg_ECIYi7V7'; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
+const SUPABASE_KEY = localStorage.getItem('gcc_supabase_key') || ''; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
 let supabaseClient = null;
 try {
   if (window.supabase && SUPABASE_URL && SUPABASE_KEY) {
@@ -3084,7 +3139,7 @@ function switchSection(section) {
   if (el) el.classList.remove('hidden');
   const nav = document.querySelector(`.sidebar-item[data-section="${section}"]`);
   if (nav) nav.classList.add('active');
-  const titles = { dashboard: 'Dashboard', employees: 'Employees', customfields: 'Admin Controls', attendance: 'Attendance', leave: 'Leave', compliance: 'Document Expiry', payroll: 'Payroll', calculator: 'Payroll Calculator', settlement: 'Final Settlement', wps: 'WPS Export', contracts: 'Contracts', mobilization: 'Mobilization', projects: 'Projects', performance: 'Performance', accounting: 'Accounting Ledger', pnl: 'P&L Report', projectpnl: 'Project P&L', invoices: 'Invoices', suppliers: 'Supplier Bills', cashbooks: 'Cash & Bank', assets: 'Assets', budget: 'Budget', vat: 'VAT Notes', reminders: 'Reminders', settings: 'Settings' };
+  const titles = { dashboard: 'Dashboard', employees: 'Employees', customfields: 'Admin Controls', attendance: 'Attendance', leave: 'Leave', compliance: 'Document Expiry', payroll: 'Payroll', calculator: 'Payroll Calculator', settlement: 'Final Settlement', wps: 'WPS Export', contracts: 'Contracts', reports: 'Reports', mobilization: 'Mobilization', projects: 'Projects', performance: 'Performance', accounting: 'Accounting Ledger', pnl: 'P&L Report', projectpnl: 'Project P&L', invoices: 'Invoices', suppliers: 'Supplier Bills', cashbooks: 'Cash & Bank', assets: 'Assets', budget: 'Budget', vat: 'VAT Notes', reminders: 'Reminders', settings: 'Settings' };
   document.getElementById('pageTitle').textContent = titles[section] || section;
   if (section === 'employees') renderEmployees();
   if (section === 'customfields') renderCustomFields();
@@ -3100,6 +3155,7 @@ function switchSection(section) {
   if (section === 'accounting') try { updateAccountingCountryUI(); renderAccounting(); } catch (_) {}
   if (section === 'settings') loadSettingsForm();
   if (section === 'contracts') renderContractsList();
+  if (section === 'reports') { try { initReportsSection(); } catch (e) { console.warn(e); } }
   if (section === 'compliance') { renderCompliance(); try { populateVaultEmployeeSelect(); renderDocVaultList(); } catch(_){} }
   if (section === 'wps') renderWPS();
   if (section === 'leave') renderLeaveModule();
@@ -6692,6 +6748,359 @@ function previewHrDoc(formId, empId, extras) {
     </div>`;
   document.getElementById('modalBackdrop').classList.remove('hidden');
 }
+
+
+// ========== Reports Centre (country-aware HR / Payroll / Finance) ==========
+window._activeReport = null;
+
+function initReportsSection() {
+  const per = document.getElementById('reportPeriod');
+  if (per && !per.value) per.value = new Date().toISOString().slice(0, 7);
+  const rc = document.getElementById('reportCountry');
+  if (rc && currentCountry) rc.value = currentCountry;
+  const rp = document.getElementById('reportProject');
+  if (rp) {
+    const cur = rp.value;
+    rp.innerHTML = '<option value="all">All projects</option>' +
+      [...new Set((data.employees || []).map(e => e.project).filter(Boolean))].sort()
+        .map(p => `<option value="${p}">${p}</option>`).join('');
+    if (cur) rp.value = cur;
+  }
+  renderReportCatalog();
+}
+
+function getReportCountryMeta() {
+  const code = document.getElementById('reportCountry')?.value || currentCountry || 'KW';
+  const law = (typeof laborLaws !== 'undefined' && laborLaws[code]) ? laborLaws[code] : (laborLaws && laborLaws.KW) || {};
+  const names = { KW: 'Kuwait', SA: 'Saudi Arabia', AE: 'UAE' };
+  const lawNote = {
+    KW: 'Kuwait Law No. 6/2010 — leave & EOS per private sector rules',
+    SA: 'Saudi Labour Law — leave & end-of-service per statute/contract',
+    AE: 'UAE Federal Decree-Law 33/2021 — leave & gratuity framework'
+  };
+  return {
+    code,
+    name: names[code] || code,
+    currency: law.currency || (code === 'SA' ? 'SAR' : code === 'AE' ? 'AED' : 'KD'),
+    annualLeave: law.annualLeaveDays || 30,
+    lawNote: lawNote[code] || '',
+    law
+  };
+}
+
+function getReportCatalog() {
+  return [
+    { id: 'leave_balance', area: 'hr', title: 'Leave Balance', desc: 'Annual leave entitlement vs used / pending', icon: 'fa-calendar-check', color: 'teal' },
+    { id: 'sick_leave_balance', area: 'hr', title: 'Sick Leave Balance', desc: 'Indicative sick leave usage (from leave requests)', icon: 'fa-notes-medical', color: 'rose' },
+    { id: 'eos_balance', area: 'hr', title: 'End of Service Balance', desc: 'Estimated EOS / gratuity by country rules', icon: 'fa-hand-holding-usd', color: 'amber' },
+    { id: 'headcount', area: 'hr', title: 'Headcount Register', desc: 'Active employees by project / nationality', icon: 'fa-users', color: 'blue' },
+    { id: 'doc_expiry', area: 'hr', title: 'Document Expiry', desc: 'Civil ID / passport / visa risk list', icon: 'fa-id-card', color: 'red' },
+    { id: 'payroll_summary', area: 'payroll', title: 'Payroll Summary', desc: 'Period payroll with OT from attendance', icon: 'fa-money-bill-wave', color: 'emerald' },
+    { id: 'payroll_detail', area: 'payroll', title: 'Payroll Detail', desc: 'Employee-level pay components', icon: 'fa-list-ul', color: 'indigo' },
+    { id: 'ot_report', area: 'payroll', title: 'Overtime Report', desc: 'OT hours by employee for period', icon: 'fa-business-time', color: 'violet' },
+    { id: 'wps_preview', area: 'payroll', title: 'WPS / Bank Transfer List', desc: 'Net pay list for bank file prep', icon: 'fa-university', color: 'cyan' },
+    { id: 'pnl_summary', area: 'finance', title: 'P&L Snapshot', desc: 'Income vs expense from ledger', icon: 'fa-chart-line', color: 'slate' },
+    { id: 'expense_register', area: 'finance', title: 'Expense Register', desc: 'Journal expenses by account', icon: 'fa-receipt', color: 'orange' },
+    { id: 'ar_invoices', area: 'finance', title: 'Sales Invoices (AR)', desc: 'Customer invoices register', icon: 'fa-file-invoice', color: 'sky' },
+    { id: 'ap_bills', area: 'finance', title: 'Supplier Bills (AP)', desc: 'Payables register', icon: 'fa-file-invoice-dollar', color: 'pink' },
+    { id: 'cash_bank', area: 'finance', title: 'Cash & Bank Summary', desc: 'Opening + movements snapshot', icon: 'fa-wallet', color: 'lime' },
+    { id: 'project_cost', area: 'finance', title: 'Project Manpower Cost', desc: 'Estimated monthly manpower by project', icon: 'fa-project-diagram', color: 'fuchsia' },
+  ];
+}
+
+function renderReportCatalog() {
+  const box = document.getElementById('reportCatalog');
+  if (!box) return;
+  const area = document.getElementById('reportArea')?.value || 'all';
+  const meta = getReportCountryMeta();
+  let list = getReportCatalog();
+  if (area !== 'all') list = list.filter(r => r.area === area);
+  const colors = {
+    teal: 'border-teal-200 bg-teal-50 text-teal-700',
+    rose: 'border-rose-200 bg-rose-50 text-rose-700',
+    amber: 'border-amber-200 bg-amber-50 text-amber-800',
+    blue: 'border-blue-200 bg-blue-50 text-blue-700',
+    red: 'border-red-200 bg-red-50 text-red-700',
+    emerald: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+    indigo: 'border-indigo-200 bg-indigo-50 text-indigo-700',
+    violet: 'border-violet-200 bg-violet-50 text-violet-700',
+    cyan: 'border-cyan-200 bg-cyan-50 text-cyan-800',
+    slate: 'border-slate-200 bg-slate-50 text-slate-700',
+    orange: 'border-orange-200 bg-orange-50 text-orange-800',
+    sky: 'border-sky-200 bg-sky-50 text-sky-800',
+    pink: 'border-pink-200 bg-pink-50 text-pink-700',
+    lime: 'border-lime-200 bg-lime-50 text-lime-800',
+    fuchsia: 'border-fuchsia-200 bg-fuchsia-50 text-fuchsia-800'
+  };
+  box.innerHTML = list.map(r => {
+    const c = colors[r.color] || colors.slate;
+    return `<button type="button" onclick="runReport('${r.id}')" class="text-left border rounded-xl p-4 hover:shadow-md transition ${c}">
+      <div class="text-lg mb-1"><i class="fas ${r.icon}"></i></div>
+      <div class="font-bold text-sm text-slate-900">${r.title}</div>
+      <div class="text-xs text-slate-600 mt-1">${r.desc}</div>
+      <div class="text-[10px] mt-2 opacity-70 uppercase font-semibold">${r.area} · ${meta.name}</div>
+    </button>`;
+  }).join('');
+}
+
+function reportFilteredEmployees() {
+  const project = document.getElementById('reportProject')?.value || 'all';
+  let emps = Array.isArray(data.employees) ? data.employees.slice() : [];
+  if (project !== 'all') emps = emps.filter(e => e.project === project);
+  return emps;
+}
+
+function estimateEosAmount(e, meta) {
+  const basic = parseFloat(e.basicSalary) || 0;
+  if (!basic || !e.joinDate) return { years: 0, amount: 0, note: 'Missing join date or basic' };
+  const start = new Date(e.joinDate);
+  const years = Math.max(0, (Date.now() - start.getTime()) / (365.25 * 86400000));
+  let amount = 0;
+  let note = '';
+  const code = meta.code;
+  // Simplified statutory-style estimates for reporting (not legal determination)
+  if (code === 'KW') {
+    // Common private-sector practice illustration: 15 days/year first 5 yrs, 30 days after (on basic) — simplified
+    const y1 = Math.min(years, 5);
+    const y2 = Math.max(0, years - 5);
+    amount = (y1 * (basic / 2)) + (y2 * basic);
+    note = 'KW-style estimate on basic (15d/yr ≤5y, 30d/yr after) — confirm under Law 6/2010 & contract';
+  } else if (code === 'SA') {
+    amount = years <= 5 ? years * (basic / 2) : (5 * (basic / 2)) + ((years - 5) * basic);
+    note = 'SA-style gratuity estimate on basic — confirm under Labour Law & contract';
+  } else {
+    // UAE limited-contract style rough: 21 days/year first 5, 30 after — simplified
+    const y1 = Math.min(years, 5);
+    const y2 = Math.max(0, years - 5);
+    amount = (y1 * (basic * 21 / 30)) + (y2 * basic);
+    note = 'UAE-style gratuity estimate — confirm under Decree-Law 33/2021 & contract type';
+  }
+  return { years: Math.round(years * 100) / 100, amount: Math.round(amount * 1000) / 1000, note };
+}
+
+function buildReportTable(headers, rows) {
+  const thead = headers.map(h => `<th class="text-left px-3 py-2 bg-slate-100 text-xs uppercase text-slate-600 border-b">${h}</th>`).join('');
+  const body = rows.length
+    ? rows.map(r => `<tr class="border-b border-slate-100 hover:bg-slate-50">${r.map(c => `<td class="px-3 py-2 whitespace-nowrap">${c}</td>`).join('')}</tr>`).join('')
+    : `<tr><td colspan="${headers.length}" class="px-3 py-8 text-center text-slate-400">No data for current filters</td></tr>`;
+  return `<table class="w-full text-sm border border-slate-200 rounded-lg overflow-hidden"><thead><tr>${thead}</tr></thead><tbody>${body}</tbody></table>`;
+}
+
+function runReport(id) {
+  const meta = getReportCountryMeta();
+  const period = document.getElementById('reportPeriod')?.value || new Date().toISOString().slice(0, 7);
+  const project = document.getElementById('reportProject')?.value || 'all';
+  const emps = reportFilteredEmployees();
+  const cat = getReportCatalog().find(r => r.id === id) || { title: id };
+  let headers = [];
+  let rows = [];
+  let excelRows = [];
+  let footnote = meta.lawNote;
+
+  if (id === 'leave_balance') {
+    headers = ['Employee', 'ID', 'Project', 'Entitlement', 'Used', 'Pending', 'Balance', 'Unit'];
+    emps.forEach(e => {
+      const ent = e.leaveEntitlement != null ? e.leaveEntitlement : meta.annualLeave;
+      const used = e.leaveUsed || 0;
+      const pending = e.leavePending || 0;
+      const bal = ent - used - pending;
+      rows.push([e.name, e.id, e.project || '—', ent, used, pending, bal, 'days']);
+      excelRows.push({ Employee: e.name, ID: e.id, Project: e.project || '', Entitlement: ent, Used: used, Pending: pending, Balance: bal });
+    });
+    footnote += ` · Default annual leave ${meta.annualLeave} days for ${meta.name} if not set on employee.`;
+  } else if (id === 'sick_leave_balance') {
+    headers = ['Employee', 'ID', 'Sick requests', 'Days (approved)', 'Note'];
+    const reqs = data.leaveRequests || [];
+    emps.forEach(e => {
+      const mine = reqs.filter(r => (r.employeeId === e.id || r.employee_id === e.id) && String(r.type || r.leaveType || '').toLowerCase().includes('sick'));
+      const approved = mine.filter(r => (r.status || '').toLowerCase() === 'approved');
+      const days = approved.reduce((s, r) => s + (parseFloat(r.days) || 0), 0);
+      rows.push([e.name, e.id, mine.length, days, 'Track sick leave types in Leave module']);
+      excelRows.push({ Employee: e.name, ID: e.id, Requests: mine.length, ApprovedDays: days });
+    });
+    footnote += ' · Sick leave statutory bands differ by country; this report shows usage from system requests.';
+  } else if (id === 'eos_balance') {
+    headers = ['Employee', 'ID', 'Join', 'Years', 'Basic', `EOS est. (${meta.currency})`, 'Note'];
+    emps.forEach(e => {
+      const eos = estimateEosAmount(e, meta);
+      rows.push([e.name, e.id, e.joinDate || '—', eos.years, e.basicSalary || 0, eos.amount, 'Estimate']);
+      excelRows.push({ Employee: e.name, ID: e.id, Join: e.joinDate || '', Years: eos.years, Basic: e.basicSalary || 0, EOS_Estimate: eos.amount, Currency: meta.currency });
+    });
+    footnote = (emps[0] ? estimateEosAmount(emps[0], meta).note : meta.lawNote) + ' · Not a final settlement calculation.';
+  } else if (id === 'headcount') {
+    headers = ['Employee', 'ID', 'Title', 'Nationality', 'Project', 'Status', 'Join'];
+    emps.forEach(e => {
+      rows.push([e.name, e.id, e.title || '—', e.nationality || '—', e.project || '—', e.status || '—', e.joinDate || '—']);
+      excelRows.push({ Employee: e.name, ID: e.id, Title: e.title || '', Nationality: e.nationality || '', Project: e.project || '', Status: e.status || '', Join: e.joinDate || '' });
+    });
+  } else if (id === 'doc_expiry') {
+    headers = ['Employee', 'Document', 'Expiry', 'Days left', 'Project'];
+    const alerts = typeof getAllDocumentAlerts === 'function' ? getAllDocumentAlerts() : [];
+    const filtered = alerts.filter(a => project === 'all' || a.project === project);
+    filtered.forEach(a => {
+      rows.push([a.employeeName, a.type, a.expiry, a.daysLeft, a.project || '—']);
+      excelRows.push({ Employee: a.employeeName, Document: a.type, Expiry: a.expiry, DaysLeft: a.daysLeft, Project: a.project || '' });
+    });
+  } else if (id === 'payroll_summary' || id === 'payroll_detail') {
+    headers = id === 'payroll_summary'
+      ? ['Employees', 'Basic total', 'Allowances', 'OT', 'Net total', 'Currency']
+      : ['Employee', 'ID', 'Basic', 'Allowances', 'OT hrs', 'OT pay', 'Net', 'Currency'];
+    let tBasic = 0, tAlw = 0, tOt = 0, tNet = 0;
+    emps.forEach(e => {
+      const br = typeof getPayslipBreakdown === 'function' ? getPayslipBreakdown(e, period) : null;
+      const basic = br ? br.basic : (e.basicSalary || 0);
+      const alw = br ? br.alw : 0;
+      const otH = br ? br.otHours : 0;
+      const otP = br ? br.otPay : 0;
+      const net = br ? br.net : (typeof getTotalSalary === 'function' ? getTotalSalary(e) : basic);
+      tBasic += basic; tAlw += alw; tOt += otP; tNet += net;
+      if (id === 'payroll_detail') {
+        rows.push([e.name, e.id, basic.toFixed(3), alw.toFixed(3), otH, otP.toFixed(3), net.toFixed(3), meta.currency]);
+        excelRows.push({ Employee: e.name, ID: e.id, Basic: basic, Allowances: alw, OT_Hours: otH, OT_Pay: otP, Net: net, Currency: meta.currency, Period: period });
+      }
+    });
+    if (id === 'payroll_summary') {
+      rows.push([emps.length, tBasic.toFixed(3), tAlw.toFixed(3), tOt.toFixed(3), tNet.toFixed(3), meta.currency]);
+      excelRows.push({ Employees: emps.length, BasicTotal: tBasic, Allowances: tAlw, OT: tOt, NetTotal: tNet, Currency: meta.currency, Period: period });
+    }
+    footnote += ` · Period ${period}. OT from attendance logs.`;
+  } else if (id === 'ot_report') {
+    headers = ['Employee', 'ID', 'OT hours', 'OT pay', 'Currency'];
+    emps.forEach(e => {
+      const br = typeof getPayslipBreakdown === 'function' ? getPayslipBreakdown(e, period) : { otHours: 0, otPay: 0 };
+      rows.push([e.name, e.id, br.otHours || 0, (br.otPay || 0).toFixed(3), meta.currency]);
+      excelRows.push({ Employee: e.name, ID: e.id, OT_Hours: br.otHours || 0, OT_Pay: br.otPay || 0, Period: period });
+    });
+  } else if (id === 'wps_preview') {
+    headers = ['Employee', 'ID', 'IBAN / Bank', 'Net', 'Currency'];
+    emps.forEach(e => {
+      const net = typeof getPayslipBreakdown === 'function' ? getPayslipBreakdown(e, period).net : (typeof getTotalSalary === 'function' ? getTotalSalary(e) : 0);
+      const iban = e.iban || e.custom?.iban || e.custom?.IBAN || '—';
+      rows.push([e.name, e.id, iban, Number(net).toFixed(3), meta.currency]);
+      excelRows.push({ Employee: e.name, ID: e.id, IBAN: iban, Net: net, Currency: meta.currency, Period: period });
+    });
+  } else if (id === 'pnl_summary') {
+    headers = ['Type', 'Amount', 'Currency'];
+    const je = data.journalEntries || [];
+    const inv = data.invoices || [];
+    const income = je.filter(j => (j.type || '').toLowerCase() === 'income').reduce((s, j) => s + (parseFloat(j.amount) || 0), 0)
+      + inv.reduce((s, i) => s + (parseFloat(i.amount || i.total) || 0), 0);
+    const expense = je.filter(j => (j.type || '').toLowerCase() === 'expense').reduce((s, j) => s + (parseFloat(j.amount) || 0), 0);
+    rows = [
+      ['Income / Sales', income.toFixed(3), meta.currency],
+      ['Expenses', expense.toFixed(3), meta.currency],
+      ['Net (approx.)', (income - expense).toFixed(3), meta.currency]
+    ];
+    excelRows = [
+      { Type: 'Income', Amount: income },
+      { Type: 'Expense', Amount: expense },
+      { Type: 'Net', Amount: income - expense }
+    ];
+  } else if (id === 'expense_register') {
+    headers = ['Date', 'Account', 'Description', 'Project', 'Amount'];
+    (data.journalEntries || []).filter(j => (j.type || '').toLowerCase() === 'expense').forEach(j => {
+      rows.push([j.date || '—', j.account || '—', j.description || '—', j.project || '—', j.amount || 0]);
+      excelRows.push({ Date: j.date, Account: j.account, Description: j.description, Project: j.project, Amount: j.amount });
+    });
+  } else if (id === 'ar_invoices') {
+    headers = ['Invoice', 'Client', 'Date', 'Amount', 'Status'];
+    (data.invoices || []).forEach(i => {
+      rows.push([i.number || i.id || '—', i.client || i.customer || '—', i.date || '—', i.amount || i.total || 0, i.status || '—']);
+      excelRows.push({ Invoice: i.number || i.id, Client: i.client || i.customer, Date: i.date, Amount: i.amount || i.total, Status: i.status });
+    });
+  } else if (id === 'ap_bills') {
+    headers = ['Bill', 'Supplier', 'Date', 'Amount', 'Status'];
+    (data.supplierBills || data.bills || []).forEach(i => {
+      rows.push([i.number || i.id || '—', i.supplier || '—', i.date || '—', i.amount || 0, i.status || '—']);
+      excelRows.push({ Bill: i.number || i.id, Supplier: i.supplier, Date: i.date, Amount: i.amount, Status: i.status });
+    });
+  } else if (id === 'cash_bank') {
+    headers = ['Item', 'Amount'];
+    const opening = data.cashOpening || 0;
+    const tx = data.cashTxns || [];
+    const inAmt = tx.filter(t => (t.type || '').toLowerCase() === 'in').reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
+    const outAmt = tx.filter(t => (t.type || '').toLowerCase() === 'out').reduce((s, t) => s + (parseFloat(t.amount) || 0), 0);
+    rows = [
+      ['Opening balance', opening],
+      ['Cash in', inAmt],
+      ['Cash out', outAmt],
+      ['Closing (approx.)', opening + inAmt - outAmt]
+    ];
+    excelRows = rows.map(r => ({ Item: r[0], Amount: r[1] }));
+  } else if (id === 'project_cost') {
+    headers = ['Project', 'Headcount', `Monthly cost (${meta.currency})`];
+    const map = {};
+    emps.forEach(e => {
+      const p = e.project || 'Unassigned';
+      if (!map[p]) map[p] = { n: 0, cost: 0 };
+      map[p].n++;
+      map[p].cost += typeof getTotalSalary === 'function' ? getTotalSalary(e) : (e.basicSalary || 0);
+    });
+    Object.keys(map).sort().forEach(p => {
+      rows.push([p, map[p].n, map[p].cost.toFixed(3)]);
+      excelRows.push({ Project: p, Headcount: map[p].n, MonthlyCost: map[p].cost });
+    });
+  }
+
+  const htmlTable = buildReportTable(headers, rows);
+  const out = document.getElementById('reportOutput');
+  const body = document.getElementById('reportOutputBody');
+  const title = document.getElementById('reportOutputTitle');
+  const metaEl = document.getElementById('reportOutputMeta');
+  if (out) out.classList.remove('hidden');
+  if (title) title.textContent = cat.title;
+  if (metaEl) metaEl.textContent = `${meta.name} · ${period} · Project: ${project} · ${emps.length} employees in filter`;
+  if (body) body.innerHTML = htmlTable + `<p class="text-xs text-slate-500 mt-3">${footnote}</p>`;
+
+  window._activeReport = {
+    id, title: cat.title, headers, rows, excelRows, meta, period, project, footnote
+  };
+  try { logAudit('report', id); } catch (_) {}
+  showToast(cat.title + ' generated', 'success');
+}
+
+function printActiveReport() {
+  if (!window._activeReport) { showToast('Generate a report first', 'warning'); return; }
+  const r = window._activeReport;
+  const w = window.open('', '_blank');
+  if (!w) return;
+  const table = document.getElementById('reportOutputBody')?.innerHTML || '';
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${r.title}</title>
+  <style>body{font-family:Segoe UI,Arial,sans-serif;padding:24px;color:#0f172a}
+  h1{font-size:18px;margin:0 0 4px} .meta{color:#64748b;font-size:12px;margin-bottom:16px}
+  table{width:100%;border-collapse:collapse;font-size:12px} th,td{border:1px solid #e2e8f0;padding:6px 8px;text-align:left}
+  th{background:#f1f5f9}@media print{.no-print{display:none}}</style></head><body>
+  <h1>${r.title}</h1>
+  <div class="meta">${r.meta.name} · ${r.period} · Project: ${r.project}</div>
+  ${table}
+  <p class="no-print"><button onclick="window.print()">Print / Save PDF</button></p>
+  </body></html>`);
+  w.document.close();
+  setTimeout(() => { try { w.print(); } catch (_) {} }, 300);
+}
+
+function exportActiveReportExcel() {
+  if (!window._activeReport) { showToast('Generate a report first', 'warning'); return; }
+  const r = window._activeReport;
+  if (typeof XLSX === 'undefined') {
+    // CSV fallback
+    const headers = r.headers || [];
+    const lines = [headers.join(',')].concat((r.rows || []).map(row => row.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')));
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${r.id}_${r.period}.csv`;
+    a.click();
+    showToast('CSV exported', 'success');
+    return;
+  }
+  const ws = XLSX.utils.json_to_sheet(r.excelRows.length ? r.excelRows : [{}]);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Report');
+  XLSX.writeFile(wb, `${r.id}_${r.meta.code}_${r.period}.xlsx`);
+  showToast('Excel exported', 'success');
+}
+
 
 function buildEmploymentContractPreviewHtml(fd) {
   const g = (k) => (fd.get(k) || '').toString().trim();
