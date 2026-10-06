@@ -1527,12 +1527,28 @@
             <p class="text-xs text-slate-500 flex-1">All generated Word files use this letterhead when logo/address is set. Employee fields auto-fill from the selected staff record.</p>
           </div>
 
+          <div class="bg-gradient-to-r from-blue-50 to-teal-50 border border-blue-100 rounded-xl p-4 mb-5">
+            <div class="flex flex-wrap items-end gap-3">
+              <div class="flex-1 min-w-[200px]">
+                <div class="text-sm font-bold text-slate-800 mb-1"><i class="fas fa-balance-scale text-blue-600 mr-1"></i> Kuwait Labour Law — Employment Agreement</div>
+                <p class="text-xs text-slate-600">Select employee → data fills from database → Preview → Print or Word. Aligned with Law No. 6 of 2010 (Private Sector).</p>
+              </div>
+              <div>
+                <label class="text-[10px] font-semibold text-slate-500 uppercase">Employee</label>
+                <select id="quickContractEmp" class="border rounded-lg px-3 py-2 text-sm block mt-0.5 min-w-[180px]"></select>
+              </div>
+              <button type="button" onclick="quickGenerateKuwaitContract()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg text-sm font-semibold">
+                <i class="fas fa-magic mr-1"></i> Generate contract
+              </button>
+            </div>
+          </div>
+
           <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">HR · Employment</h4>
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mb-5">
             <button type="button" onclick="openModal('generateContract')" class="text-left border border-blue-200 bg-blue-50 rounded-xl p-4 hover:shadow-md transition">
               <div class="text-blue-600 text-xl mb-1"><i class="fas fa-file-contract"></i></div>
               <div class="font-bold text-sm">Employment Contract</div>
-              <div class="text-xs text-gray-500 mt-1">EN+AR · full terms</div>
+              <div class="text-xs text-gray-500 mt-1">KW Law 6/2010 · EN+AR · full terms</div>
             </button>
             <button type="button" onclick="openModal('generateOffer')" class="text-left border border-emerald-200 bg-emerald-50 rounded-xl p-4 hover:shadow-md transition">
               <div class="text-emerald-600 text-xl mb-1"><i class="fas fa-file-signature"></i></div>
@@ -2006,7 +2022,7 @@ let STORAGE_KEY = (function() {
 
 // ---- Supabase cloud (fill key if empty) ----
 const SUPABASE_URL = 'https://jlhlayydqcsvmmzdypcr.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_N8t3mr2fEUNbGQuV8qThSg_ECIYi7V7'; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
+const SUPABASE_KEY = localStorage.getItem('gcc_supabase_key') || ''; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
 let supabaseClient = null;
 try {
   if (window.supabase && SUPABASE_URL && SUPABASE_KEY) {
@@ -5799,6 +5815,12 @@ function filterJournalAccounts() {
 }
 
 function renderContractsList() {
+  const qsel = document.getElementById('quickContractEmp');
+  if (qsel) {
+    qsel.innerHTML = '<option value="">— Select employee —</option>' +
+      (data.employees || []).map(e => `<option value="${e.id}">${e.name} (${e.id})</option>`).join('');
+  }
+
   const el = document.getElementById('contractsList');
   if (!el) return;
   if (!data.contracts || data.contracts.length === 0) {
@@ -6180,7 +6202,10 @@ function updateMobStages(form, id) {
 function autoFillDoc(id) {
   const e = data.employees.find(x => x.id === id);
   if (!e) return;
-  const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v ?? ''; };
+  const set = (sid, v) => { const el = document.getElementById(sid); if (el) el.value = v ?? ''; };
+  const civil = e.civilIdNo || e.civilId || e.civilID || e.custom?.civilId || '';
+  const addrEn = e.kuwaitAddress || e.address || e.homeAddress || e.custom?.addressEn || '';
+  const addrAr = e.addressAr || e.custom?.addressAr || '';
   set('docName', e.name);
   set('docNameAr', e.nameAr || e.custom?.nameAr || '');
   set('docEmpNo', e.id);
@@ -6188,7 +6213,7 @@ function autoFillDoc(id) {
   set('docNat', e.nationality || '');
   set('docNatAr', e.nationalityAr || e.custom?.nationalityAr || '');
   set('docPpt', e.passportNo || e.passport || e.custom?.passportNo || '');
-  set('docTitle', e.title || '');
+  set('docTitle', e.title || e.profession || '');
   set('docTitleAr', e.titleAr || e.custom?.titleAr || '');
   set('docDept', e.department || '');
   set('docBasic', e.basicSalary ?? '');
@@ -6196,12 +6221,11 @@ function autoFillDoc(id) {
   set('docTransport', e.transportAllowance ?? '');
   set('docFood', e.foodAllowance ?? '');
   set('docJoin', e.joinDate || '');
-  set('docAddrEn', e.address || e.homeAddress || e.custom?.addressEn || '');
-  set('docAddrAr', e.addressAr || e.custom?.addressAr || '');
+  set('docAddrEn', addrEn);
+  set('docAddrAr', addrAr);
   set('docAllow', e.foodAccommodation || 'By Employer');
-  set('docCivil', e.civilId || e.civilID || e.custom?.civilId || '');
+  set('docCivil', civil);
   set('docEmployerEn', data.companyName || '');
-  // also fill name= fields used by FormData
   const form = document.getElementById('contractForm');
   if (form) {
     const byName = (n, v) => { const el = form.querySelector(`[name="${n}"]`); if (el) el.value = v ?? ''; };
@@ -6212,21 +6236,39 @@ function autoFillDoc(id) {
     byName('nationality', e.nationality || '');
     byName('nationalityAr', e.nationalityAr || '');
     byName('passportNo', e.passportNo || e.passport || '');
-    byName('jobTitle', e.title || '');
+    byName('jobTitle', e.title || e.profession || '');
     byName('jobTitleAr', e.titleAr || '');
     byName('basicSalary', e.basicSalary ?? '');
     byName('housingAllowance', e.housingAllowance ?? 0);
     byName('transportAllowance', e.transportAllowance ?? 0);
     byName('foodAllowance', e.foodAllowance ?? 0);
     byName('joiningDate', e.joinDate || '');
-    byName('addressEn', e.address || '');
-    byName('addressAr', e.addressAr || '');
-    byName('civilId', e.civilId || e.civilID || '');
+    byName('addressEn', addrEn);
+    byName('addressAr', addrAr);
+    byName('civilId', civil);
     byName('employerEn', (data.companyName || '') + (data.companyAddress ? ', ' + data.companyAddress : ''));
-    byName('probationDays', (laborLaws[currentCountry] || laborLaws.KW).probationDays);
-    byName('workCity', currentCountry === 'SA' ? 'Saudi Arabia' : currentCountry === 'AE' ? 'United Arab Emirates' : 'Kuwait');
+    byName('probationDays', (laborLaws[currentCountry] || laborLaws.KW).probationDays || 100);
+    byName('workCity', currentCountry === 'SA' ? 'Saudi Arabia' : currentCountry === 'AE' ? 'United Arab Emirates' : 'State of Kuwait');
+    byName('contractType', e.employmentType === 'Limited' || e.employmentType === 'Fixed' ? 'Fixed-Term' : 'Indefinite-Term');
+    if (form.querySelector('[name="lang"]')) form.querySelector('[name="lang"]').value = 'bi';
   }
+  try { showToast('Filled from employee: ' + e.name, 'success'); } catch (_) {}
 }
+
+/** One-click from Document Center: open form, fill, preview Kuwait contract */
+function quickGenerateKuwaitContract() {
+  const id = document.getElementById('quickContractEmp')?.value;
+  if (!id) { showToast('Select an employee first', 'warning'); return; }
+  openModal('generateContract');
+  setTimeout(function () {
+    const sel = document.getElementById('docEmpSelect');
+    if (sel) { sel.value = id; }
+    autoFillDoc(id);
+    const form = document.getElementById('contractForm');
+    if (form) previewEmploymentContract(form);
+  }, 80);
+}
+
 
 function autoFillHrDoc(id) {
   autoFillDoc(id);
@@ -6258,9 +6300,13 @@ function buildEmploymentContractPreviewHtml(fd) {
   const g = (k) => (fd.get(k) || '').toString().trim();
   const law = laborLaws[currentCountry] || laborLaws.KW;
   const cur = law.currency || 'KD';
-  const countryBanner = `<div style="text-align:center;margin-bottom:12px;padding:8px;background:#f0fdfa;border-radius:8px;font-size:12px">
-    <strong>UNIFIED EMPLOYMENT CONTRACT</strong> · ${law.name || currentCountry} · Currency ${cur}<br>
-    <span style="color:#666">Yellow fields linked from employee record</span></div>`;
+  const leaveDays = law.annualLeaveDays || 30;
+  const probation = g('probationDays') || String(law.probationDays || 100);
+  const notice = law.noticePeriod || '3 months';
+  const otN = (law.overtimeMultiplier && law.overtimeMultiplier.normal) || 1.25;
+  const otR = (law.overtimeMultiplier && law.overtimeMultiplier.restDay) || 1.5;
+  const otH = (law.overtimeMultiplier && law.overtimeMultiplier.publicHoliday) || 2;
+
   const name = g('employeeName') || '—';
   const nameAr = g('employeeNameAr') || name;
   const empNo = g('empNo') || '—';
@@ -6268,77 +6314,215 @@ function buildEmploymentContractPreviewHtml(fd) {
   const nat = g('nationality') || '—';
   const natAr = g('nationalityAr') || nat;
   const ppt = g('passportNo') || '—';
+  const civil = g('civilId') || '—';
   const title = g('jobTitle') || '—';
   const titleAr = g('jobTitleAr') || title;
   const doj = g('joiningDate') || '—';
   const sal = g('basicSalary') || '0';
-  const allow = g('allowanceNote') || 'By Employer';
+  const housing = g('housingAllowance') || '0';
+  const transport = g('transportAllowance') || '0';
+  const food = g('foodAllowance') || '0';
+  const totalSal = (parseFloat(sal)||0) + (parseFloat(housing)||0) + (parseFloat(transport)||0) + (parseFloat(food)||0);
+  const allow = g('allowanceNote') || 'As agreed / by Employer';
   const addrEn = g('addressEn') || '—';
   const addrAr = g('addressAr') || addrEn;
-  const period = g('period') || 'Open';
+  const period = g('period') || g('contractType') || 'Indefinite-Term';
+  const contractYears = g('contractYears') || '';
+  const endDate = g('endDate') || '';
+  const workCity = g('workCity') || 'State of Kuwait';
   const employerEn = g('employerEn') || data.companyName || 'Company';
-  const employerAr = g('employerAr') || employerEn;
-  const lang = g('lang') || 'bi';
-  const showEn = lang === 'en' || lang === 'bi';
-  const showAr = lang === 'ar' || lang === 'bi';
+  const employerAr = g('employerAr') || 'الشركة';
+  const hrName = data.hrName || '—';
+  const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
 
-  let h = `<div style="font-family:Times New Roman,serif;font-size:13px;line-height:1.45;color:#111">`;
-  h += `<h2 style="text-align:center;margin:0 0 4px">EMPLOYMENT CONTRACT</h2>`;
-  if (showAr) h += `<h2 style="text-align:center;margin:0 0 12px;direction:rtl">عقد العمل</h2>`;
-  h += `<p style="font-size:11px;color:#666;text-align:center"><em>Yellow highlights = data from employee / form (auto-filled)</em></p>`;
+  const row = (en, ar) =>
+    `<tr>
+      <td class="col-en">${en}</td>
+      <td class="col-ar" dir="rtl">${ar}</td>
+    </tr>`;
 
-  if (showEn) {
-    h += `<p>This employment contract is executed and entered into by and between <strong>${hl(employerEn)}</strong> hereinafter referred to as EMPLOYER, and or First Party and</p>`;
-    h += `<p>Name: ${hl(name)} · Employee ID: ${hl(empNo)} · Date of Birth: ${hl(dob)} · Nationality: ${hl(nat)} · Passport No: ${hl(ppt)}</p>`;
-    h += `<p>And residing at: Kuwait. Hereinafter referred to as the EMPLOYEE, and or Second Party.</p>`;
-    h += `<p><strong>A. Basic Terms</strong></p>`;
-    h += `<p>1. Date of Joining: ${hl(doj)}<br>2. Period of Agreement – ${hl(period)}<br>3. Home Country's Address: ${hl(addrEn)}<br>4. Site of Employment – Kuwait<br>5. Title: ${hl(title)}</p>`;
-    h += `<p>6. The Agreement is effective from the first day of actual and official commencement of employment with the First Party in Kuwait and shall continue thereafter until terminated by either party by giving three month notice in advance.</p>`;
-    h += `<p>7. Basic monthly salary: KD ${hl(sal)} /- &nbsp; Food/Accommodation: ${hl(allow)}. Wages paid in KD on completion of approved timesheet each period set by employer.</p>`;
-    h += `<p>8. Normal workweek: six (6) days, eight (8) hours per day, exclusive of one (1) hour meal break; regular minimum working hours in a calendar month shall not be less than 208 hours. Overtime as per Kuwait Labor Law: <strong>A.</strong> Regular OT/Hour: 25% premium &nbsp; <strong>B.</strong> Day off OT/Hour: 50% premium &nbsp; <strong>C.</strong> Holiday OT/Hour: 100% premium.</p>`;
-    h += `<p>9. 30 days leave with full pay per full year of service; leave only after minimum 9 months. Cannot accumulate leave for more than 2 years except with written consent of EMPLOYER.</p>`;
-    h += `<p>10. Economy class air ticket Kuwait ↔ country of origin while availing eligible vacation every 2 years of continuous service. No ticket if leave taken before 24 months.</p>`;
-    h += `<p>11. Sick leave per Kuwait Labor Law: A. 15 days 100% · B. 10 days 75% · C. 10 days 50% · D. 10 days 25% · E. 30 days without pay. Medical certificate may be required.</p>`;
-    h += `<p>12. Leave without pay requires prior approval. 13. Probation: 100 days; employer may terminate during probation without assigning reason. 14. Abide by policies and local customs.</p>`;
-    h += `<p><strong>B. Termination of Contract</strong> — Neither party may unilaterally cancel except as provided (project completion, crime against honor/trust, moral offenses, assault, breach of contract, repeated violations; or employee resignation with 90 days written notice and clearance). Confidentiality and no part-time work with third parties during agreement.</p>`;
-    h += `<p><strong>C. Other Benefits</strong> — Mobilization ticket (overseas); demobilization ticket on employer termination; food, laundry, AC shared housing; AC transport camp–workplace; safety compliance; KMOH insurance; workers' compensation; death repatriation.</p>`;
-    h += `<p><strong>D–G.</strong> Disputes under Kuwait law; uncovered matters → Law No. 6/2010; entire agreement; amendments in writing signed by both parties.</p>`;
-    h += `<p>In witness whereof, we hereby sign this contract.</p>`;
-    h += `<p><strong>EMPLOYER</strong> Signature: ________ Printed: ${hl(data.hrName || '—')} Date: ________</p>`;
-    h += `<p><strong>EMPLOYEE</strong> Signature: ________ Printed: ${hl(name)} Date: ________</p>`;
-  }
-  if (showAr) {
-    h += `<hr style="margin:16px 0"><div style="direction:rtl;text-align:right">`;
-    h += `<p>يتم عقد العمل هذا بين السادة/ <strong>${hl(employerAr)}</strong> المشار إليها فيما بعد باسم صاحب العمل أو الطرف الأول.</p>`;
-    h += `<p>الموظف: ${hl(nameAr)} · هوية الموظف: ${hl(empNo)} · تاريخ الميلاد: ${hl(dob)} · الجنسية: ${hl(natAr)} · رقم جواز السفر: ${hl(ppt)}</p>`;
-    h += `<p>المقيم في: الكويت. يشار إليه فيما بعد باسم الموظف أو الطرف الثاني.</p>`;
-    h += `<p><strong>أ : الشروط الأساسية</strong></p>`;
-    h += `<p>1 – تاريخ الالتحاق: ${hl(doj)} &nbsp; 2 – مدة الاتفاق: ${hl(period)} &nbsp; 5 – المسمى: ${hl(titleAr)}</p>`;
-    h += `<p>7 – الراتب الشهري الأساسي: ${hl(sal)} دينار كويتي &nbsp; الغذاء والسكن: ${hl(allow)}</p>`;
-    h += `<p>8 – أسبوع العمل العادي 6 أيام × 8 ساعات؛ العمل الإضافي وفق قانون العمل (25% / 50% / 100%). 9 – إجازة 30 يوماً بعد 9 أشهر. 11 – إجازة مرضية وفق القانون. 13 – فترة التجربة 100 يوماً.</p>`;
-    h += `<p><strong>ب / إنهاء العقد</strong> · <strong>ج. الفوائد الأخرى</strong> · تسوية المنازعات وفق قوانين الكويت وقانون العمل رقم 6/2010.</p>`;
-    h += `<p>صاحب العمل: ________ &nbsp; الموظف: ${hl(nameAr)} ________</p>`;
-    h += `</div>`;
-  }
-  h += `</div>`;
+  const termPeriod = period + (contractYears ? ` (${contractYears} year(s))` : '') + (endDate ? ` · End: ${endDate}` : '');
+
+  let h = '';
+  h += `<div class="contract-print">`;
+  h += `<div class="contract-header">
+    <div class="company">${escHtml(employerEn)}</div>
+    <div class="company-ar" dir="rtl">${escHtml(employerAr)}</div>
+    <div class="doc-title">EMPLOYMENT CONTRACT · عقد العمل</div>
+    <div class="doc-sub">Private Sector — State of Kuwait · Law No. 6 of 2010 · القطاع الأهلي — دولة الكويت (القانون رقم 6 لسنة 2010)</div>
+    <div class="meta">Date: ${today} · Currency: ${cur}</div>
+  </div>`;
+
+  h += `<table class="side-table">
+    <thead>
+      <tr>
+        <th class="col-en">English</th>
+        <th class="col-ar" dir="rtl">العربية</th>
+      </tr>
+    </thead>
+    <tbody>`;
+
+  h += row(
+    `This Employment Contract is made between <strong>${escHtml(employerEn)}</strong> (the "Employer" / First Party) and the Employee named below (the "Employee" / Second Party).`,
+    `يُبرم عقد العمل هذا بين السادة / <strong>${escHtml(employerAr)}</strong> (صاحب العمل / الطرف الأول) والموظف المبيّن أدناه (الموظف / الطرف الثاني).`
+  );
+
+  h += row(
+    `<strong>Employee details</strong><br>
+     Name: <strong>${escHtml(name)}</strong><br>
+     Employee ID: ${escHtml(empNo)} · Date of birth: ${escHtml(dob)}<br>
+     Nationality: ${escHtml(nat)} · Passport: ${escHtml(ppt)} · Civil ID: ${escHtml(civil)}<br>
+     Address: ${escHtml(addrEn)}`,
+    `<strong>بيانات الموظف</strong><br>
+     الاسم: <strong>${escHtml(nameAr)}</strong><br>
+     رقم الموظف: ${escHtml(empNo)} · تاريخ الميلاد: ${escHtml(dob)}<br>
+     الجنسية: ${escHtml(natAr)} · جواز السفر: ${escHtml(ppt)} · البطاقة المدنية: ${escHtml(civil)}<br>
+     العنوان: ${escHtml(addrAr)}`
+  );
+
+  h += row(
+    `<strong>A. Basic terms</strong><br>
+     1. Date of joining: <strong>${escHtml(doj)}</strong><br>
+     2. Contract type / period: <strong>${escHtml(termPeriod)}</strong><br>
+     3. Place of work: <strong>${escHtml(workCity)}</strong><br>
+     4. Job title: <strong>${escHtml(title)}</strong><br>
+     5. Basic salary: <strong>${escHtml(sal)} ${cur}</strong> per month<br>
+     6. Housing: ${escHtml(housing)} ${cur} · Transport: ${escHtml(transport)} ${cur} · Food: ${escHtml(food)} ${cur}<br>
+     7. Total monthly package (estimate): <strong>${totalSal.toFixed(3)} ${cur}</strong><br>
+     8. Food / accommodation notes: ${escHtml(allow)}`,
+    `<strong>أ. الشروط الأساسية</strong><br>
+     1. تاريخ الالتحاق: <strong>${escHtml(doj)}</strong><br>
+     2. نوع / مدة العقد: <strong>${escHtml(termPeriod)}</strong><br>
+     3. مكان العمل: <strong>${escHtml(workCity)}</strong><br>
+     4. المسمى الوظيفي: <strong>${escHtml(titleAr)}</strong><br>
+     5. الراتب الأساسي: <strong>${escHtml(sal)} ${cur}</strong> شهرياً<br>
+     6. سكن: ${escHtml(housing)} · مواصلات: ${escHtml(transport)} · طعام: ${escHtml(food)} ${cur}<br>
+     7. إجمالي الحزمة الشهرية (تقديري): <strong>${totalSal.toFixed(3)} ${cur}</strong><br>
+     8. ملاحظات السكن/الطعام: ${escHtml(allow)}`
+  );
+
+  h += row(
+    `<strong>Working hours & overtime</strong><br>
+     Ordinary working week: 6 days × 8 hours (or as permitted by law).<br>
+     Overtime paid per Kuwait Labour Law: normal day ${otN}×, rest day ${otR}×, public holiday ${otH}× of the hourly rate (Basic ÷ 26 ÷ 8 as applicable).`,
+    `<strong>ساعات العمل والعمل الإضافي</strong><br>
+     أسبوع العمل العادي: 6 أيام × 8 ساعات (أو وفق القانون).<br>
+     يُحتسب العمل الإضافي وفق قانون العمل: اليوم العادي ${otN}×، يوم الراحة ${otR}×، العطل الرسمية ${otH}×.`
+  );
+
+  h += row(
+    `<strong>Leave</strong><br>
+     Annual leave: ${leaveDays} days after completion of the qualifying period under the Law.<br>
+     Sick leave and other leave as provided in Law No. 6 of 2010 and company policy.`,
+    `<strong>الإجازات</strong><br>
+     الإجازة السنوية: ${leaveDays} يوماً بعد استيفاء المدة المقررة قانوناً.<br>
+     الإجازة المرضية وغيرها وفق القانون رقم 6 لسنة 2010 وسياسة الشركة.`
+  );
+
+  h += row(
+    `<strong>Probation</strong><br>
+     Probation period: <strong>${escHtml(probation)} days</strong> from the date of joining. During probation the Employer may terminate in accordance with the Law.`,
+    `<strong>فترة التجربة</strong><br>
+     مدة التجربة: <strong>${escHtml(probation)} يوماً</strong> من تاريخ الالتحاق. يجوز لصاحب العمل إنهاء الخدمة خلال التجربة وفق القانون.`
+  );
+
+  h += row(
+    `<strong>B. Termination</strong><br>
+     Either party may terminate only as permitted by Kuwait Labour Law (including notice of <strong>${escHtml(String(notice))}</strong> where applicable, project completion, serious misconduct, or lawful resignation with clearance).<br>
+     End-of-service indemnity is calculated under the Law.`,
+    `<strong>ب. إنهاء العقد</strong><br>
+     لا يجوز لأي طرف إنهاء العقد إلا وفق قانون العمل (بما في ذلك الإخطار لمدة <strong>${escHtml(String(notice))}</strong> حيث ينطبق، أو انتهاء المشروع، أو المخالفة الجسيمة، أو الاستقالة المشروعة مع إخلاء الطرف).<br>
+     تُحسب مكافأة نهاية الخدمة وفق القانون.`
+  );
+
+  h += row(
+    `<strong>C. Other obligations</strong><br>
+     Employee shall abide by company policies, HSE rules, and local laws and customs.<br>
+     Confidentiality of employer information; no conflicting employment without written consent.<br>
+     Employer provides statutory insurance as required.`,
+    `<strong>ج. التزامات أخرى</strong><br>
+     يلتزم الموظف بسياسات الشركة وقواعد السلامة والقوانين والأعراف المحلية.<br>
+     المحافظة على سرية معلومات صاحب العمل؛ وعدم العمل لدى الغير دون موافقة كتابية.<br>
+     يوفر صاحب العمل التأمين المقرر قانوناً.`
+  );
+
+  h += row(
+    `<strong>D. Governing law</strong><br>
+     This contract is governed by the laws of the State of Kuwait, including Law No. 6 of 2010 concerning labour in the private sector. Any matter not covered herein shall be resolved under said Law. Amendments must be in writing and signed by both parties.`,
+    `<strong>د. القانون الواجب التطبيق</strong><br>
+     يخضع هذا العقد لقوانين دولة الكويت بما فيها القانون رقم 6 لسنة 2010 بشأن العمل في القطاع الأهلي. ما لم يرد به نص يُعالَج وفق القانون. أي تعديل يكون كتابياً وموقّعاً من الطرفين.`
+  );
+
+  h += row(
+    `<strong>Signatures</strong><br><br>
+     <strong>EMPLOYER</strong><br>
+     Name: ${escHtml(hrName)}<br>
+     Signature: _______________________<br>
+     Date: _______________`,
+    `<strong>التوقيعات</strong><br><br>
+     <strong>صاحب العمل</strong><br>
+     الاسم: ${escHtml(hrName)}<br>
+     التوقيع: _______________________<br>
+     التاريخ: _______________`
+  );
+
+  h += row(
+    `<strong>EMPLOYEE</strong><br>
+     Name: ${escHtml(name)}<br>
+     Signature: _______________________<br>
+     Date: _______________`,
+    `<strong>الموظف</strong><br>
+     الاسم: ${escHtml(nameAr)}<br>
+     التوقيع: _______________________<br>
+     التاريخ: _______________`
+  );
+
+  h += `</tbody></table>
+  <p class="footer-note">This document is system-generated for printing. Ensure details match official records before signature.</p>
+  </div>`;
   return h;
 }
+
+function escHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
 
 function previewEmploymentContract(form) {
   const fd = new FormData(form);
   window._pendingContractForm = form;
   const preview = buildEmploymentContractPreviewHtml(fd);
   const content = document.getElementById('modalContent');
+  content.style.maxWidth = '960px';
   content.innerHTML = `
     <div class="p-6">
       <div class="flex justify-between items-start mb-3 gap-2">
         <div>
-          <h3 class="text-xl font-bold">Contract preview</h3>
-          <p class="text-xs text-gray-500">Yellow = auto-filled from employee / form. Review then download or print.</p>
+          <h3 class="text-xl font-bold">Contract preview — side by side</h3>
+          <p class="text-xs text-gray-500">English | Arabic · Kuwait Law 6/2010 · Print-ready (no further editing needed)</p>
         </div>
         <button onclick="closeModal()" class="text-gray-400"><i class="fas fa-times text-xl"></i></button>
       </div>
-      <div id="contractPreviewBody" class="border rounded-xl p-4 max-h-[55vh] overflow-y-auto bg-white shadow-inner">${preview}</div>
+      <div id="contractPreviewBody" class="border rounded-xl p-3 max-h-[60vh] overflow-y-auto bg-white shadow-inner">
+        <style>
+          #contractPreviewBody .contract-header{text-align:center;margin-bottom:10px;border-bottom:2px solid #0f766e;padding-bottom:8px}
+          #contractPreviewBody .contract-header .company{font-size:15px;font-weight:700}
+          #contractPreviewBody .contract-header .company-ar{font-size:14px;font-weight:700;margin-top:2px}
+          #contractPreviewBody .contract-header .doc-title{font-size:16px;font-weight:800;margin-top:8px}
+          #contractPreviewBody .contract-header .doc-sub,#contractPreviewBody .contract-header .meta{font-size:11px;color:#64748b;margin-top:3px}
+          #contractPreviewBody table.side-table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:12px}
+          #contractPreviewBody table.side-table th{background:#0f766e;color:#fff;padding:6px 8px;width:50%;border:1px solid #0f766e}
+          #contractPreviewBody table.side-table td{vertical-align:top;padding:8px;border:1px solid #cbd5e1;width:50%;line-height:1.4}
+          #contractPreviewBody table.side-table td.col-en{border-right:2px solid #0f766e}
+          #contractPreviewBody table.side-table td.col-ar{text-align:right;font-family:Tahoma,Segoe UI,Arial,sans-serif}
+          #contractPreviewBody .footer-note{font-size:10px;color:#94a3b8;margin-top:8px;text-align:center}
+        </style>
+        ${preview}
+      </div>
       <div class="flex flex-wrap gap-2 mt-4">
         <button type="button" onclick="openModal('generateContract')" class="flex-1 min-w-[100px] bg-gray-100 py-2.5 rounded-lg font-semibold text-sm">← Edit fields</button>
         <button type="button" onclick="printContractPreview()" class="flex-1 min-w-[100px] bg-slate-700 text-white py-2.5 rounded-lg font-semibold text-sm"><i class="fas fa-print mr-1"></i>Print</button>
@@ -6351,13 +6535,54 @@ function previewEmploymentContract(form) {
 function printContractPreview() {
   const body = document.getElementById('contractPreviewBody');
   if (!body) return;
+  const clone = body.cloneNode(true);
+  clone.querySelectorAll('mark').forEach(m => {
+    const t = document.createTextNode(m.textContent || '');
+    m.parentNode.replaceChild(t, m);
+  });
   const w = window.open('', '_blank');
-  w.document.write(`<!DOCTYPE html><html><head><title>Employment Contract</title>
-    <style>body{font-family:Times New Roman,serif;max-width:800px;margin:24px auto;padding:0 16px}
-    mark{background:#fef08a}</style></head><body>${body.innerHTML}</body></html>`);
+  if (!w) { showToast('Allow pop-ups to print / Save as PDF', 'warning'); return; }
+  const company = data.companyName || 'AHANORA';
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Employment Contract — ${company}</title>
+<style>
+  @page { size: A4; margin: 12mm; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 0; color: #0f172a; background: #fff;
+    font-family: "Times New Roman", Times, serif; font-size: 10.5pt; line-height: 1.4; }
+  .contract-print { max-width: 190mm; margin: 0 auto; padding: 4mm; }
+  .contract-header { text-align: center; margin-bottom: 10px; border-bottom: 2px solid #0f766e; padding-bottom: 8px; }
+  .contract-header .company { font-size: 13pt; font-weight: bold; color: #0f172a; }
+  .contract-header .company-ar { font-family: Tahoma, "Segoe UI", Arial, sans-serif; font-size: 12pt; font-weight: bold; margin-top: 2px; }
+  .contract-header .doc-title { font-size: 14pt; font-weight: bold; margin-top: 8px; letter-spacing: 0.02em; }
+  .contract-header .doc-sub { font-size: 8.5pt; color: #475569; margin-top: 4px; }
+  .contract-header .meta { font-size: 8.5pt; color: #64748b; margin-top: 4px; }
+  table.side-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  table.side-table th {
+    background: #0f766e; color: #fff; font-size: 9pt; padding: 6px 8px;
+    border: 1px solid #0f766e; width: 50%;
+  }
+  table.side-table td {
+    vertical-align: top; padding: 8px 9px; border: 1px solid #cbd5e1;
+    font-size: 9.5pt; width: 50%;
+  }
+  table.side-table td.col-en { border-right: 2px solid #0f766e; }
+  table.side-table td.col-ar { font-family: Tahoma, "Segoe UI", Arial, sans-serif; text-align: right; }
+  .footer-note { font-size: 8pt; color: #94a3b8; margin-top: 10px; text-align: center; }
+  .no-print { margin-top: 16px; text-align: center; }
+  @media print {
+    .no-print { display: none !important; }
+    body { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+    table.side-table th { background: #0f766e !important; color: #fff !important; }
+  }
+</style></head><body>
+${clone.innerHTML}
+<p class="no-print"><button onclick="window.print()" style="padding:12px 22px;background:#0f766e;color:#fff;border:0;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px">Print / Save as PDF</button></p>
+</body></html>`);
   w.document.close();
   w.focus();
-  setTimeout(() => w.print(), 300);
+  setTimeout(() => { try { w.print(); } catch (_) {} }, 400);
+  try { logAudit('print_contract', 'employment'); } catch (_) {}
+  showToast('Print-ready contract — use Save as PDF if needed', 'success');
 }
 
 async function generateDoc(form, type) {
@@ -8204,27 +8429,35 @@ async function doCloudLogin() {
   const btn = document.getElementById('btnCloudLogin');
   if (btn) { btn.disabled = true; btn.textContent = 'Signing in…'; }
   try {
-    const { data: authData, error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
+    const authPromise = supabaseClient.auth.signInWithPassword({ email, password: pass });
+    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Sign-in timed out (10s). Check internet / Supabase.')), 10000));
+    const { data: authData, error } = await Promise.race([authPromise, timeoutPromise]);
     if (error) throw error;
     const uid = authData.user?.id;
     let profileRole = 'hr';
     let fullName = authData.user?.email || email;
     if (uid) {
-      const { data: prof, error: pe } = await supabaseClient
-        .from('user_profiles')
-        .select('role, full_name, is_active, company_key')
-        .eq('id', uid)
-        .maybeSingle();
-      if (pe) console.warn('profile load', pe);
-      if (prof) {
-        if (prof.is_active === false) throw new Error('Account is inactive');
-        profileRole = prof.role || 'hr';
-        fullName = prof.full_name || fullName;
-        if (prof.company_key) {
-          try { localStorage.setItem('gcc_active_company', prof.company_key); } catch (_) {}
+      try {
+        const profRes = await Promise.race([
+          supabaseClient.from('user_profiles').select('role, full_name, is_active, company_key').eq('id', uid).maybeSingle(),
+          new Promise((_, rej) => setTimeout(() => rej(new Error('profile timeout')), 6000))
+        ]);
+        const prof = profRes.data;
+        const pe = profRes.error;
+        if (pe) console.warn('profile load', pe);
+        if (prof) {
+          if (prof.is_active === false) throw new Error('Account is inactive');
+          profileRole = prof.role || 'hr';
+          fullName = prof.full_name || fullName;
+          if (prof.company_key) {
+            try { localStorage.setItem('gcc_active_company', prof.company_key); } catch (_) {}
+          }
+        } else {
+          showToast('No role in user_profiles — defaulting to HR.', 'warning');
         }
-      } else {
-        showToast('No role in user_profiles — defaulting to HR. Ask admin to set role.', 'warning');
+      } catch (pe) {
+        console.warn('profile skipped', pe);
+        showToast('Profile load slow — continuing as HR', 'warning');
       }
     }
     loginFailCount = 0;
@@ -8293,57 +8526,72 @@ function finishLogin() {
     const ls = document.getElementById('loginScreen');
     if (ls) {
       ls.classList.add('hidden');
-      ls.style.display = 'none';
+      ls.style.setProperty('display', 'none', 'important');
     }
-    document.documentElement.style.cssText = 'height:100%!important;width:100%!important;';
-    document.body.style.minHeight = '100vh';
-    document.body.style.width = '100%';
-    document.body.style.margin = '0';
     const shell = document.getElementById('appShell');
     if (shell) {
       shell.classList.remove('hidden');
-      shell.style.cssText = 'display:flex!important;flex-direction:row!important;visibility:visible!important;opacity:1!important;position:fixed!important;top:0!important;left:0!important;right:0!important;bottom:0!important;width:100vw!important;height:100vh!important;z-index:10!important;background:#eef2f6!important;overflow:hidden!important;';
+      shell.style.setProperty('display', 'flex', 'important');
+      shell.style.setProperty('flex-direction', 'row', 'important');
+      shell.style.setProperty('position', 'fixed', 'important');
+      shell.style.setProperty('inset', '0', 'important');
+      shell.style.setProperty('width', '100vw', 'important');
+      shell.style.setProperty('height', '100vh', 'important');
+      shell.style.setProperty('z-index', '10', 'important');
+      shell.style.setProperty('background', '#eef2f6', 'important');
+      shell.style.setProperty('overflow', 'hidden', 'important');
     }
     const mainEl = document.querySelector('#appShell > main');
     if (mainEl) {
-      mainEl.style.cssText = 'display:block!important;visibility:visible!important;opacity:1!important;flex:1 1 auto!important;min-width:0!important;width:auto!important;height:100%!important;overflow-y:auto!important;background:#eef2f6!important;';
+      mainEl.style.setProperty('display', 'block', 'important');
+      mainEl.style.setProperty('flex', '1 1 auto', 'important');
+      mainEl.style.setProperty('min-width', '0', 'important');
+      mainEl.style.setProperty('height', '100%', 'important');
+      mainEl.style.setProperty('overflow-y', 'auto', 'important');
+      mainEl.style.setProperty('background', '#eef2f6', 'important');
     }
     const side = document.getElementById('appSidebar');
     if (side) {
-      side.style.cssText = 'display:flex!important;flex-direction:column!important;visibility:visible!important;width:260px!important;min-width:260px!important;flex-shrink:0!important;height:100%!important;';
+      side.style.setProperty('display', 'flex', 'important');
+      side.style.setProperty('width', '260px', 'important');
+      side.style.setProperty('min-width', '260px', 'important');
+      side.style.setProperty('height', '100%', 'important');
+      side.style.setProperty('flex-shrink', '0', 'important');
     }
-    try { applyRolePermissions(); } catch (e) { console.warn('roles', e); }
-    try { resetSessionTimer(); } catch (e) { console.warn('session', e); }
-    try { logAudit('login', currentRole); } catch (e) {}
-    const msg = currentRole === 'admin' ? 'Logged in as Admin — full access'
-      : currentRole === 'accountant' ? 'Logged in as Finance — Finance + HR view'
-      : 'Logged in as HR — limited access';
+    try { applyRolePermissions(); } catch (e) { console.warn(e); }
+    try { resetSessionTimer(); } catch (e) { console.warn(e); }
     try {
-      showToast(msg + (window.currentUserEmail ? ' · ' + window.currentUserEmail : '') + ' · Session ' + (typeof SESSION_MINUTES !== 'undefined' ? SESSION_MINUTES : 30) + 'min', 'success');
-    } catch (e) { console.warn('toast', e); }
-    try {
-      if (currentRole === 'accountant') switchSection('accounting');
-      else switchSection('dashboard');
-    } catch (e) { console.warn('section', e); }
-    try { renderDashboard(); } catch (e) { console.warn('dashboard', e); }
-    try { updateStatusChip('Online · ' + (window.currentUserEmail || currentRole || 'Admin')); } catch (_) {}
-    try {
-      const greet = document.getElementById('dashGreeting');
-      if (greet && window.currentUserName) greet.textContent = String(window.currentUserName).split(' ')[0];
-    } catch (_) {}
+      showToast(
+        (currentRole === 'admin' ? 'Logged in as Admin' : currentRole === 'accountant' ? 'Logged in as Finance' : 'Logged in as HR') +
+        (window.currentUserEmail ? ' · ' + window.currentUserEmail : ''),
+        'success'
+      );
+    } catch (e) {}
+    try { updateStatusChip('Online · ' + (window.currentUserEmail || currentRole || 'User')); } catch (_) {}
+    // Defer heavy UI so the shell paints first (prevents freeze)
+    requestAnimationFrame(function () {
+      try {
+        if (currentRole === 'accountant') switchSection('accounting');
+        else switchSection('dashboard');
+      } catch (e) { console.warn(e); }
+      setTimeout(function () {
+        try { renderDashboard(); } catch (e) { console.warn('dashboard', e); }
+        try { logAudit('login', currentRole); } catch (e) {}
+      }, 50);
+    });
   } catch (e) {
     console.error('finishLogin failed', e);
-    // Force shell visible even if something failed
     try {
       document.body.classList.add('is-authenticated');
       const shell = document.getElementById('appShell');
       if (shell) { shell.classList.remove('hidden'); shell.style.display = 'flex'; }
       const ls = document.getElementById('loginScreen');
-      if (ls) { ls.classList.add('hidden'); ls.style.display = 'none'; }
+      if (ls) { ls.style.display = 'none'; }
     } catch (_) {}
     alert('Login UI error: ' + (e && e.message ? e.message : e));
   }
 }
+
 async function logout() {
   logAudit('logout', currentRole);
   currentRole = null;
@@ -8367,15 +8615,27 @@ async function logout() {
 async function tryRestoreCloudSession() {
   if (!supabaseClient) return;
   try {
-    const { data: { session } } = await supabaseClient.auth.getSession();
+    const sessPromise = supabaseClient.auth.getSession();
+    const timed = Promise.race([
+      sessPromise,
+      new Promise((_, rej) => setTimeout(() => rej(new Error('session timeout')), 8000))
+    ]);
+    const { data: { session } } = await timed;
     if (!session?.user) return;
     const uid = session.user.id;
-    const { data: prof } = await supabaseClient.from('user_profiles').select('role, full_name, is_active').eq('id', uid).maybeSingle();
+    let prof = null;
+    try {
+      const pr = await Promise.race([
+        supabaseClient.from('user_profiles').select('role, full_name, is_active').eq('id', uid).maybeSingle(),
+        new Promise((_, rej) => setTimeout(() => rej(new Error('profile timeout')), 5000))
+      ]);
+      prof = pr.data;
+    } catch (_) {}
     if (prof && prof.is_active === false) return;
     currentRole = mapProfileRoleToApp(prof?.role || 'hr');
     window.currentUserEmail = session.user.email;
-    window.currentUserName = prof?.full_name || session.user.email;
-    window.currentProfileRole = prof?.role || 'hr';
+    window.currentUserName = (prof && prof.full_name) || session.user.email;
+    window.currentProfileRole = (prof && prof.role) || 'hr';
     finishLogin();
   } catch (e) { console.warn('session restore', e); }
 }
