@@ -511,6 +511,73 @@
     min-height: 200px !important;
   }
 
+
+  /* World-class UI polish pass */
+  .quick-action {
+    display: flex; align-items: center; gap: 0.5rem;
+    padding: 0.65rem 0.9rem;
+    border-radius: 0.85rem;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #334155;
+    transition: all .18s ease;
+    cursor: pointer;
+  }
+  .quick-action:hover {
+    border-color: #99f6e4;
+    background: #f0fdfa;
+    color: #0f766e;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 20px -10px rgba(13,148,136,0.35);
+  }
+  .quick-action i { color: #0d9488; width: 1rem; text-align: center; }
+  .empty-state {
+    text-align: center;
+    padding: 2.5rem 1.5rem;
+    color: #94a3b8;
+  }
+  .empty-state i {
+    font-size: 2rem;
+    margin-bottom: 0.75rem;
+    opacity: 0.45;
+    display: block;
+  }
+  .empty-state p { font-size: 0.875rem; margin: 0.25rem 0 0.75rem; }
+  .status-chip {
+    position: fixed;
+    bottom: 1rem;
+    left: 1rem;
+    z-index: 40;
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 0.4rem 0.75rem;
+    border-radius: 999px;
+    background: rgba(15,23,42,0.88);
+    color: #e2e8f0;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 8px 24px -8px rgba(0,0,0,0.35);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+  .status-chip .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: #34d399;
+    box-shadow: 0 0 0 3px rgba(52,211,153,0.25);
+  }
+  body:not(.is-authenticated) .status-chip { display: none !important; }
+  #pageTitle {
+    font-family: 'Plus Jakarta Sans', Inter, sans-serif;
+  }
+  .table-actions button {
+    opacity: 0.85;
+  }
+  tr:hover .table-actions button { opacity: 1; }
+
 </style>
 </head>
 <body class="text-gray-800 antialiased">
@@ -593,6 +660,11 @@
 </div>
 
 </div><!-- /#loginScreen -->
+
+<div id="statusChip" class="status-chip" title="Workspace status">
+  <span class="dot"></span>
+  <span id="statusChipText">AHANORA · Ready</span>
+</div>
 
 <!-- Toast Container -->
 <div id="toastContainer" class="fixed top-4 right-4 z-[300] space-y-2"></div>
@@ -755,6 +827,15 @@
               <div class="text-[11px] text-slate-300 font-semibold uppercase tracking-wider mt-0.5">Employees</div>
             </div>
           </div>
+        </div>
+
+        <div id="dashQuickActions" class="flex flex-wrap gap-2 mb-5">
+          <button type="button" class="quick-action" onclick="openModal('addEmployee')"><i class="fas fa-user-plus"></i> Add employee</button>
+          <button type="button" class="quick-action" onclick="switchSection('attendance')"><i class="fas fa-clock"></i> Attendance</button>
+          <button type="button" class="quick-action" onclick="switchSection('leave')"><i class="fas fa-calendar-check"></i> Leave inbox</button>
+          <button type="button" class="quick-action" onclick="switchSection('payroll')"><i class="fas fa-money-bill-wave"></i> Run payroll</button>
+          <button type="button" class="quick-action" onclick="switchSection('compliance')"><i class="fas fa-id-card"></i> Doc expiry</button>
+          <button type="button" class="quick-action" onclick="saveToCloud && saveToCloud()"><i class="fas fa-cloud-upload-alt"></i> Save cloud</button>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -1068,7 +1149,7 @@
               <h3 class="text-lg font-bold"><i class="fas fa-id-card text-red-500 mr-2"></i>Document Expiry & Compliance</h3>
               <p class="text-sm text-gray-500">Civil ID · Passport · Visa · Medical — alerts & reminders</p>
             </div>
-            <div class="flex gap-2">
+            <div class="flex flex-wrap gap-2">
               <select id="complianceFilter" onchange="renderCompliance()" class="border rounded-lg px-3 py-2 text-sm">
                 <option value="60">Next 60 days</option>
                 <option value="30">Next 30 days</option>
@@ -1076,23 +1157,38 @@
                 <option value="0">Expired only</option>
                 <option value="365">All (1 year)</option>
               </select>
+              <select id="complianceDocType" onchange="renderCompliance()" class="border rounded-lg px-3 py-2 text-sm">
+                <option value="all">All documents</option>
+                <option value="Civil ID">Civil ID</option>
+                <option value="Passport">Passport</option>
+                <option value="Visa">Visa</option>
+                <option value="Medical">Medical</option>
+                <option value="Work Permit">Work Permit</option>
+                <option value="Insurance">Insurance</option>
+              </select>
+              <select id="complianceProject" onchange="renderCompliance()" class="border rounded-lg px-3 py-2 text-sm">
+                <option value="all">All projects</option>
+              </select>
+              <input type="search" id="complianceSearch" oninput="renderCompliance()" placeholder="Search name / ID…" class="border rounded-lg px-3 py-2 text-sm w-40">
               <button onclick="exportComplianceExcel()" class="bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-semibold"><i class="fas fa-download mr-1"></i> Export</button>
             </div>
           </div>
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
-            <div class="bg-red-50 rounded-xl p-4 text-center border border-red-100"><div class="text-2xl font-bold text-red-600" id="compExpired">0</div><div class="text-xs text-gray-600">Expired</div></div>
-            <div class="bg-amber-50 rounded-xl p-4 text-center border border-amber-100"><div class="text-2xl font-bold text-amber-600" id="comp7">0</div><div class="text-xs text-gray-600">&lt; 7 days</div></div>
-            <div class="bg-yellow-50 rounded-xl p-4 text-center border border-yellow-100"><div class="text-2xl font-bold text-yellow-600" id="comp30">0</div><div class="text-xs text-gray-600">&lt; 30 days</div></div>
-            <div class="bg-emerald-50 rounded-xl p-4 text-center border border-emerald-100"><div class="text-2xl font-bold text-emerald-600" id="compOk">0</div><div class="text-xs text-gray-600">OK (&gt;60d)</div></div>
+          <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-5">
+            <div class="bg-red-50 rounded-xl p-4 text-center border border-red-100 cursor-pointer" onclick="document.getElementById('complianceFilter').value='0';renderCompliance()"><div class="text-2xl font-bold text-red-600" id="compExpired">0</div><div class="text-xs text-gray-600">Expired</div></div>
+            <div class="bg-amber-50 rounded-xl p-4 text-center border border-amber-100 cursor-pointer" onclick="document.getElementById('complianceFilter').value='7';renderCompliance()"><div class="text-2xl font-bold text-amber-600" id="comp7">0</div><div class="text-xs text-gray-600">&lt; 7 days</div></div>
+            <div class="bg-yellow-50 rounded-xl p-4 text-center border border-yellow-100 cursor-pointer" onclick="document.getElementById('complianceFilter').value='30';renderCompliance()"><div class="text-2xl font-bold text-yellow-600" id="comp30">0</div><div class="text-xs text-gray-600">&lt; 30 days</div></div>
+            <div class="bg-orange-50 rounded-xl p-4 text-center border border-orange-100"><div class="text-2xl font-bold text-orange-600" id="comp60">0</div><div class="text-xs text-gray-600">&lt; 60 days</div></div>
+            <div class="bg-emerald-50 rounded-xl p-4 text-center border border-emerald-100"><div class="text-2xl font-bold text-emerald-600" id="compOk">0</div><div class="text-xs text-gray-600">Tracked OK</div></div>
           </div>
-          <div class="overflow-x-auto border rounded-xl max-h-[480px]">
+          <div class="overflow-x-auto border rounded-xl max-h-[520px]">
             <table class="w-full text-sm">
               <thead class="bg-gray-50 text-xs uppercase text-gray-600 sticky top-0">
                 <tr>
-                  <th class="text-left px-3 py-2">Employee</th>
-                  <th class="text-left px-3 py-2">Document</th>
-                  <th class="text-left px-3 py-2">Expiry</th>
-                  <th class="text-left px-3 py-2">Days Left</th>
+                  <th class="text-left px-3 py-2 cursor-pointer" onclick="sortCompliance('employeeName')">Employee</th>
+                  <th class="text-left px-3 py-2">Project</th>
+                  <th class="text-left px-3 py-2 cursor-pointer" onclick="sortCompliance('type')">Document</th>
+                  <th class="text-left px-3 py-2 cursor-pointer" onclick="sortCompliance('expiry')">Expiry</th>
+                  <th class="text-left px-3 py-2 cursor-pointer" onclick="sortCompliance('daysLeft')">Days Left</th>
                   <th class="text-left px-3 py-2">Status</th>
                   <th class="text-left px-3 py-2">Action</th>
                 </tr>
@@ -1196,7 +1292,9 @@
               <button onclick="switchSection('calculator')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-sm font-semibold"><i class="fas fa-calculator mr-1"></i> Calculator</button>
               <button onclick="runBulkPayroll()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-sm font-semibold"><i class="fas fa-play mr-1"></i> Run Bulk Payroll</button>
               <button onclick="loadPayrollRunsFromSupabase()" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-2 rounded-lg text-sm font-semibold" title="Load payroll runs from Postgres"><i class="fas fa-cloud-download-alt mr-1"></i> Load DB</button>
-              <button onclick="emailAllPayslips()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-semibold"><i class="fas fa-envelope mr-1"></i> Email Payslips</button>
+              <button onclick="emailAllPayslips()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-semibold"><i class="fas fa-envelope mr-1"></i> Email</button>
+              <button onclick="downloadAllPayslipsWord()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-sm font-semibold"><i class="fas fa-file-word mr-1"></i> Word</button>
+              <button onclick="printSelectedPayslipsPDF()" class="bg-rose-600 hover:bg-rose-700 text-white px-3 py-2 rounded-lg text-sm font-semibold"><i class="fas fa-file-pdf mr-1"></i> PDF</button>
               <button onclick="exportPayrollExcel()" class="bg-gray-700 hover:bg-gray-800 text-white px-3 py-2 rounded-lg text-sm font-semibold"><i class="fas fa-file-excel mr-1"></i> Export</button>
             </div>
           </div>
@@ -1908,7 +2006,7 @@ let STORAGE_KEY = (function() {
 
 // ---- Supabase cloud (fill key if empty) ----
 const SUPABASE_URL = 'https://jlhlayydqcsvmmzdypcr.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_N8t3mr2fEUNbGQuV8qThSg_ECIYi7V7'; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
+const SUPABASE_KEY = localStorage.getItem('gcc_supabase_key') || ''; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
 let supabaseClient = null;
 try {
   if (window.supabase && SUPABASE_URL && SUPABASE_KEY) {
@@ -2783,6 +2881,8 @@ const colors = ['bg-blue-500','bg-emerald-500','bg-purple-500','bg-rose-500','bg
 
 // -------------------- Persistence --------------------
 function saveData() {
+  try { updateStatusChip('Saved · ' + new Date().toLocaleTimeString()); } catch (_) {}
+
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
 function loadData() {
@@ -2924,6 +3024,10 @@ function updateAccountingCountryUI() {
   const badge = document.getElementById('dashCountryBadge');
   if (badge) badge.textContent = currentCountry;
   updateVatNotes();
+}
+function updateStatusChip(text) {
+  const el = document.getElementById('statusChipText');
+  if (el) el.textContent = text || ('AHANORA · ' + (currentRole || 'Ready'));
 }
 function showToast(msg, type = 'info') {
   const colors = { success: 'bg-emerald-500', error: 'bg-red-500', info: 'bg-blue-500', warning: 'bg-amber-500' };
@@ -3453,19 +3557,23 @@ function renderPayrollSummary() {
 
   const tbody = document.getElementById('payrollTableBody');
   if (!tbody) return;
+  const payPeriod = document.getElementById('payrollPeriod')?.value || new Date().toISOString().slice(0,7);
   tbody.innerHTML = emps.map(e => {
     const alw = (e.housingAllowance||0)+(e.foodAllowance||0)+(e.transportAllowance||0)+(e.projectAllowance||0)+(e.fixedAllowance||0);
-    const net = getTotalSalary(e);
+    const br = typeof getPayslipBreakdown === 'function' ? getPayslipBreakdown(e, payPeriod) : { otHours: 0, otPay: 0, net: getTotalSalary(e) };
+    const net = br.net != null ? br.net : getTotalSalary(e);
     return `<tr class="border-b border-gray-100 hover:bg-gray-50">
       <td class="px-3 py-2"><input type="checkbox" class="pay-check" value="${e.id}"></td>
       <td class="px-3 py-2 font-semibold">${e.name}<div class="text-xs text-gray-400">${e.id}</div></td>
       <td class="px-3 py-2 text-xs">${e.project || '—'}</td>
       <td class="px-3 py-2">${e.basicSalary||0}</td>
-      <td class="px-3 py-2">${alw}</td>
-      <td class="px-3 py-2 font-bold text-emerald-600">${currency()} ${net.toLocaleString()}</td>
+      <td class="px-3 py-2">${alw}<div class="text-[10px] text-indigo-600">OT ${br.otHours||0}h · ${currency()} ${(br.otPay||0).toFixed(2)}</div></td>
+      <td class="px-3 py-2 font-bold text-emerald-600">${currency()} ${Number(net).toLocaleString()}</td>
       <td class="px-3 py-2">
-        <button onclick="emailPayslip('${e.id}')" class="text-blue-600 text-xs font-semibold hover:underline mr-2"><i class="fas fa-envelope"></i> Email</button>
-        <button onclick="downloadPayslipText('${e.id}')" class="text-gray-600 text-xs font-semibold hover:underline"><i class="fas fa-download"></i> Slip</button>
+        <button onclick="emailPayslip('${e.id}')" class="text-blue-600 text-xs font-semibold hover:underline mr-1" title="Email"><i class="fas fa-envelope"></i></button>
+        <button onclick="downloadPayslipWord('${e.id}')" class="text-indigo-600 text-xs font-semibold hover:underline mr-1" title="Word"><i class="fas fa-file-word"></i></button>
+        <button onclick="printPayslipPDF('${e.id}')" class="text-rose-600 text-xs font-semibold hover:underline mr-1" title="PDF / Print"><i class="fas fa-file-pdf"></i></button>
+        <button onclick="downloadPayslipText('${e.id}')" class="text-gray-500 text-xs font-semibold hover:underline" title="Text"><i class="fas fa-file-alt"></i></button>
       </td>
     </tr>`;
   }).join('') || '<tr><td colspan="7" class="text-center py-8 text-gray-400">No employees in this project</td></tr>';
@@ -3481,11 +3589,15 @@ function getSelectedPayEmployees() {
   return filter === 'all' ? data.employees : data.employees.filter(e => e.project === filter);
 }
 function buildPayslipText(e, period) {
-  const alw = (e.housingAllowance||0)+(e.foodAllowance||0)+(e.transportAllowance||0)+(e.projectAllowance||0)+(e.fixedAllowance||0);
-  const net = getTotalSalary(e);
+  const p = period || new Date().toISOString().slice(0,7);
+  const br = typeof getPayslipBreakdown === 'function' ? getPayslipBreakdown(e, p) : null;
+  const alw = br ? br.alw : ((e.housingAllowance||0)+(e.foodAllowance||0)+(e.transportAllowance||0)+(e.projectAllowance||0)+(e.fixedAllowance||0));
+  const net = br ? br.net : getTotalSalary(e);
+  const otH = br ? br.otHours : 0;
+  const otP = br ? br.otPay : 0;
   return [
     `PAYSLIP — ${data.companyName}`,
-    `Period: ${period || new Date().toISOString().slice(0,7)}`,
+    `Period: ${p}`,
     `----------------------------------------`,
     `Employee: ${e.name} (${e.id})`,
     `Title: ${e.title || ''}`,
@@ -3498,11 +3610,12 @@ function buildPayslipText(e, period) {
     `Transport:        ${currency()} ${(e.transportAllowance||0).toFixed(3)}`,
     `Project Allow:    ${currency()} ${(e.projectAllowance||0).toFixed(3)}`,
     `Fixed Allow:      ${currency()} ${(e.fixedAllowance||0).toFixed(3)}`,
+    `Overtime (${otH}h):  ${currency()} ${otP.toFixed(3)}`,
     `----------------------------------------`,
     `GROSS / NET EST:  ${currency()} ${net.toFixed(3)}`,
     `Allowances total: ${currency()} ${alw.toFixed(3)}`,
     ``,
-    `Kuwait Labour Law compliant calculation basis (Basic ÷ 26 for daily rate).`,
+    `Daily rate = Basic ÷ 26. OT from Attendance for ${p} at ${br && br.mult ? br.mult : 1.25}x.`,
     `This is a system-generated payslip from ${data.companyName}.`,
     `HR: ${data.hrName || ''}`
   ].join('\n');
@@ -3530,8 +3643,179 @@ function downloadPayslipText(empId) {
   a.download = `Payslip_${e.id}_${period}.txt`;
   a.click();
   logAudit('download_payslip', e.name);
-  showToast('Payslip downloaded', 'success');
+  showToast('Payslip text downloaded', 'success');
 }
+
+function getEmployeeOTForPeriod(empId, period) {
+  // period = YYYY-MM — sum overtimeHours from attendanceLogs in that month
+  if (!period || !empId) return 0;
+  const prefix = String(period).slice(0, 7);
+  let total = 0;
+  (data.attendanceLogs || []).forEach(r => {
+    if ((r.employeeId === empId || r.employee_id === empId) && String(r.workDate || r.work_date || '').startsWith(prefix)) {
+      total += parseFloat(r.overtimeHours != null ? r.overtimeHours : r.overtime_hours) || 0;
+    }
+  });
+  return Math.round(total * 100) / 100;
+}
+function getOTRateMultiplier() {
+  // KW common practice 1.25 ordinary OT; can be refined per country rules
+  const law = (typeof laborLaws !== 'undefined' && laborLaws[currentCountry]) ? laborLaws[currentCountry] : null;
+  return (law && law.otMultiplier) ? law.otMultiplier : 1.25;
+}
+function getPayslipBreakdown(e, period) {
+  const otHours = typeof getEmployeeOTForPeriod === 'function' ? getEmployeeOTForPeriod(e.id, period) : 0;
+  const daily = (e.basicSalary || 0) / 26;
+  const mult = typeof getOTRateMultiplier === 'function' ? getOTRateMultiplier() : 1.25;
+  const otPay = otHours * daily * mult;
+  const alw = (e.housingAllowance||0)+(e.foodAllowance||0)+(e.transportAllowance||0)+(e.projectAllowance||0)+(e.fixedAllowance||0);
+  const basic = e.basicSalary || 0;
+  const gross = basic + alw + otPay;
+  return { otHours, otPay, alw, basic, gross, net: gross, daily, mult };
+}
+
+function buildPayslipHTML(e, period) {
+  const p = period || new Date().toISOString().slice(0, 7);
+  const b = getPayslipBreakdown(e, p);
+  const cur = currency();
+  const company = data.companyName || 'AHANORA';
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Payslip ${e.name}</title>
+  <style>
+    body{font-family:Segoe UI,Arial,sans-serif;color:#0f172a;padding:32px;max-width:720px;margin:0 auto}
+    h1{color:#0f766e;margin:0 0 4px;font-size:22px}
+    .sub{color:#64748b;font-size:12px;margin-bottom:20px}
+    table{width:100%;border-collapse:collapse;margin:16px 0}
+    th,td{text-align:left;padding:8px 10px;border-bottom:1px solid #e2e8f0;font-size:13px}
+    th{background:#f8fafc;color:#64748b;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+    .total td{font-weight:700;font-size:15px;border-bottom:none;padding-top:14px}
+    .foot{margin-top:28px;font-size:11px;color:#94a3b8;border-top:1px solid #e2e8f0;padding-top:12px}
+    @media print{body{padding:12px} .no-print{display:none}}
+  </style></head><body>
+  <h1>${company}</h1>
+  <div class="sub">PAYSLIP · Period ${p} · ${currentCountry || 'KW'}</div>
+  <table>
+    <tr><th>Employee</th><td>${e.name} (${e.id})</td></tr>
+    <tr><th>Title</th><td>${e.title || '—'}</td></tr>
+    <tr><th>Project</th><td>${e.project || '—'}</td></tr>
+    <tr><th>Nationality</th><td>${e.nationality || '—'}</td></tr>
+  </table>
+  <table>
+    <tr><th>Component</th><th>Amount</th></tr>
+    <tr><td>Basic salary</td><td>${cur} ${b.basic.toFixed(3)}</td></tr>
+    <tr><td>Housing</td><td>${cur} ${(e.housingAllowance||0).toFixed(3)}</td></tr>
+    <tr><td>Food</td><td>${cur} ${(e.foodAllowance||0).toFixed(3)}</td></tr>
+    <tr><td>Transport</td><td>${cur} ${(e.transportAllowance||0).toFixed(3)}</td></tr>
+    <tr><td>Project allowance</td><td>${cur} ${(e.projectAllowance||0).toFixed(3)}</td></tr>
+    <tr><td>Fixed allowance</td><td>${cur} ${(e.fixedAllowance||0).toFixed(3)}</td></tr>
+    <tr><td>Overtime (${b.otHours} hrs × 1.25)</td><td>${cur} ${b.otPay.toFixed(3)}</td></tr>
+    <tr class="total"><td>Net pay (estimate)</td><td>${cur} ${b.net.toFixed(3)}</td></tr>
+  </table>
+  <div class="foot">System-generated payslip · ${company} · HR: ${data.hrName || ''} · Not a bank advice<br>
+  Daily rate basis: Basic ÷ 26. OT rate shown at 1.25× (country rules may vary).</div>
+  <p class="no-print" style="margin-top:20px"><button onclick="window.print()" style="padding:10px 18px;background:#0d9488;color:#fff;border:0;border-radius:8px;font-weight:600;cursor:pointer">Print / Save as PDF</button></p>
+  </body></html>`;
+}
+
+async function downloadPayslipWord(empId) {
+  const e = data.employees.find(x => x.id === empId);
+  if (!e) return;
+  if (typeof docx === 'undefined' || !docx.Document) {
+    showToast('Word library not loaded — use PDF or Text', 'error');
+    return;
+  }
+  const period = document.getElementById('payrollPeriod')?.value || new Date().toISOString().slice(0,7);
+  const b = getPayslipBreakdown(e, period);
+  const cur = currency();
+  const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, BorderStyle } = docx;
+  const border = { style: BorderStyle.SINGLE, size: 4, color: 'E2E8F0' };
+  const borders = { top: border, bottom: border, left: border, right: border };
+  const cell = (text, bold) => new TableCell({
+    borders,
+    width: { size: 4500, type: WidthType.DXA },
+    children: [new Paragraph({ children: [new TextRun({ text: String(text), bold: !!bold, size: 20 })] })]
+  });
+  const row = (a, b, bold) => new TableRow({ children: [cell(a, bold), cell(b, bold)] });
+  const doc = new Document({
+    sections: [{
+      properties: {},
+      children: [
+        new Paragraph({ children: [new TextRun({ text: data.companyName || 'AHANORA', bold: true, size: 32, color: '0F766E' })] }),
+        new Paragraph({ children: [new TextRun({ text: `PAYSLIP — ${period}`, size: 22 })] }),
+        new Paragraph({ text: '' }),
+        new Table({
+          width: { size: 9000, type: WidthType.DXA },
+          rows: [
+            row('Employee', `${e.name} (${e.id})`),
+            row('Title', e.title || '—'),
+            row('Project', e.project || '—'),
+            row('Basic', `${cur} ${b.basic.toFixed(3)}`),
+            row('Allowances', `${cur} ${b.alw.toFixed(3)}`),
+            row(`Overtime (${b.otHours}h)`, `${cur} ${b.otPay.toFixed(3)}`),
+            row('NET PAY', `${cur} ${b.net.toFixed(3)}`, true),
+          ]
+        }),
+        new Paragraph({ text: '' }),
+        new Paragraph({ children: [new TextRun({ text: `HR: ${data.hrName || ''} · Generated by AHANORA`, size: 16, color: '94A3B8' })] }),
+      ]
+    }]
+  });
+  try {
+    const blob = await Packer.toBlob(doc);
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `Payslip_${e.id}_${period}.docx`;
+    a.click();
+    logAudit('download_payslip_word', e.name);
+    showToast('Payslip Word downloaded', 'success');
+  } catch (err) {
+    console.error(err);
+    showToast('Word download failed: ' + (err.message || err), 'error');
+  }
+}
+
+function printPayslipPDF(empId) {
+  const e = data.employees.find(x => x.id === empId);
+  if (!e) return;
+  const period = document.getElementById('payrollPeriod')?.value || new Date().toISOString().slice(0,7);
+  const w = window.open('', '_blank');
+  if (!w) { showToast('Allow pop-ups to print/save PDF', 'warning'); return; }
+  w.document.write(buildPayslipHTML(e, period));
+  w.document.close();
+  setTimeout(() => { try { w.focus(); w.print(); } catch (_) {} }, 250);
+  logAudit('print_payslip', e.name);
+  showToast('Print dialog — choose Save as PDF', 'info');
+}
+
+async function downloadAllPayslipsWord() {
+  const emps = getSelectedPayEmployees();
+  if (!emps.length) { showToast('No employees', 'warning'); return; }
+  if (emps.length > 15 && !confirm(`Download Word payslips for ${emps.length} employees?`)) return;
+  showToast('Generating Word files…', 'info');
+  for (const e of emps) {
+    await downloadPayslipWord(e.id);
+    await new Promise(r => setTimeout(r, 200));
+  }
+}
+
+function printSelectedPayslipsPDF() {
+  const emps = getSelectedPayEmployees();
+  if (!emps.length) { showToast('No employees', 'warning'); return; }
+  const period = document.getElementById('payrollPeriod')?.value || new Date().toISOString().slice(0,7);
+  const w = window.open('', '_blank');
+  if (!w) { showToast('Allow pop-ups', 'warning'); return; }
+  const pages = emps.map(e => buildPayslipHTML(e, period).replace('</body></html>', '<div style="page-break-after:always"></div></body></html>')).join('\n');
+  // simpler: one HTML combining bodies
+  const bodies = emps.map((e, i) => {
+    const inner = buildPayslipHTML(e, period);
+    const m = inner.match(/<body[^>]*>([\s\S]*)<\/body>/i);
+    return (m ? m[1] : '') + (i < emps.length - 1 ? '<div style="page-break-after:always"></div>' : '');
+  }).join('\n');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Payslips ${period}</title></head><body>${bodies}</body></html>`);
+  w.document.close();
+  setTimeout(() => { try { w.focus(); w.print(); } catch (_) {} }, 400);
+  showToast('Batch print — Save as PDF', 'info');
+}
+
 function emailAllPayslips() {
   const emps = getSelectedPayEmployees();
   if (!emps.length) { showToast('No employees selected', 'warning'); return; }
@@ -3656,7 +3940,23 @@ async function runBulkPayroll() {
     if (!confirm('A payroll run already exists for ' + period + '.\n\nRun again anyway? (Prefer: Lock period after a final run.)')) return;
   }
   const filter = document.getElementById('payrollProjectFilter')?.value || 'all';
-  const total = emps.reduce((s, e) => s + getTotalSalary(e), 0);
+  const lines = emps.map(e => {
+    const allow = (e.housingAllowance||0)+(e.foodAllowance||0)+(e.transportAllowance||0)+(e.projectAllowance||0)+(e.fixedAllowance||0);
+    const br = typeof getPayslipBreakdown === 'function' ? getPayslipBreakdown(e, period) : null;
+    const otPay = br ? br.otPay : 0;
+    const otHours = br ? br.otHours : 0;
+    const net = br ? br.net : getTotalSalary(e);
+    return {
+      employee_id: e.id,
+      basic: e.basicSalary || 0,
+      allowances: allow,
+      overtime_pay: otPay,
+      deductions: 0,
+      net,
+      breakdown: { name: e.name, project: e.project || filter, otHours, otPay }
+    };
+  });
+  const total = lines.reduce((s, l) => s + (l.net || 0), 0);
   if (!data.payrollRuns) data.payrollRuns = [];
   const localId = 'PR-' + Date.now();
   const run = {
@@ -3668,19 +3968,7 @@ async function runBulkPayroll() {
     total,
     by: currentRole,
     date: new Date().toISOString(),
-    lines: emps.map(e => {
-      const allow = (e.housingAllowance||0)+(e.foodAllowance||0)+(e.transportAllowance||0)+(e.projectAllowance||0)+(e.fixedAllowance||0);
-      const net = getTotalSalary(e);
-      return {
-        employee_id: e.id,
-        basic: e.basicSalary || 0,
-        allowances: allow,
-        overtime_pay: 0,
-        deductions: 0,
-        net,
-        breakdown: { name: e.name, project: e.project || filter }
-      };
-    })
+    lines
   };
   data.payrollRuns.unshift(run);
 
@@ -6970,34 +7258,82 @@ function getAllDocumentAlerts() {
     const add = (type, date) => {
       if (!date) return;
       const daysLeft = Math.ceil((new Date(date) - new Date()) / 86400000);
-      docs.push({ employeeId: e.id, employeeName: e.name, type, expiry: date, daysLeft });
+      docs.push({
+        employeeId: e.id,
+        employeeName: e.name,
+        project: e.project || '',
+        type,
+        expiry: date,
+        daysLeft
+      });
     };
     add('Civil ID', e.civilIdExpiry);
     add('Passport', e.passportExpiry || e.custom?.passportExpiry);
     add('Visa', e.visaExpiry || e.custom?.visaExpiry);
     add('Medical', e.medicalExpiry || e.custom?.medicalExpiry);
+    add('Work Permit', e.workPermitExpiry || e.custom?.workPermitExpiry || e.custom?.['Work Permit Expiry']);
+    add('Insurance', e.insuranceExpiry || e.custom?.insuranceExpiry || e.custom?.['Insurance Expiry']);
   });
   return docs.sort((a,b) => a.daysLeft - b.daysLeft);
 }
+let complianceSortKey = 'daysLeft';
+let complianceSortDir = 1;
+function sortCompliance(key) {
+  if (complianceSortKey === key) complianceSortDir *= -1;
+  else { complianceSortKey = key; complianceSortDir = 1; }
+  renderCompliance();
+}
 function renderCompliance() {
   const filter = parseInt(document.getElementById('complianceFilter')?.value || '60', 10);
+  const docType = document.getElementById('complianceDocType')?.value || 'all';
+  const project = document.getElementById('complianceProject')?.value || 'all';
+  const q = (document.getElementById('complianceSearch')?.value || '').trim().toLowerCase();
+
+  const projSel = document.getElementById('complianceProject');
+  if (projSel && projSel.options.length <= 1) {
+    const projects = [...new Set(data.employees.map(e => e.project).filter(Boolean))].sort();
+    projects.forEach(p => {
+      const o = document.createElement('option');
+      o.value = p; o.textContent = p;
+      projSel.appendChild(o);
+    });
+  }
+
   let all = getAllDocumentAlerts();
   const expired = all.filter(d => d.daysLeft < 0).length;
   const d7 = all.filter(d => d.daysLeft >= 0 && d.daysLeft <= 7).length;
   const d30 = all.filter(d => d.daysLeft > 7 && d.daysLeft <= 30).length;
-  const ok = data.employees.length - all.filter(d => d.daysLeft <= 60).length;
-  document.getElementById('compExpired').textContent = expired;
-  document.getElementById('comp7').textContent = d7;
-  document.getElementById('comp30').textContent = d30;
-  document.getElementById('compOk').textContent = Math.max(0, ok);
+  const d60 = all.filter(d => d.daysLeft > 30 && d.daysLeft <= 60).length;
+  const trackedOk = all.filter(d => d.daysLeft > 60).length;
+  const setc = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  setc('compExpired', expired);
+  setc('comp7', d7);
+  setc('comp30', d30);
+  setc('comp60', d60);
+  setc('compOk', trackedOk);
 
   if (filter === 0) all = all.filter(d => d.daysLeft < 0);
   else all = all.filter(d => d.daysLeft <= filter);
+  if (docType !== 'all') all = all.filter(d => d.type === docType);
+  if (project !== 'all') all = all.filter(d => d.project === project);
+  if (q) all = all.filter(d =>
+    (d.employeeName || '').toLowerCase().includes(q) ||
+    (d.employeeId || '').toLowerCase().includes(q) ||
+    (d.project || '').toLowerCase().includes(q)
+  );
+
+  all = all.slice().sort((a, b) => {
+    const ka = a[complianceSortKey];
+    const kb = b[complianceSortKey];
+    if (ka < kb) return -1 * complianceSortDir;
+    if (ka > kb) return 1 * complianceSortDir;
+    return 0;
+  });
 
   const tbody = document.getElementById('complianceBody');
   if (!tbody) return;
   if (!all.length) {
-    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-10 text-gray-400">No documents in this range. Add Civil ID / Passport / Visa expiry on employees.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-10 text-gray-400">No documents in this range. Add expiry dates on employees.</td></tr>';
     return;
   }
   tbody.innerHTML = all.map(d => {
@@ -7005,11 +7341,13 @@ function renderCompliance() {
       : d.daysLeft <= 7 ? '<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded-full text-xs font-semibold">Critical</span>'
       : d.daysLeft <= 30 ? '<span class="badge-warning px-2 py-0.5 rounded-full text-xs font-semibold">Warning</span>'
       : '<span class="badge-ok px-2 py-0.5 rounded-full text-xs font-semibold">OK</span>';
-    return `<tr class="border-b border-gray-100 hover:bg-gray-50">
-      <td class="px-3 py-2 font-semibold">${d.employeeName}</td>
+    const rowBg = d.daysLeft < 0 ? 'bg-red-50/50' : d.daysLeft <= 7 ? 'bg-amber-50/40' : '';
+    return `<tr class="border-b border-gray-100 hover:bg-gray-50 ${rowBg}">
+      <td class="px-3 py-2 font-semibold">${d.employeeName}<div class="text-[10px] text-gray-400">${d.employeeId}</div></td>
+      <td class="px-3 py-2 text-xs">${d.project || '—'}</td>
       <td class="px-3 py-2">${d.type}</td>
       <td class="px-3 py-2">${d.expiry}</td>
-      <td class="px-3 py-2 font-bold ${d.daysLeft < 0 ? 'text-red-600' : d.daysLeft <= 30 ? 'text-amber-600' : ''}">${d.daysLeft}</td>
+      <td class="px-3 py-2 font-bold ${d.daysLeft < 0 ? 'text-red-600' : d.daysLeft <= 30 ? 'text-amber-600' : 'text-slate-700'}">${d.daysLeft}</td>
       <td class="px-3 py-2">${st}</td>
       <td class="px-3 py-2"><button onclick="openModal('editEmployee','${d.employeeId}')" class="text-blue-600 text-xs font-semibold hover:underline">Update</button></td>
     </tr>`;
@@ -7018,6 +7356,8 @@ function renderCompliance() {
 function exportComplianceExcel() {
   const rows = getAllDocumentAlerts().map(d => ({
     Employee: d.employeeName,
+    'Employee ID': d.employeeId,
+    Project: d.project || '',
     Document: d.type,
     Expiry: d.expiry,
     'Days Left': d.daysLeft,
@@ -7986,6 +8326,7 @@ function finishLogin() {
       else switchSection('dashboard');
     } catch (e) { console.warn('section', e); }
     try { renderDashboard(); } catch (e) { console.warn('dashboard', e); }
+    try { updateStatusChip('Online · ' + (window.currentUserEmail || currentRole || 'Admin')); } catch (_) {}
     try {
       const greet = document.getElementById('dashGreeting');
       if (greet && window.currentUserName) greet.textContent = String(window.currentUserName).split(' ')[0];
