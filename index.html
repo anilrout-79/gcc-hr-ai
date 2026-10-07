@@ -839,6 +839,39 @@
           <button type="button" class="quick-action" onclick="saveToCloud && saveToCloud()"><i class="fas fa-cloud-upload-alt"></i> Save cloud</button>
         </div>
 
+
+        <div id="dashTodayStrip" class="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-3 mb-5">
+          <button type="button" onclick="switchSection('attendance')" class="text-left rounded-xl border border-slate-200 bg-white p-3 hover:border-teal-300 hover:shadow-sm transition">
+            <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Today · Absent</div>
+            <div class="text-2xl font-black text-slate-900 mt-1" id="todayAbsent">0</div>
+            <div class="text-[11px] text-slate-500">Attendance today</div>
+          </button>
+          <button type="button" onclick="switchSection('leave')" class="text-left rounded-xl border border-slate-200 bg-white p-3 hover:border-amber-300 hover:shadow-sm transition">
+            <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Leave pending</div>
+            <div class="text-2xl font-black text-amber-600 mt-1" id="todayLeavePending">0</div>
+            <div class="text-[11px] text-slate-500">Awaiting approval</div>
+          </button>
+          <button type="button" onclick="switchSection('compliance')" class="text-left rounded-xl border border-slate-200 bg-white p-3 hover:border-red-300 hover:shadow-sm transition">
+            <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Docs &lt; 30 days</div>
+            <div class="text-2xl font-black text-red-600 mt-1" id="todayDocsRisk">0</div>
+            <div class="text-[11px] text-slate-500">Expiry risk</div>
+          </button>
+          <button type="button" onclick="switchSection('payroll')" class="text-left rounded-xl border border-slate-200 bg-white p-3 hover:border-indigo-300 hover:shadow-sm transition">
+            <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Payroll period</div>
+            <div class="text-lg font-black text-indigo-700 mt-1" id="todayPayrollLock">—</div>
+            <div class="text-[11px] text-slate-500" id="todayPayrollLockSub">Status</div>
+          </button>
+          <button type="button" onclick="switchSection('employees')" class="text-left rounded-xl border border-slate-200 bg-white p-3 hover:border-emerald-300 hover:shadow-sm transition">
+            <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">On leave status</div>
+            <div class="text-2xl font-black text-emerald-700 mt-1" id="todayOnLeave">0</div>
+            <div class="text-[11px] text-slate-500">Employee status</div>
+          </button>
+          <button type="button" onclick="document.getElementById('globalSearch')?.focus()" class="text-left rounded-xl border border-dashed border-slate-300 bg-slate-50 p-3 hover:border-teal-400 transition">
+            <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Employee 360</div>
+            <div class="text-sm font-bold text-slate-800 mt-2"><i class="fas fa-user-circle text-teal-600 mr-1"></i> Open from list / search</div>
+            <div class="text-[11px] text-slate-500 mt-1">View → full profile</div>
+          </button>
+        </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <div class="group bg-white kpi-glow-blue rounded-2xl border border-slate-200/80 p-5 shadow-[0_1px_3px_rgba(15,23,42,0.04)] hover:shadow-md hover:border-slate-300/80 transition">
             <div class="flex items-start justify-between mb-4">
@@ -921,6 +954,7 @@
               <button onclick="openModal('findEmployee')" class="bg-slate-800 hover:bg-slate-900 text-white px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2" title="Search and open full profile"><i class="fas fa-search"></i> Find Employee</button>
               <button onclick="loadEmployeesFromSupabase()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2" title="Load from Supabase employees table"><i class="fas fa-cloud-download-alt"></i> Load DB</button>
               <button onclick="syncAllEmployeesToSupabase()" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2" title="Push all app employees to Supabase"><i class="fas fa-cloud-upload-alt"></i> Sync DB</button>
+              <button onclick="downloadEmployeeImportTemplate()" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2"><i class="fas fa-download"></i> Template</button>
               <button onclick="openModal('importExcel')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2"><i class="fas fa-file-excel"></i> Import</button>
               <button onclick="exportEmployeesExcel()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2"><i class="fas fa-download"></i> Export</button>
               <button onclick="openModal('addEmployee')" class="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2"><i class="fas fa-plus"></i> Add Employee</button>
@@ -1109,7 +1143,14 @@
           </div>
 
           <div id="leaveApprovalInbox" class="mb-6 hidden">
-            <h4 class="font-semibold mb-2 flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> Approval inbox</h4>
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+              <h4 class="font-semibold flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span> Approval workflow inbox</h4>
+              <div class="flex gap-2">
+                <button type="button" onclick="bulkApproveLeave('supervisor')" class="text-xs bg-slate-800 text-white px-3 py-1.5 rounded-lg font-semibold">Bulk supervisor OK</button>
+                <button type="button" onclick="bulkApproveLeave('hr')" class="text-xs bg-teal-600 text-white px-3 py-1.5 rounded-lg font-semibold">Bulk HR approve</button>
+              </div>
+            </div>
+            <p class="text-xs text-slate-500 mb-2">Flow: <strong>Submit → Supervisor → HR → Approved</strong>. Admin/HR can final-approve in one step.</p>
             <div id="leaveInboxList" class="space-y-2"></div>
           </div>
 
@@ -1414,9 +1455,12 @@
         <div class="bg-white rounded-xl border border-gray-100 shadow-sm p-6">
           <div class="flex flex-wrap items-start justify-between gap-2 mb-2">
             <h3 class="text-lg font-bold flex items-center gap-2"><i class="fas fa-file-invoice-dollar text-emerald-600"></i> Final Settlement / End of Service</h3>
-            <button type="button" onclick="refreshComplianceRules()" class="text-xs px-3 py-1.5 rounded-lg border border-teal-200 bg-teal-50 text-teal-800 font-semibold hover:bg-teal-100"><i class="fas fa-sync-alt mr-1"></i>Refresh rules from DB</button>
+            <div class="flex flex-wrap gap-2">
+              <button type="button" onclick="printSettlementPack()" class="text-xs px-3 py-1.5 rounded-lg bg-slate-900 text-white font-semibold hover:bg-slate-800"><i class="fas fa-print mr-1"></i>Print settlement pack</button>
+              <button type="button" onclick="refreshComplianceRules()" class="text-xs px-3 py-1.5 rounded-lg border border-teal-200 bg-teal-50 text-teal-800 font-semibold hover:bg-teal-100"><i class="fas fa-sync-alt mr-1"></i>Refresh rules from DB</button>
+            </div>
           </div>
-          <p class="text-sm text-gray-500 mb-1">EOS + leave encashment using <strong>GCC Compliance Engine</strong> when available (not hard-coded only on the employee).</p>
+          <p class="text-sm text-gray-500 mb-1">EOS + leave encashment wizard · Print pack includes calculation + exit clearance checklist.</p>
           <p class="text-xs text-teal-700 mb-5">Rules source: <span id="complianceSourceBadge" class="font-semibold">Built-in defaults</span></p>
 
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -2094,7 +2138,7 @@ let STORAGE_KEY = (function() {
 
 // ---- Supabase cloud (fill key if empty) ----
 const SUPABASE_URL = 'https://jlhlayydqcsvmmzdypcr.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_N8t3mr2fEUNbGQuV8qThSg_ECIYi7V7'; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
+const SUPABASE_KEY = localStorage.getItem('gcc_supabase_key') || ''; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
 let supabaseClient = null;
 try {
   if (window.supabase && SUPABASE_URL && SUPABASE_KEY) {
@@ -2279,7 +2323,7 @@ window.syncAllEmployeesToSupabase = async function () {
 };
 
 window.switchEmpProfileTab = function (tab) {
-  ['overview', 'salary', 'performance', 'documents', 'assignment', 'exit'].forEach(t => {
+  ['overview', 'salary', 'leave', 'attendance', 'performance', 'documents', 'assignment', 'exit'].forEach(t => {
     const panel = document.getElementById('empPanel-' + t);
     const btn = document.getElementById('empTab-' + t);
     if (panel) panel.classList.toggle('hidden', t !== tab);
@@ -3225,7 +3269,60 @@ function renderDashboard() {
   try { renderDashboardCharts(); } catch (e) {}
   try { renderOnboarding(); } catch (e) {}
   try { updateNotifBadge(); } catch (e) {}
+  try { renderTodayStrip(); } catch (e) { console.warn(e); }
+  try { renderDashAlertBanner(); } catch (e) {}
 }
+function renderDashAlertBanner() {
+  let box = document.getElementById('dashAlertBanner');
+  if (!box) {
+    const strip = document.getElementById('dashTodayStrip');
+    if (!strip || !strip.parentNode) return;
+    box = document.createElement('div');
+    box.id = 'dashAlertBanner';
+    strip.parentNode.insertBefore(box, strip);
+  }
+  const alerts = (typeof getSystemAlerts === 'function' ? getSystemAlerts() : []).filter(a => a.level === 'danger' || a.category === 'document');
+  const critical = alerts.filter(a => a.level === 'danger').slice(0, 5);
+  if (!critical.length) {
+    box.innerHTML = '';
+    box.className = 'hidden';
+    return;
+  }
+  box.className = 'mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3';
+  box.innerHTML = `<div class="flex flex-wrap items-start justify-between gap-2">
+    <div>
+      <div class="text-sm font-bold text-red-800"><i class="fas fa-exclamation-circle mr-1"></i> Urgent document alerts (${critical.length}+)</div>
+      <ul class="mt-1 text-xs text-red-700 space-y-0.5">${critical.map(a => `<li>• ${a.text}</li>`).join('')}</ul>
+    </div>
+    <button type="button" onclick="switchSection('compliance')" class="text-xs font-semibold bg-red-600 text-white px-3 py-1.5 rounded-lg">Open expiry list</button>
+  </div>`;
+}
+
+
+function renderTodayStrip() {
+  const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  const today = new Date().toISOString().slice(0, 10);
+  const logs = (data.attendanceLogs || []).filter(r => (r.workDate || r.work_date) === today);
+  const absent = logs.filter(r => String(r.status || '').toLowerCase() === 'absent').length;
+  // If no logs yet, count status Absent on employee card
+  const absentEmp = (data.employees || []).filter(e => String(e.status || '').toLowerCase() === 'absent').length;
+  setTxt('todayAbsent', logs.length ? absent : absentEmp);
+  const pending = (data.leaveRequests || []).filter(r => String(r.status || '').toLowerCase() === 'pending').length;
+  setTxt('todayLeavePending', pending);
+  let docsRisk = 0;
+  try {
+    const all = typeof getAllDocumentAlerts === 'function' ? getAllDocumentAlerts() : [];
+    docsRisk = all.filter(d => d.daysLeft <= 30).length;
+  } catch (_) {}
+  setTxt('todayDocsRisk', docsRisk);
+  setTxt('todayOnLeave', (data.employees || []).filter(e => String(e.status || '').toLowerCase().includes('leave')).length);
+  const period = new Date().toISOString().slice(0, 7);
+  const locked = typeof isPayrollPeriodLocked === 'function' && isPayrollPeriodLocked(period);
+  setTxt('todayPayrollLock', locked ? 'LOCKED' : period);
+  const sub = document.getElementById('todayPayrollLockSub');
+  if (sub) sub.textContent = locked ? 'Unlock in Payroll' : 'Open for processing';
+}
+
 
 // -------------------- Admin Controls / Custom Fields --------------------
 let adminFieldFilter = 'all';
@@ -4641,34 +4738,88 @@ function handleExcelImport(file) {
   reader.onload = (e) => {
     try {
       const wb = XLSX.read(e.target.result, { type: 'array' });
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      const json = XLSX.utils.sheet_to_json(ws);
+      // Prefer sheet named Employees
+      let sheetName = wb.SheetNames.find(n => String(n).toLowerCase() === 'employees') || wb.SheetNames[0];
+      const ws = wb.Sheets[sheetName];
+      const json = XLSX.utils.sheet_to_json(ws, { defval: '' });
+      const cell = (row, ...keys) => {
+        for (const k of keys) {
+          if (row[k] !== undefined && row[k] !== null && String(row[k]).trim() !== '') return row[k];
+        }
+        return '';
+      };
+      const num = (v) => { const n = parseFloat(v); return isNaN(n) ? 0 : n; };
+      const dateStr = (v) => {
+        if (v === '' || v == null) return '';
+        if (typeof v === 'number' && typeof XLSX !== 'undefined' && XLSX.SSF) {
+          try {
+            const d = XLSX.SSF.parse_date_code(v);
+            if (d) return `${d.y}-${String(d.m).padStart(2,'0')}-${String(d.d).padStart(2,'0')}`;
+          } catch (_) {}
+        }
+        const s = String(v).trim();
+        if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+        return s;
+      };
       let added = 0;
       json.forEach(row => {
-        const name = row['Name'] || row['name'] || row['Employee Name'];
-        if (!name) return;
-        const id = `EMP-${String(data.empIdCounter++).padStart(3, '0')}`;
+        const name = String(cell(row, 'Name', 'name', 'Employee Name', 'Full Name')).trim();
+        if (!name || name.toLowerCase() === 'name') return;
+        const idRaw = cell(row, 'Employee ID', 'ID', 'Emp ID');
+        let id = idRaw ? String(idRaw).trim() : '';
+        if (!id || data.employees.some(e => e.id === id)) {
+          id = `EMP-${String(data.empIdCounter++).padStart(3, '0')}`;
+        } else {
+          const m = String(id).match(/(\d+)/);
+          if (m) data.empIdCounter = Math.max(data.empIdCounter, parseInt(m[1], 10) + 1);
+        }
         const initials = name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
         const emp = {
-          id, name,
-          nationality: row['Nationality'] || '',
-          title: row['Job Title'] || row['title'] || '',
-          department: row['Department'] || '',
-          project: row['Project'] || '',
-          status: row['Status'] || 'Present',
-          basicSalary: parseFloat(row['Basic Salary'] || row['Basic'] || 0),
-          housingAllowance: parseFloat(row['Housing'] || row['Housing Allowance'] || 0),
-          foodAllowance: parseFloat(row['Food'] || row['Food Allowance'] || 0),
-          transportAllowance: parseFloat(row['Transport'] || row['Transport Allowance'] || 0),
-          projectAllowance: parseFloat(row['Project Allowance'] || 0),
-          fixedAllowance: parseFloat(row['Fixed'] || row['Fixed Allowance'] || 0),
-          joinDate: row['Join Date'] || '',
-          civilIdExpiry: row['Civil ID Expiry'] || '',
-          initials, color: colors[data.employees.length % colors.length],
+          id,
+          name,
+          nameAr: cell(row, 'Name Arabic', 'Arabic Name', 'nameAr'),
+          gender: cell(row, 'Gender'),
+          dob: dateStr(cell(row, 'Date of Birth', 'DOB', 'dob')),
+          nationality: cell(row, 'Nationality') || 'Other',
+          maritalStatus: cell(row, 'Marital Status'),
+          bloodGroup: cell(row, 'Blood Group'),
+          mobile: cell(row, 'Mobile', 'Phone'),
+          email: cell(row, 'Email'),
+          emergencyName: cell(row, 'Emergency Name'),
+          emergencyPhone: cell(row, 'Emergency Phone'),
+          homeAddress: cell(row, 'Home Address'),
+          kuwaitAddress: cell(row, 'Local Address', 'Kuwait Address', 'Address'),
+          title: cell(row, 'Job Title', 'title', 'Title') || 'Staff',
+          profession: cell(row, 'Profession'),
+          department: cell(row, 'Department') || 'General',
+          project: cell(row, 'Project') || 'Unassigned',
+          employmentType: cell(row, 'Employment Type') || 'Permanent',
+          status: cell(row, 'Status') || 'Present',
+          basicSalary: num(cell(row, 'Basic Salary', 'Basic')),
+          housingAllowance: num(cell(row, 'Housing Allowance', 'Housing')),
+          foodAllowance: num(cell(row, 'Food Allowance', 'Food')),
+          transportAllowance: num(cell(row, 'Transport Allowance', 'Transport')),
+          projectAllowance: num(cell(row, 'Project Allowance')),
+          fixedAllowance: num(cell(row, 'Fixed Allowance', 'Fixed')),
+          joinDate: dateStr(cell(row, 'Join Date', 'Joining Date', 'Date of Joining')),
+          iban: cell(row, 'IBAN', 'Bank IBAN'),
+          civilIdNo: cell(row, 'Civil ID No', 'Civil ID', 'Civil ID Number'),
+          civilIdExpiry: dateStr(cell(row, 'Civil ID Expiry')),
+          passportNo: cell(row, 'Passport No', 'Passport'),
+          passportExpiry: dateStr(cell(row, 'Passport Expiry')),
+          visaExpiry: dateStr(cell(row, 'Visa Expiry')),
+          medicalExpiry: dateStr(cell(row, 'Medical Expiry')),
+          workPermitExpiry: dateStr(cell(row, 'Work Permit Expiry')),
+          insuranceExpiry: dateStr(cell(row, 'Insurance Expiry')),
+          leaveEntitlement: cell(row, 'Leave Entitlement') !== '' ? num(cell(row, 'Leave Entitlement')) : undefined,
+          leaveUsed: num(cell(row, 'Leave Used')),
+          leavePending: 0,
+          essPin: cell(row, 'ESS PIN', 'PIN') ? String(cell(row, 'ESS PIN', 'PIN')) : '',
+          initials,
+          color: (typeof colors !== 'undefined' ? colors[data.employees.length % colors.length] : 'bg-teal-500'),
           custom: {}
         };
-        // Map custom fields by label (employees only)
-        data.customFields.filter(f => (f.entity||'employee')==='employee').forEach(f => {
+        (data.customFields || []).filter(f => (f.entity || 'employee') === 'employee').forEach(f => {
           if (row[f.label] !== undefined && row[f.label] !== '') {
             emp.custom[f.id] = row[f.label];
           }
@@ -4677,16 +4828,38 @@ function handleExcelImport(file) {
         added++;
       });
       saveData();
-      renderEmployees();
-      renderDashboard();
-      closeModal();
-      showToast(`✓ ${added} employees imported (custom fields mapped)!`, 'success');
+      try { renderEmployees(); } catch (_) {}
+      try { renderDashboard(); } catch (_) {}
+      try { closeModal(); } catch (_) {}
+      showToast(added + ' employees imported from Excel', 'success');
+      try { logAudit('import_excel', added + ' rows'); } catch (_) {}
     } catch (err) {
+      console.error(err);
       showToast('Import error: ' + err.message, 'error');
     }
   };
   reader.readAsArrayBuffer(file);
 }
+
+/** Download blank/full import template from the app */
+function downloadEmployeeImportTemplate() {
+  const headers = ['Name','Name Arabic','Gender','Date of Birth','Nationality','Marital Status','Blood Group','Mobile','Email','Emergency Name','Emergency Phone','Home Address','Local Address','Job Title','Profession','Department','Project','Employment Type','Status','Join Date','Basic Salary','Housing Allowance','Food Allowance','Transport Allowance','Project Allowance','Fixed Allowance','IBAN','Civil ID No','Civil ID Expiry','Passport No','Passport Expiry','Visa Expiry','Medical Expiry','Work Permit Expiry','Insurance Expiry','Leave Entitlement','Leave Used','ESS PIN','Country Code'];
+  const sample = ['Sample Employee','','Male','1990-01-15','India','Single','O+','+96550000000','sample@email.com','','','Home address','Local address','Technician','Technician','Operations','Project Alpha','Permanent','Present','2024-01-01',400,50,30,20,0,0,'','','2027-01-01','A1234567','2028-01-01','2026-12-31','','','',30,0,'','KW'];
+  if (typeof XLSX === 'undefined') {
+    const csv = headers.join(',') + '\n' + sample.map(c => `"${c}"`).join(',');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+    a.download = 'AHANORA_Employee_Import_Template.csv';
+    a.click();
+    return;
+  }
+  const ws = XLSX.utils.aoa_to_sheet([headers, sample]);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Employees');
+  XLSX.writeFile(wb, 'AHANORA_Employee_Import_Template.xlsx');
+  showToast('Import template downloaded', 'success');
+}
+
 
 // -------------------- Backup / Restore --------------------
 function exportAllData() {
@@ -4814,6 +4987,8 @@ function openModal(type, payload) {
   }
 
   else if (type === 'viewEmployee') {
+    const contentEl = document.getElementById('modalContent');
+    if (contentEl) contentEl.style.maxWidth = '920px';
     const e = data.employees.find(x => x.id === payload);
     if (!e) { showToast('Employee not found', 'error'); return; }
     if (!e.salaryHistory) e.salaryHistory = [];
@@ -4847,21 +5022,57 @@ function openModal(type, payload) {
         <p class="text-sm text-gray-700 mt-2 whitespace-pre-wrap">${(r.comments||'—').replace(/</g,'&lt;')}</p>
       </div>`).join('') || `<p class="text-sm text-gray-400 text-center py-4">No reviews yet</p>`;
 
+    const leaveEnt = e.leaveEntitlement != null ? e.leaveEntitlement : (typeof getDefaultAnnualLeaveDays === 'function' ? getDefaultAnnualLeaveDays() : 30);
+    const leaveUsed = e.leaveUsed || 0;
+    const leavePending = e.leavePending || 0;
+    const leaveBal = leaveEnt - leaveUsed - leavePending;
+    const empLeaves = (data.leaveRequests || []).filter(r => r.employeeId === e.id || r.employee_id === e.id)
+      .sort((a,b) => String(b.from||b.startDate||'').localeCompare(String(a.from||a.startDate||'')));
+    const leaveRowsHtml = empLeaves.slice(0, 12).map(r =>
+      `<tr class="border-b border-gray-100 text-sm">
+        <td class="py-1.5 pr-2">${r.type || r.leaveType || 'Leave'}</td>
+        <td class="py-1.5 pr-2">${r.from || r.startDate || '—'}</td>
+        <td class="py-1.5 pr-2">${r.to || r.endDate || '—'}</td>
+        <td class="py-1.5 pr-2">${r.days != null ? r.days : '—'}</td>
+        <td class="py-1.5"><span class="text-xs font-semibold ${String(r.status).toLowerCase()==='approved'?'text-emerald-600':String(r.status).toLowerCase()==='pending'?'text-amber-600':'text-gray-500'}">${r.status||'—'}</span></td>
+      </tr>`).join('') || `<tr><td colspan="5" class="py-4 text-center text-gray-400 text-sm">No leave requests</td></tr>`;
+    const attLogs = (data.attendanceLogs || []).filter(r => r.employeeId === e.id || r.employee_id === e.id)
+      .sort((a,b) => String(b.workDate||b.work_date||'').localeCompare(String(a.workDate||a.work_date||'')));
+    const attRowsHtml = attLogs.slice(0, 14).map(r =>
+      `<tr class="border-b border-gray-100 text-sm">
+        <td class="py-1.5 pr-2">${r.workDate || r.work_date || '—'}</td>
+        <td class="py-1.5 pr-2">${r.status || '—'}</td>
+        <td class="py-1.5">${r.overtimeHours != null ? r.overtimeHours : (r.overtime_hours || 0)}h</td>
+      </tr>`).join('') || `<tr><td colspan="3" class="py-4 text-center text-gray-400 text-sm">No attendance logs</td></tr>`;
+    const periodNow = new Date().toISOString().slice(0, 7);
+    let otMonth = 0;
+    try { otMonth = typeof getEmployeeOTForPeriod === 'function' ? getEmployeeOTForPeriod(e.id, periodNow) : 0; } catch (_) {}
+    let eosEst = '—';
+    try {
+      if (typeof estimateEosAmount === 'function') {
+        const meta = typeof getReportCountryMeta === 'function' ? getReportCountryMeta() : { code: currentCountry || 'KW' };
+        const eos = estimateEosAmount(e, meta);
+        eosEst = (eos.amount || 0).toLocaleString() + ' (' + (eos.years||0) + 'y)';
+      }
+    } catch (_) {}
+
     html = `<div class="p-6">
       <div class="flex items-center justify-between mb-4">
         <div class="flex items-center gap-3">
           <div class="w-14 h-14 ${e.color} rounded-full flex items-center justify-center text-white text-xl font-bold">${e.initials}</div>
           <div>
             <h3 class="text-xl font-bold">${e.name}</h3>
-            <p class="text-sm text-gray-500">${e.id} · ${e.title || '—'} · ${e.department || ''}</p>
+            <p class="text-sm text-gray-500">Employee 360 · ${e.id} · ${e.title || '—'} · ${e.department || ''}</p>
           </div>
         </div>
         <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times text-xl"></i></button>
       </div>
 
       <div class="flex gap-1 mb-4 border-b border-gray-200 overflow-x-auto">
-        <button type="button" onclick="switchEmpProfileTab('overview')" id="empTab-overview" class="emp-prof-tab px-3 py-2 text-xs md:text-sm font-semibold border-b-2 border-teal-600 text-teal-700 whitespace-nowrap">Overview</button>
-        <button type="button" onclick="switchEmpProfileTab('salary')" id="empTab-salary" class="emp-prof-tab px-3 py-2 text-xs md:text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-800 whitespace-nowrap">Salary</button>
+        <button type="button" onclick="switchEmpProfileTab('overview')" id="empTab-overview" class="emp-prof-tab px-3 py-2 text-xs md:text-sm font-semibold border-b-2 border-teal-600 text-teal-700 whitespace-nowrap">360</button>
+        <button type="button" onclick="switchEmpProfileTab('salary')" id="empTab-salary" class="emp-prof-tab px-3 py-2 text-xs md:text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-800 whitespace-nowrap">Pay</button>
+        <button type="button" onclick="switchEmpProfileTab('leave')" id="empTab-leave" class="emp-prof-tab px-3 py-2 text-xs md:text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-800 whitespace-nowrap">Leave</button>
+        <button type="button" onclick="switchEmpProfileTab('attendance')" id="empTab-attendance" class="emp-prof-tab px-3 py-2 text-xs md:text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-800 whitespace-nowrap">Attendance</button>
         <button type="button" onclick="switchEmpProfileTab('performance')" id="empTab-performance" class="emp-prof-tab px-3 py-2 text-xs md:text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-800 whitespace-nowrap">Performance</button>
         <button type="button" onclick="switchEmpProfileTab('documents')" id="empTab-documents" class="emp-prof-tab px-3 py-2 text-xs md:text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-800 whitespace-nowrap">Documents</button>
         <button type="button" onclick="switchEmpProfileTab('assignment')" id="empTab-assignment" class="emp-prof-tab px-3 py-2 text-xs md:text-sm font-semibold border-b-2 border-transparent text-gray-500 hover:text-gray-800 whitespace-nowrap">Assignment</button>
@@ -4893,10 +5104,56 @@ function openModal(type, payload) {
           <div class="text-xs font-bold text-purple-800 mb-2">Custom fields</div>
           ${cfRows || '<div class="text-xs text-gray-400">No values</div>'}
         </div>` : ''}
-        <div class="flex gap-2">
-          <button onclick="closeModal(); openModal('editEmployee','${e.id}')" class="flex-1 bg-blue-600 text-white py-2.5 rounded-lg font-semibold text-sm">Edit profile</button>
-          <button onclick="closeModal(); switchSection('calculator'); setTimeout(()=>{ const s=document.getElementById('calcEmployeeSelect'); if(s){ s.value='${e.id}'; loadEmployeeToCalc(); } },100)" class="flex-1 bg-emerald-600 text-white py-2.5 rounded-lg font-semibold text-sm">Payroll calc</button>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
+          <div class="rounded-lg bg-teal-50 border border-teal-100 p-2.5 text-center">
+            <div class="text-[10px] uppercase text-teal-700 font-bold">Leave bal</div>
+            <div class="text-lg font-black text-teal-900">${leaveBal}</div>
+          </div>
+          <div class="rounded-lg bg-indigo-50 border border-indigo-100 p-2.5 text-center">
+            <div class="text-[10px] uppercase text-indigo-700 font-bold">OT ${periodNow}</div>
+            <div class="text-lg font-black text-indigo-900">${otMonth}h</div>
+          </div>
+          <div class="rounded-lg bg-amber-50 border border-amber-100 p-2.5 text-center">
+            <div class="text-[10px] uppercase text-amber-700 font-bold">EOS est.</div>
+            <div class="text-sm font-black text-amber-900 truncate">${eosEst}</div>
+          </div>
+          <div class="rounded-lg bg-slate-50 border border-slate-200 p-2.5 text-center">
+            <div class="text-[10px] uppercase text-slate-600 font-bold">Status</div>
+            <div class="text-sm font-black text-slate-900">${e.status||'—'}</div>
+          </div>
         </div>
+        <div class="flex flex-wrap gap-2">
+          <button onclick="closeModal(); openModal('editEmployee','${e.id}')" class="flex-1 min-w-[120px] bg-blue-600 text-white py-2.5 rounded-lg font-semibold text-sm">Edit profile</button>
+          <button onclick="closeModal(); switchSection('calculator'); setTimeout(()=>{ const s=document.getElementById('calcEmployeeSelect'); if(s){ s.value='${e.id}'; loadEmployeeToCalc(); } },100)" class="flex-1 min-w-[120px] bg-emerald-600 text-white py-2.5 rounded-lg font-semibold text-sm">Payroll calc</button>
+          <button type="button" onclick="switchEmpProfileTab('leave')" class="flex-1 min-w-[100px] bg-slate-100 text-slate-800 py-2.5 rounded-lg font-semibold text-sm">Leave 360</button>
+          <button type="button" onclick="switchEmpProfileTab('attendance')" class="flex-1 min-w-[100px] bg-slate-100 text-slate-800 py-2.5 rounded-lg font-semibold text-sm">Attendance</button>
+        </div>
+      </div>
+
+      <div id="empPanel-leave" class="emp-prof-panel hidden">
+        <div class="grid grid-cols-3 gap-2 mb-4 text-center">
+          <div class="bg-slate-50 rounded-lg p-3"><div class="text-xs text-gray-500">Entitlement</div><div class="font-bold text-lg">${leaveEnt}</div></div>
+          <div class="bg-slate-50 rounded-lg p-3"><div class="text-xs text-gray-500">Used / Pending</div><div class="font-bold text-lg">${leaveUsed} / ${leavePending}</div></div>
+          <div class="bg-teal-50 rounded-lg p-3 border border-teal-100"><div class="text-xs text-teal-700">Balance</div><div class="font-bold text-lg text-teal-800">${leaveBal}</div></div>
+        </div>
+        <div class="overflow-x-auto mb-3">
+          <table class="w-full text-left">
+            <thead><tr class="text-xs text-gray-500 border-b"><th class="py-2">Type</th><th class="py-2">From</th><th class="py-2">To</th><th class="py-2">Days</th><th class="py-2">Status</th></tr></thead>
+            <tbody>${leaveRowsHtml}</tbody>
+          </table>
+        </div>
+        <button type="button" onclick="closeModal(); switchSection('leave')" class="w-full bg-teal-600 text-white py-2.5 rounded-lg font-semibold text-sm">Open leave module</button>
+      </div>
+
+      <div id="empPanel-attendance" class="emp-prof-panel hidden">
+        <p class="text-xs text-gray-500 mb-2">Recent attendance · OT this month: <strong>${otMonth}h</strong></p>
+        <div class="overflow-x-auto mb-3">
+          <table class="w-full text-left">
+            <thead><tr class="text-xs text-gray-500 border-b"><th class="py-2">Date</th><th class="py-2">Status</th><th class="py-2">OT</th></tr></thead>
+            <tbody>${attRowsHtml}</tbody>
+          </table>
+        </div>
+        <button type="button" onclick="closeModal(); switchSection('attendance')" class="w-full bg-indigo-600 text-white py-2.5 rounded-lg font-semibold text-sm">Open attendance</button>
       </div>
 
       <div id="empPanel-salary" class="emp-prof-panel hidden">
@@ -7962,18 +8219,26 @@ function renderLeaveModule() {
   if (inbox && inboxList) {
     if (pending.length) {
       inbox.classList.remove('hidden');
-      inboxList.innerHTML = pending.slice().reverse().map(r => `
-        <div class="border border-amber-200 bg-amber-50/50 rounded-xl p-4 flex flex-wrap justify-between items-center gap-2">
+      inboxList.innerHTML = pending.slice().reverse().map(r => {
+        const stage = r.workflowStage || 'supervisor';
+        const stageLabel = stage === 'hr' ? 'Awaiting HR' : 'Awaiting supervisor';
+        const stageCls = stage === 'hr' ? 'bg-indigo-100 text-indigo-700' : 'bg-amber-100 text-amber-800';
+        return `<div class="border border-amber-200 bg-amber-50/50 rounded-xl p-4 flex flex-wrap justify-between items-center gap-2">
           <div>
-            <div class="font-semibold text-slate-900">${r.employeeName} <span class="text-xs font-normal text-slate-500">${r.employeeId || ''}</span></div>
+            <div class="font-semibold text-slate-900">${r.employeeName} <span class="text-xs font-normal text-slate-500">${r.employeeId || ''}</span>
+              <span class="ml-2 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${stageCls}">${stageLabel}</span>
+            </div>
             <div class="text-xs text-slate-600 mt-0.5">${r.type} · ${r.from} → ${r.to} · <strong>${r.days}</strong> day(s)</div>
             ${r.reason ? `<div class="text-xs text-slate-500 mt-1">Reason: ${r.reason}</div>` : ''}
+            ${r.supervisorApprovedBy ? `<div class="text-[10px] text-slate-400 mt-1">Supervisor: ${r.supervisorApprovedBy}</div>` : ''}
           </div>
           <div class="flex items-center gap-2">
-            <button type="button" onclick="decideLeave('${r.id}','Approved')" class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg font-semibold">Approve</button>
+            <button type="button" onclick="decideLeave('${r.id}','Approved','supervisor')" class="text-xs bg-slate-700 hover:bg-slate-600 text-white px-3 py-1.5 rounded-lg font-semibold">Supervisor OK</button>
+            <button type="button" onclick="decideLeave('${r.id}','Approved','hr')" class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg font-semibold">HR Approve</button>
             <button type="button" onclick="decideLeave('${r.id}','Rejected')" class="text-xs bg-white border border-red-200 text-red-600 px-3 py-1.5 rounded-lg font-semibold">Reject</button>
           </div>
-        </div>`).join('');
+        </div>`;
+      }).join('');
     } else {
       inbox.classList.add('hidden');
       inboxList.innerHTML = '';
@@ -8016,27 +8281,83 @@ function accrueAllLeave() {
   renderLeaveModule();
   showToast(`Annual leave entitlement set to ${days} days (${(laborLaws[currentCountry]||{}).name || currentCountry})`, 'success');
 }
-async function decideLeave(id, status) {
+async function decideLeave(id, status, asRole) {
   const r = (data.leaveRequests || []).find(x => x.id === id);
   if (!r) return;
   if (r.status !== 'Pending') { showToast('Already decided', 'info'); return; }
-  r.status = status;
-  r.decidedAt = new Date().toISOString();
-  r.decidedBy = window.currentUserEmail || currentRole || 'manager';
-  const emp = data.employees.find(e => e.id === r.employeeId || e.name === r.employeeName);
-  if (emp) {
-    if (status === 'Approved') {
+  if (!r.workflowStage) r.workflowStage = 'supervisor';
+  if (!r.history) r.history = [];
+  const actor = window.currentUserEmail || currentRole || 'manager';
+  const role = asRole || (currentRole === 'admin' || currentRole === 'hr' || currentProfileRole === 'hr' || currentProfileRole === 'admin' ? 'hr' : 'supervisor');
+
+  if (status === 'Rejected') {
+    r.status = 'Rejected';
+    r.workflowStage = 'done';
+    r.decidedAt = new Date().toISOString();
+    r.decidedBy = actor;
+    r.history.push({ at: r.decidedAt, by: actor, action: 'rejected', role });
+    const emp = data.employees.find(e => e.id === r.employeeId || e.name === r.employeeName);
+    if (emp) emp.leavePending = Math.max(0, (emp.leavePending || 0) - (r.days || 0));
+    saveData();
+    renderLeaveModule();
+    try { updateNotifBadge(); } catch (_) {}
+    showToast('Leave rejected', 'warning');
+    try { await upsertLeaveRequestToSupabase(r); } catch (_) {}
+    return;
+  }
+
+  // Approve path
+  if (r.workflowStage === 'supervisor') {
+    // Supervisor approved → send to HR (admin can skip to final)
+    if (role === 'hr' || currentRole === 'admin') {
+      // HR/Admin can final-approve in one step
+      r.workflowStage = 'done';
+      r.status = 'Approved';
+      r.decidedAt = new Date().toISOString();
+      r.decidedBy = actor;
+      r.history.push({ at: r.decidedAt, by: actor, action: 'approved_final', role: 'hr' });
+      const emp = data.employees.find(e => e.id === r.employeeId || e.name === r.employeeName);
+      if (emp) {
+        emp.leaveUsed = (emp.leaveUsed || 0) + (r.days || 0);
+        emp.leavePending = Math.max(0, (emp.leavePending || 0) - (r.days || 0));
+      }
+      showToast('Leave approved (HR)', 'success');
+    } else {
+      r.workflowStage = 'hr';
+      r.supervisorApprovedBy = actor;
+      r.supervisorApprovedAt = new Date().toISOString();
+      r.history.push({ at: r.supervisorApprovedAt, by: actor, action: 'approved_supervisor', role: 'supervisor' });
+      showToast('Supervisor approved — sent to HR', 'success');
+    }
+  } else if (r.workflowStage === 'hr') {
+    r.workflowStage = 'done';
+    r.status = 'Approved';
+    r.decidedAt = new Date().toISOString();
+    r.decidedBy = actor;
+    r.history.push({ at: r.decidedAt, by: actor, action: 'approved_final', role: 'hr' });
+    const emp = data.employees.find(e => e.id === r.employeeId || e.name === r.employeeName);
+    if (emp) {
       emp.leaveUsed = (emp.leaveUsed || 0) + (r.days || 0);
       emp.leavePending = Math.max(0, (emp.leavePending || 0) - (r.days || 0));
-    } else if (status === 'Rejected') {
-      emp.leavePending = Math.max(0, (emp.leavePending || 0) - (r.days || 0));
     }
+    showToast('Leave approved by HR', 'success');
+  } else {
+    showToast('Invalid workflow state', 'error');
+    return;
   }
   saveData();
   renderLeaveModule();
-  showToast(`Leave ${status.toLowerCase()}`, status === 'Approved' ? 'success' : 'warning');
+  try { updateNotifBadge(); } catch (_) {}
   try { await upsertLeaveRequestToSupabase(r); } catch (_) {}
 }
+
+function bulkApproveLeave(stage) {
+  const pending = (data.leaveRequests || []).filter(r => r.status === 'Pending');
+  if (!pending.length) { showToast('No pending leave', 'info'); return; }
+  if (!confirm('Process ' + pending.length + ' pending leave request(s)?')) return;
+  pending.forEach(r => decideLeave(r.id, 'Approved', stage === 'hr' || currentRole === 'admin' ? 'hr' : 'supervisor'));
+}
+
 function submitLeaveRequest(form) {
   ensureLeaveBalances();
   const fd = new FormData(form);
@@ -8067,14 +8388,17 @@ function submitLeaveRequest(form) {
     employeeName: emp?.name || name,
     type, from, to, days, reason,
     status: 'Pending',
+    workflowStage: 'supervisor', // supervisor → hr → done
     created: new Date().toISOString().slice(0,10),
-    country: currentCountry
+    country: currentCountry,
+    history: [{ at: new Date().toISOString(), by: window.currentUserEmail || currentRole || 'requester', action: 'submitted' }]
   };
   data.leaveRequests.push(req);
   saveData();
   closeModal();
   renderLeaveModule();
-  showToast('Leave request submitted — pending approval', 'success');
+  try { updateNotifBadge(); } catch (_) {}
+  showToast('Leave submitted — awaiting supervisor approval', 'success');
   upsertLeaveRequestToSupabase(req).catch(() => {});
 }
 
@@ -9558,20 +9882,124 @@ function cmdKeyNav(e) {
   if (e.key === 'Enter' && cmdItems[cmdIndex]) { e.preventDefault(); cmdItems[cmdIndex].action(); }
 }
 
+function printSettlementPack() {
+  const empId = document.getElementById('settleEmpSelect')?.value;
+  if (!empId) { showToast('Select an employee first', 'warning'); return; }
+  const e = data.employees.find(x => x.id === empId);
+  if (!e) return;
+  try { calcSettlement(); } catch (_) {}
+  const years = document.getElementById('settleYears')?.value || '0';
+  const leaveDays = document.getElementById('settleLeaveDays')?.value || '0';
+  const basic = document.getElementById('settleBasic')?.value || '0';
+  const reason = document.getElementById('settleReason')?.selectedOptions?.[0]?.text || '';
+  const lwd = document.getElementById('settleLwd')?.value || '—';
+  const deductions = document.getElementById('settleDeductions')?.value || '0';
+  const daysWorked = document.getElementById('settleDaysWorked')?.value || '0';
+  const iban = document.getElementById('settleIban')?.value || e.iban || '—';
+  const getT = (id) => document.getElementById(id)?.textContent || '—';
+  const company = data.companyName || 'AHANORA';
+  const cur = typeof currency === 'function' ? currency() : 'KD';
+  const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+  const w = window.open('', '_blank');
+  if (!w) { showToast('Allow pop-ups', 'warning'); return; }
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Settlement Pack — ${e.name}</title>
+  <style>
+    @page{size:A4;margin:14mm}
+    body{font-family:Segoe UI,Arial,sans-serif;color:#0f172a;font-size:11pt;line-height:1.4;margin:0;padding:16px}
+    h1{font-size:16pt;margin:0 0 4px;color:#0f766e}
+    h2{font-size:12pt;margin:18px 0 8px;border-bottom:2px solid #0f766e;padding-bottom:4px}
+    .meta{color:#64748b;font-size:9pt;margin-bottom:12px}
+    table{width:100%;border-collapse:collapse;margin:8px 0}
+    th,td{border:1px solid #cbd5e1;padding:6px 8px;text-align:left;font-size:10pt}
+    th{background:#f1f5f9}
+    .total{font-weight:700;background:#ecfdf5}
+    .check td{border:none;padding:4px 0}
+    .sig{margin-top:28px;display:grid;grid-template-columns:1fr 1fr;gap:24px}
+    .sig div{border-top:1px solid #94a3b8;padding-top:6px;font-size:9pt}
+    @media print{.no-print{display:none}}
+  </style></head><body>
+  <h1>${company}</h1>
+  <div class="meta">Final Settlement Pack · ${today} · ${currentCountry || 'KW'}</div>
+  <h2>1. Employee</h2>
+  <table>
+    <tr><th>Name</th><td>${e.name} (${e.id})</td><th>Title</th><td>${e.title||'—'}</td></tr>
+    <tr><th>Project</th><td>${e.project||'—'}</td><th>Join date</th><td>${e.joinDate||'—'}</td></tr>
+    <tr><th>Last working day</th><td>${lwd}</td><th>Exit reason</th><td>${reason}</td></tr>
+    <tr><th>Years of service</th><td>${years}</td><th>IBAN</th><td>${iban}</td></tr>
+  </table>
+  <h2>2. Calculation summary</h2>
+  <table>
+    <tr><th>Component</th><th>Amount (${cur})</th></tr>
+    <tr><td>End of service / gratuity</td><td id="p-eos">${getT('settleEosAmt') || getT('settleEos') || '—'}</td></tr>
+    <tr><td>Leave encashment (${leaveDays} days)</td><td>${getT('settleLeaveAmt') || '—'}</td></tr>
+    <tr><td>Final month salary (days worked: ${daysWorked})</td><td>${getT('settleSalaryAmt') || '—'}</td></tr>
+    <tr><td>Other deductions</td><td>${deductions}</td></tr>
+    <tr class="total"><td>Net payable (see on-screen breakdown)</td><td>${getT('settleNet') || getT('settleTotal') || '—'} ${cur}</td></tr>
+  </table>
+  <p style="font-size:9pt;color:#64748b">Figures mirror the Settlement screen at print time. Confirm against company policy and local labour law before payment.</p>
+  <h2>3. Exit clearance checklist</h2>
+  <table class="check">
+    <tr><td>☐ IT assets / tools returned</td><td>☐ Uniform / PPE</td></tr>
+    <tr><td>☐ Access cards / Civil ID copy</td><td>☐ Housing clearance</td></tr>
+    <tr><td>☐ Client site clearance</td><td>☐ Advances / loans cleared</td></tr>
+    <tr><td>☐ Handover complete</td><td>☐ Final settlement approved</td></tr>
+  </table>
+  <div class="sig">
+    <div>HR / Finance<br>Name: ${data.hrName||'—'}<br>Signature: ____________</div>
+    <div>Employee acknowledgment<br>Name: ${e.name}<br>Signature: ____________</div>
+  </div>
+  <p class="no-print" style="margin-top:16px"><button onclick="window.print()">Print / Save PDF</button></p>
+  </body></html>`);
+  w.document.close();
+  setTimeout(() => { try { w.print(); } catch (_) {} }, 350);
+  try { logAudit('settlement_pack', e.id); } catch (_) {}
+  showToast('Settlement pack ready to print', 'success');
+}
+
 function getSystemAlerts() {
   const alerts = [];
-  getExpiringCivilIds(30).forEach(e => {
-    alerts.push({ level: e.daysLeft < 0 ? 'danger' : 'warn', text: `Civil ID: ${e.name} — ${e.daysLeft < 0 ? 'expired' : e.daysLeft + 'd left'}`, go: () => switchSection('compliance') });
+  const now = new Date();
+  // Document expiry — primary operational alerts
+  try {
+    const docs = typeof getAllDocumentAlerts === 'function' ? getAllDocumentAlerts() : [];
+    docs.filter(d => d.daysLeft <= 60).slice(0, 40).forEach(d => {
+      const level = d.daysLeft < 0 ? 'danger' : d.daysLeft <= 14 ? 'danger' : d.daysLeft <= 30 ? 'warn' : 'info';
+      const when = d.daysLeft < 0 ? ('Expired ' + Math.abs(d.daysLeft) + 'd ago') : (d.daysLeft + 'd left');
+      alerts.push({
+        level,
+        category: 'document',
+        text: d.type + ': ' + d.employeeName + ' · ' + when,
+        go: () => { switchSection('compliance'); }
+      });
+    });
+  } catch (_) {}
+  // Leave workflow
+  (data.leaveRequests || []).filter(r => r.status === 'Pending').forEach(r => {
+    const stage = r.workflowStage === 'hr' ? 'HR' : 'Supervisor';
+    alerts.push({
+      level: 'warn',
+      category: 'leave',
+      text: 'Leave ' + stage + ': ' + (r.employeeName || '') + ' (' + (r.days || '?') + 'd)',
+      go: () => switchSection('leave')
+    });
   });
-  (data.invoices||[]).filter(i => i.status !== 'Paid').slice(0, 8).forEach(i => {
-    alerts.push({ level: 'warn', text: `Unpaid invoice ${i.number} — ${i.client}`, go: () => switchSection('invoices') });
+  // Payroll lock reminder near month end
+  const day = now.getDate();
+  const period = now.toISOString().slice(0, 7);
+  if (day >= 25 && typeof isPayrollPeriodLocked === 'function' && !isPayrollPeriodLocked(period)) {
+    alerts.push({ level: 'info', category: 'payroll', text: 'Payroll ' + period + ' still unlocked', go: () => switchSection('payroll') });
+  }
+  // Supplier dues
+  (data.supplierBills || data.bills || []).filter(b => b.dueDate && new Date(b.dueDate) <= now && String(b.status||'').toLowerCase() !== 'paid').slice(0, 5).forEach(b => {
+    alerts.push({ level: 'info', category: 'finance', text: 'Supplier due: ' + (b.supplier || b.id), go: () => switchSection('suppliers') });
   });
-  (data.supplierBills||[]).filter(b => b.status !== 'Paid').slice(0, 5).forEach(b => {
-    alerts.push({ level: 'info', text: `Supplier due: ${b.supplier}`, go: () => switchSection('suppliers') });
+  // Low leave
+  (data.employees || []).filter(e => ((e.leaveEntitlement != null ? e.leaveEntitlement : 30) - (e.leaveUsed || 0)) < 3).slice(0, 8).forEach(e => {
+    alerts.push({ level: 'info', category: 'leave', text: 'Low leave balance: ' + e.name, go: () => switchSection('leave') });
   });
-  data.employees.filter(e => ((e.leaveEntitlement||30)-(e.leaveUsed||0)) < 3).forEach(e => {
-    alerts.push({ level: 'info', text: `Low leave balance: ${e.name}`, go: () => switchSection('leave') });
-  });
+  // Sort danger first
+  const order = { danger: 0, warn: 1, info: 2 };
+  alerts.sort((a, b) => (order[a.level] ?? 3) - (order[b.level] ?? 3));
   return alerts;
 }
 function updateNotifBadge() {
