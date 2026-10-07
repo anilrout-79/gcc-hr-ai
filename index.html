@@ -871,6 +871,11 @@
             <div class="text-sm font-bold text-slate-800 mt-2"><i class="fas fa-user-circle text-teal-600 mr-1"></i> Open from list / search</div>
             <div class="text-[11px] text-slate-500 mt-1">View → full profile</div>
           </button>
+          <button type="button" onclick="switchSection('employees')" class="text-left rounded-xl border border-slate-200 bg-white p-3 hover:border-purple-300 hover:shadow-sm transition">
+            <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Data quality</div>
+            <div class="text-2xl font-black text-slate-900 mt-1" id="statDataQuality">—</div>
+            <div class="text-[11px] text-slate-500" id="statDataQualitySub">Profile completeness</div>
+          </button>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
           <div class="group bg-white kpi-glow-blue rounded-2xl border border-slate-200/80 p-5 shadow-[0_1px_3px_rgba(15,23,42,0.04)] hover:shadow-md hover:border-slate-300/80 transition">
@@ -961,7 +966,7 @@
             </div>
           </div>
 
-          <div class="flex flex-wrap gap-3 mb-4">
+          <div class="flex flex-wrap gap-3 mb-3">
             <div class="relative flex-1 min-w-[220px]">
               <i class="fas fa-search absolute left-3 top-3 text-gray-400 text-sm"></i>
               <input type="text" id="empSearch" placeholder="Search name, ID, nationality, project, custom fields..." class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:outline-none" oninput="filterEmployees()">
@@ -975,11 +980,24 @@
               <option>Present</option><option>Absent</option><option>On Leave</option>
             </select>
           </div>
+          <div id="empBulkBar" class="flex flex-wrap items-center gap-2 mb-4 p-3 rounded-xl border border-slate-200 bg-slate-50">
+            <span class="text-xs font-bold text-slate-600 uppercase tracking-wide"><span id="empSelectedCount">0</span> selected</span>
+            <select id="bulkStatus" class="border rounded-lg px-2 py-1.5 text-xs">
+              <option value="">Set status…</option>
+              <option>Present</option><option>Absent</option><option>On Leave</option><option>Terminated</option>
+            </select>
+            <button type="button" onclick="bulkApplyStatus()" class="text-xs bg-slate-800 text-white px-3 py-1.5 rounded-lg font-semibold">Apply status</button>
+            <input type="text" id="bulkProject" placeholder="Move to project…" class="border rounded-lg px-2 py-1.5 text-xs w-36">
+            <button type="button" onclick="bulkApplyProject()" class="text-xs bg-teal-600 text-white px-3 py-1.5 rounded-lg font-semibold">Apply project</button>
+            <button type="button" onclick="selectAllVisibleEmployees(true)" class="text-xs border border-slate-300 bg-white px-2 py-1.5 rounded-lg font-semibold">Select all</button>
+            <button type="button" onclick="selectAllVisibleEmployees(false)" class="text-xs border border-slate-300 bg-white px-2 py-1.5 rounded-lg font-semibold">Clear</button>
+          </div>
 
           <div class="overflow-x-auto border border-gray-200 rounded-xl max-h-[620px]">
             <table class="w-full text-sm">
               <thead>
                 <tr class="bg-gray-50 border-b border-gray-200 text-xs uppercase text-gray-600">
+                  <th class="text-left px-3 py-3 font-semibold w-8"><input type="checkbox" id="empSelectAll" onchange="selectAllVisibleEmployees(this.checked)" title="Select all"></th>
                   <th class="text-left px-4 py-3 font-semibold">Employee</th>
                   <th class="text-left px-4 py-3 font-semibold">Nationality</th>
                   <th class="text-left px-4 py-3 font-semibold">Title</th>
@@ -2138,7 +2156,7 @@ let STORAGE_KEY = (function() {
 
 // ---- Supabase cloud (fill key if empty) ----
 const SUPABASE_URL = 'https://jlhlayydqcsvmmzdypcr.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_N8t3mr2fEUNbGQuV8qThSg_ECIYi7V7'; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
+const SUPABASE_KEY = localStorage.getItem('gcc_supabase_key') || ''; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
 let supabaseClient = null;
 try {
   if (window.supabase && SUPABASE_URL && SUPABASE_KEY) {
@@ -3271,6 +3289,7 @@ function renderDashboard() {
   try { updateNotifBadge(); } catch (e) {}
   try { renderTodayStrip(); } catch (e) { console.warn(e); }
   try { renderDashAlertBanner(); } catch (e) {}
+  try { renderDataQualityWidget(); } catch (e) {}
 }
 function renderDashAlertBanner() {
   let box = document.getElementById('dashAlertBanner');
@@ -3421,6 +3440,7 @@ function renderEmployees(list) {
   if (emps.length === 0) {
     tbody.innerHTML = '';
     noRes.classList.remove('hidden');
+    updateEmpSelectedCount();
     return;
   }
   noRes.classList.add('hidden');
@@ -3443,6 +3463,7 @@ function renderEmployees(list) {
 
     const statusClass = e.status === 'Present' ? 'badge-ok' : e.status === 'Absent' ? 'badge-expired' : 'badge-warning';
     return `<tr class="border-b border-gray-100 hover:bg-gray-50">
+      <td class="px-3 py-3"><input type="checkbox" class="emp-row-check" value="${e.id}" onchange="updateEmpSelectedCount()"></td>
       <td class="px-4 py-3">
         <div class="flex items-center gap-3">
           <div class="w-9 h-9 ${e.color} rounded-full flex items-center justify-center text-white text-xs font-bold cursor-pointer" onclick="openModal('viewEmployee','${e.id}')" title="Quick view">${e.initials}</div>
@@ -3474,6 +3495,7 @@ function renderEmployees(list) {
       </td>
     </tr>`;
   }).join('');
+  updateEmpSelectedCount();
 }
 
 function quickStatusChange(id, status) {
@@ -3509,6 +3531,96 @@ function deleteEmployee(id) {
   renderEmployees();
   renderDashboard();
   showToast('Employee deleted', 'success');
+}
+
+function updateEmpSelectedCount() {
+  const n = document.querySelectorAll('.emp-row-check:checked').length;
+  const el = document.getElementById('empSelectedCount');
+  if (el) el.textContent = n;
+}
+function selectAllVisibleEmployees(on) {
+  document.querySelectorAll('.emp-row-check').forEach(c => { c.checked = !!on; });
+  const master = document.getElementById('empSelectAll');
+  if (master) master.checked = !!on;
+  updateEmpSelectedCount();
+}
+function getSelectedEmployeeIds() {
+  return [...document.querySelectorAll('.emp-row-check:checked')].map(c => c.value);
+}
+function bulkApplyStatus() {
+  const status = document.getElementById('bulkStatus')?.value;
+  const ids = getSelectedEmployeeIds();
+  if (!status) { showToast('Choose a status', 'warning'); return; }
+  if (!ids.length) { showToast('Select employees first', 'warning'); return; }
+  ids.forEach(id => {
+    const e = data.employees.find(x => x.id === id);
+    if (e) e.status = status;
+  });
+  saveData();
+  renderEmployees();
+  renderDashboard();
+  showToast(ids.length + ' employees → ' + status, 'success');
+  try { logAudit('bulk_status', status + ' x' + ids.length); } catch (_) {}
+}
+function bulkApplyProject() {
+  const project = (document.getElementById('bulkProject')?.value || '').trim();
+  const ids = getSelectedEmployeeIds();
+  if (!project) { showToast('Enter project name', 'warning'); return; }
+  if (!ids.length) { showToast('Select employees first', 'warning'); return; }
+  ids.forEach(id => {
+    const e = data.employees.find(x => x.id === id);
+    if (e) e.project = project;
+  });
+  saveData();
+  renderEmployees();
+  renderDashboard();
+  showToast(ids.length + ' employees → project ' + project, 'success');
+  try { logAudit('bulk_project', project + ' x' + ids.length); } catch (_) {}
+}
+
+/** Data quality: % profiles with critical fields filled */
+function computeDataQuality() {
+  const emps = data.employees || [];
+  if (!emps.length) return { score: 100, missing: [], checks: 0, filled: 0 };
+  const fields = [
+    ['name', e => e.name],
+    ['nationality', e => e.nationality],
+    ['title', e => e.title],
+    ['project', e => e.project],
+    ['joinDate', e => e.joinDate],
+    ['basicSalary', e => e.basicSalary > 0],
+    ['civilIdExpiry', e => e.civilIdExpiry],
+    ['passportExpiry', e => e.passportExpiry || e.custom?.passportExpiry],
+    ['mobile', e => e.mobile],
+    ['iban', e => e.iban || e.custom?.iban || e.custom?.IBAN],
+  ];
+  let filled = 0, total = emps.length * fields.length;
+  const missing = [];
+  emps.forEach(e => {
+    fields.forEach(([key, fn]) => {
+      const ok = !!fn(e);
+      if (ok) filled++;
+      else missing.push({ id: e.id, name: e.name, field: key });
+    });
+  });
+  const score = Math.round((filled / total) * 100);
+  return { score, missing, checks: total, filled };
+}
+function renderDataQualityWidget() {
+  const el = document.getElementById('statDataQuality');
+  const sub = document.getElementById('statDataQualitySub');
+  if (!el) return;
+  const q = computeDataQuality();
+  el.textContent = q.score + '%';
+  if (sub) {
+    const top = {};
+    q.missing.forEach(m => { top[m.field] = (top[m.field] || 0) + 1; });
+    const worst = Object.entries(top).sort((a,b) => b[1]-a[1])[0];
+    sub.textContent = worst ? ('Often missing: ' + worst[0]) : 'Profiles complete';
+  }
+  el.classList.toggle('text-red-600', q.score < 60);
+  el.classList.toggle('text-amber-600', q.score >= 60 && q.score < 85);
+  el.classList.toggle('text-emerald-600', q.score >= 85);
 }
 
 // -------------------- Projects --------------------
