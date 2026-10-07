@@ -1312,7 +1312,10 @@
               <h3 class="text-lg font-bold"><i class="fas fa-university text-indigo-600 mr-2"></i>WPS / Bank Salary Export</h3>
               <p class="text-sm text-gray-500">Kuwait Wage Protection System style file — Bank Account & IBAN from custom fields</p>
             </div>
-            <button onclick="exportWPS()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold"><i class="fas fa-file-excel mr-1"></i> Export WPS Excel</button>
+            <div class="flex flex-wrap gap-2">
+              <button onclick="exportWPSBankFile()" class="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-semibold"><i class="fas fa-file-download mr-1"></i> Bank file (CSV)</button>
+              <button onclick="exportWPS()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-semibold"><i class="fas fa-file-excel mr-1"></i> Export WPS Excel</button>
+            </div>
           </div>
           <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-4 mb-5 text-sm">
             <strong>How it works:</strong> Uses employee salary + custom fields <em>Bank Account</em> and <em>IBAN</em> (Admin Controls → Payroll entity). Add those fields and fill them on each employee for a complete WPS file.
@@ -1773,7 +1776,9 @@
               <h3 class="text-lg font-bold">Mobilization Tracker</h3>
               <p class="text-sm text-gray-500">Track Overseas & Local mobilization workflows</p>
             </div>
-            <div class="flex gap-2">
+            <div class="flex flex-wrap gap-2">
+              <button type="button" onclick="setMobView('kanban')" id="mobViewKanban" class="px-3 py-2 rounded-lg text-sm font-semibold bg-slate-900 text-white"><i class="fas fa-columns mr-1"></i>Kanban</button>
+              <button type="button" onclick="setMobView('list')" id="mobViewList" class="px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600"><i class="fas fa-list mr-1"></i>List</button>
               <button onclick="openModal('addMobilizationOverseas')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold"><i class="fas fa-plane-departure mr-1"></i> New Overseas</button>
               <button onclick="openModal('addMobilizationLocal')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-semibold"><i class="fas fa-map-marker-alt mr-1"></i> New Local</button>
             </div>
@@ -1795,6 +1800,7 @@
             <div class="bg-cyan-50 rounded-xl p-3 text-center"><div class="text-xl font-bold text-cyan-700" id="mobStatLocal">0</div><div class="text-xs text-gray-600">Local</div></div>
           </div>
 
+          <div id="mobKanban" class="overflow-x-auto pb-2 mb-4"></div>
           <div id="mobList" class="space-y-4"></div>
         </div>
       </section>
@@ -2156,7 +2162,7 @@ let STORAGE_KEY = (function() {
 
 // ---- Supabase cloud (fill key if empty) ----
 const SUPABASE_URL = 'https://jlhlayydqcsvmmzdypcr.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_N8t3mr2fEUNbGQuV8qThSg_ECIYi7V7'; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
+const SUPABASE_KEY = localStorage.getItem('gcc_supabase_key') || ''; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
 let supabaseClient = null;
 try {
   if (window.supabase && SUPABASE_URL && SUPABASE_KEY) {
@@ -5239,6 +5245,7 @@ function openModal(type, payload) {
           <button onclick="closeModal(); switchSection('calculator'); setTimeout(()=>{ const s=document.getElementById('calcEmployeeSelect'); if(s){ s.value='${e.id}'; loadEmployeeToCalc(); } },100)" class="flex-1 min-w-[120px] bg-emerald-600 text-white py-2.5 rounded-lg font-semibold text-sm">Payroll calc</button>
           <button type="button" onclick="switchEmpProfileTab('leave')" class="flex-1 min-w-[100px] bg-slate-100 text-slate-800 py-2.5 rounded-lg font-semibold text-sm">Leave 360</button>
           <button type="button" onclick="switchEmpProfileTab('attendance')" class="flex-1 min-w-[100px] bg-slate-100 text-slate-800 py-2.5 rounded-lg font-semibold text-sm">Attendance</button>
+          <button type="button" onclick="printJoiningPack('${e.id}')" class="flex-1 min-w-[100px] bg-slate-900 text-white py-2.5 rounded-lg font-semibold text-sm">Joining pack</button>
         </div>
       </div>
 
@@ -6593,17 +6600,122 @@ function getMobProgress(m) {
   return stages.length ? Math.round((done / stages.length) * 100) : 0;
 }
 
+let mobViewMode = 'kanban';
+
+function setMobView(mode) {
+  mobViewMode = mode === 'list' ? 'list' : 'kanban';
+  const kb = document.getElementById('mobViewKanban');
+  const lb = document.getElementById('mobViewList');
+  if (kb && lb) {
+    kb.className = mobViewMode === 'kanban' ? 'px-3 py-2 rounded-lg text-sm font-semibold bg-slate-900 text-white' : 'px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600';
+    lb.className = mobViewMode === 'list' ? 'px-3 py-2 rounded-lg text-sm font-semibold bg-slate-900 text-white' : 'px-3 py-2 rounded-lg text-sm font-semibold border border-gray-200 text-gray-600';
+  }
+  renderMobilizations();
+}
+
+function getMobCurrentStageKey(m) {
+  const stages = m.type === 'overseas' ? OVERSEAS_STAGES : LOCAL_STAGES;
+  for (const s of stages) {
+    const st = (m.stages && m.stages[s.key]) || 'Pending';
+    if (st !== 'Done') return s.key;
+  }
+  return stages.length ? stages[stages.length - 1].key : '';
+}
+
+function advanceMobStage(id) {
+  const m = data.mobilizations.find(x => x.id === id);
+  if (!m) return;
+  if (!m.stages) m.stages = {};
+  const stages = m.type === 'overseas' ? OVERSEAS_STAGES : LOCAL_STAGES;
+  const cur = getMobCurrentStageKey(m);
+  const idx = stages.findIndex(s => s.key === cur);
+  if (idx < 0) return;
+  m.stages[stages[idx].key] = 'Done';
+  if (idx + 1 < stages.length && (m.stages[stages[idx + 1].key] || 'Pending') === 'Pending') {
+    m.stages[stages[idx + 1].key] = 'In Progress';
+  }
+  saveData();
+  renderMobilizations();
+  showToast('Moved to next stage', 'success');
+}
+
+function renderMobKanban(items) {
+  const board = document.getElementById('mobKanban');
+  if (!board) return;
+  // Use overseas stages when filter is overseas or all; local when local only
+  const useOverseas = mobFilter !== 'local';
+  const stages = useOverseas ? OVERSEAS_STAGES : LOCAL_STAGES;
+  // Group cards by current stage (for mixed all view, map local stages onto first N overseas labels poorly — better split)
+  const cols = stages.map(s => ({ key: s.key, label: s.label, cards: [] }));
+  const doneCol = { key: '_done', label: 'Completed', cards: [] };
+  items.forEach(m => {
+    const stList = m.type === 'overseas' ? OVERSEAS_STAGES : LOCAL_STAGES;
+    if (getMobProgress(m) === 100) {
+      doneCol.cards.push(m);
+      return;
+    }
+    const cur = getMobCurrentStageKey(m);
+    // Place on matching column if same stage set; else use index alignment for mixed
+    let col = cols.find(c => c.key === cur);
+    if (!col) {
+      const idx = stList.findIndex(s => s.key === cur);
+      col = cols[Math.min(Math.max(idx, 0), cols.length - 1)];
+    }
+    if (col) col.cards.push(m);
+    else doneCol.cards.push(m);
+  });
+  const allCols = cols.concat([doneCol]);
+  board.innerHTML = `<div class="flex gap-3 min-w-max pb-2">` + allCols.map(col => `
+    <div class="w-64 flex-shrink-0 bg-slate-50 border border-slate-200 rounded-xl flex flex-col max-h-[520px]">
+      <div class="px-3 py-2 border-b border-slate-200 sticky top-0 bg-slate-100 rounded-t-xl">
+        <div class="text-xs font-bold text-slate-700 truncate" title="${col.label}">${col.label}</div>
+        <div class="text-[10px] text-slate-500">${col.cards.length} candidate(s)</div>
+      </div>
+      <div class="p-2 space-y-2 overflow-y-auto flex-1">
+        ${col.cards.length ? col.cards.map(m => {
+          const pct = getMobProgress(m);
+          const badge = m.type === 'overseas' ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700';
+          return `<div class="bg-white border border-slate-200 rounded-lg p-2.5 shadow-sm">
+            <div class="font-semibold text-sm text-slate-900 truncate">${m.employeeName}</div>
+            <div class="text-[10px] text-slate-500 truncate">${m.position || '—'} · ${m.project || '—'}</div>
+            <div class="flex items-center justify-between mt-2 gap-1">
+              <span class="${badge} text-[9px] font-bold px-1.5 py-0.5 rounded">${m.type === 'overseas' ? 'OS' : 'Local'}</span>
+              <span class="text-[10px] font-bold text-slate-600">${pct}%</span>
+            </div>
+            <div class="flex gap-1 mt-2">
+              <button type="button" onclick="advanceMobStage('${m.id}')" class="flex-1 text-[10px] font-semibold bg-teal-600 text-white rounded px-1 py-1">Advance</button>
+              <button type="button" onclick="editMobStages('${m.id}')" class="text-[10px] font-semibold border border-slate-200 rounded px-2 py-1">Edit</button>
+            </div>
+          </div>`;
+        }).join('') : '<div class="text-[10px] text-slate-400 text-center py-6">Empty</div>'}
+      </div>
+    </div>`).join('') + `</div>`;
+}
+
 function renderMobilizations() {
   const list = document.getElementById('mobList');
+  const board = document.getElementById('mobKanban');
   if (!list) return;
   let items = data.mobilizations || [];
   if (mobFilter !== 'all') items = items.filter(m => m.type === mobFilter);
 
-  document.getElementById('mobStatTotal').textContent = (data.mobilizations || []).length;
-  document.getElementById('mobStatOverseas').textContent = (data.mobilizations || []).filter(m => m.type === 'overseas').length;
-  document.getElementById('mobStatLocal').textContent = (data.mobilizations || []).filter(m => m.type === 'local').length;
-  document.getElementById('mobStatProgress').textContent = (data.mobilizations || []).filter(m => getMobProgress(m) > 0 && getMobProgress(m) < 100).length;
-  document.getElementById('mobStatDone').textContent = (data.mobilizations || []).filter(m => getMobProgress(m) === 100).length;
+  const el = (id, v) => { const n = document.getElementById(id); if (n) n.textContent = v; };
+  el('mobStatTotal', (data.mobilizations || []).length);
+  el('mobStatOverseas', (data.mobilizations || []).filter(m => m.type === 'overseas').length);
+  el('mobStatLocal', (data.mobilizations || []).filter(m => m.type === 'local').length);
+  el('mobStatProgress', (data.mobilizations || []).filter(m => getMobProgress(m) > 0 && getMobProgress(m) < 100).length);
+  el('mobStatDone', (data.mobilizations || []).filter(m => getMobProgress(m) === 100).length);
+
+  if (mobViewMode === 'kanban') {
+    if (board) { board.classList.remove('hidden'); renderMobKanban(items); }
+    list.classList.add('hidden');
+    if (!items.length && board) {
+      board.innerHTML = `<div class="text-center text-gray-400 py-12"><i class="fas fa-columns text-4xl mb-3"></i><p>No mobilizations yet. Add Overseas or Local to fill the board.</p></div>`;
+    }
+    return;
+  }
+  if (board) board.classList.add('hidden');
+  list.classList.remove('hidden');
 
   if (items.length === 0) {
     list.innerHTML = `<div class="text-center text-gray-400 py-12"><i class="fas fa-plane-departure text-4xl mb-3"></i><p>No mobilizations yet. Add Overseas or Local.</p></div>`;
@@ -6632,6 +6744,7 @@ function renderMobilizations() {
         <div class="flex items-center gap-2">
           ${typeBadge}
           <span class="text-sm font-bold ${pct === 100 ? 'text-emerald-600' : 'text-blue-600'}">${pct}%</span>
+          <button onclick="advanceMobStage('${m.id}')" class="text-teal-700 text-xs font-semibold hover:underline">Advance</button>
           <button onclick="editMobStages('${m.id}')" class="text-blue-600 text-xs font-semibold hover:underline">Update Stages</button>
           <button onclick="deleteMobilization('${m.id}')" class="text-red-500 text-xs font-semibold hover:underline">Delete</button>
         </div>
@@ -6641,6 +6754,7 @@ function renderMobilizations() {
     </div>`;
   }).join('');
 }
+
 
 function deleteMobilization(id) {
   if (!confirm('Delete this mobilization?')) return;
@@ -8849,7 +8963,7 @@ function renderWPS() {
   let withBank = 0, total = 0;
   const rows = data.employees.map(e => {
     const bank = bankId ? (e.custom?.[bankId] || '') : '';
-    const iban = ibanId ? (e.custom?.[ibanId] || '') : '';
+    const iban = typeof getEmployeeIban === 'function' ? getEmployeeIban(e) : (ibanId ? (e.custom?.[ibanId] || '') : (e.iban || ''));
     const net = getTotalSalary(e);
     total += net;
     if (bank || iban) withBank++;
@@ -8871,28 +8985,72 @@ function renderWPS() {
     </tr>
   `).join('') || '<tr><td colspan="5" class="text-center py-8 text-gray-400">No employees</td></tr>';
 }
+function getEmployeeIban(e) {
+  const { bankId, ibanId } = getBankFieldIds();
+  return (e.iban || (ibanId ? e.custom?.[ibanId] : '') || (bankId ? e.custom?.[bankId] : '') || '').toString().trim();
+}
 function exportWPS() {
   const { bankId, ibanId } = getBankFieldIds();
-  const period = new Date().toISOString().slice(0, 7);
-  const rows = data.employees.map(e => ({
-    'Employee Name': e.name,
-    'Employee ID': e.id,
-    'Nationality': e.nationality,
-    'Bank Account': bankId ? (e.custom?.[bankId] || '') : '',
-    'IBAN': ibanId ? (e.custom?.[ibanId] || '') : '',
-    'Basic Salary': e.basicSalary || 0,
-    'Allowances': (e.housingAllowance||0)+(e.foodAllowance||0)+(e.transportAllowance||0)+(e.projectAllowance||0)+(e.fixedAllowance||0),
-    'Net Salary': getTotalSalary(e),
-    'Currency': currency(),
-    'Pay Period': period,
-    'Company': data.companyName
-  }));
-  const ws = XLSX.utils.json_to_sheet(rows);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'WPS');
-  XLSX.writeFile(wb, `WPS_Salary_${period}_${data.companyName.replace(/\s+/g,'_')}.xlsx`);
+  const period = document.getElementById('payrollPeriod')?.value || new Date().toISOString().slice(0, 7);
+  const rows = data.employees.map(e => {
+    const br = typeof getPayslipBreakdown === 'function' ? getPayslipBreakdown(e, period) : null;
+    const net = br ? br.net : getTotalSalary(e);
+    return {
+      'Employee Name': e.name,
+      'Employee ID': e.id,
+      'Nationality': e.nationality,
+      'Civil ID': e.civilIdNo || e.civilId || '',
+      'Bank Account': bankId ? (e.custom?.[bankId] || '') : '',
+      'IBAN': getEmployeeIban(e),
+      'Basic Salary': e.basicSalary || 0,
+      'Allowances': (e.housingAllowance||0)+(e.foodAllowance||0)+(e.transportAllowance||0)+(e.projectAllowance||0)+(e.fixedAllowance||0),
+      'OT Pay': br ? br.otPay : 0,
+      'Net Salary': net,
+      'Currency': currency(),
+      'Pay Period': period,
+      'Company': data.companyName
+    };
+  });
+  if (typeof XLSX !== 'undefined') {
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'WPS');
+    XLSX.writeFile(wb, `WPS_Salary_${period}_${(data.companyName||'Company').replace(/\s+/g,'_')}.xlsx`);
+  }
   showToast('WPS Excel exported', 'success');
 }
+/** Bank-ready salary CSV (SIF-style columns for bank upload prep) */
+function exportWPSBankFile() {
+  const period = document.getElementById('payrollPeriod')?.value || new Date().toISOString().slice(0, 7);
+  const headers = ['EmployeeID','EmployeeName','CivilID','IBAN','Amount','Currency','PayPeriod','Company'];
+  const lines = [headers.join(',')];
+  let missing = 0;
+  data.employees.forEach(e => {
+    const iban = getEmployeeIban(e);
+    if (!iban) missing++;
+    const br = typeof getPayslipBreakdown === 'function' ? getPayslipBreakdown(e, period) : null;
+    const net = br ? br.net : getTotalSalary(e);
+    const row = [
+      e.id,
+      '"' + String(e.name||'').replace(/"/g,'""') + '"',
+      e.civilIdNo || e.civilId || '',
+      iban,
+      Number(net).toFixed(3),
+      currency(),
+      period,
+      '"' + String(data.companyName||'').replace(/"/g,'""') + '"'
+    ];
+    lines.push(row.join(','));
+  });
+  const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `Bank_Salary_${period}.csv`;
+  a.click();
+  showToast(missing ? `Bank CSV downloaded (${missing} missing IBAN)` : 'Bank CSV downloaded', missing ? 'warning' : 'success');
+  try { logAudit('wps_bank_file', period); } catch (_) {}
+}
+
 
 // -------------------- Arabic / RTL i18n --------------------
 let currentLang = localStorage.getItem('gcc_hr_lang') || 'en';
@@ -9992,6 +10150,81 @@ function cmdKeyNav(e) {
   if (e.key === 'ArrowDown') { e.preventDefault(); cmdIndex = Math.min(cmdItems.length - 1, cmdIndex + 1); renderCmdResults(); }
   if (e.key === 'ArrowUp') { e.preventDefault(); cmdIndex = Math.max(0, cmdIndex - 1); renderCmdResults(); }
   if (e.key === 'Enter' && cmdItems[cmdIndex]) { e.preventDefault(); cmdItems[cmdIndex].action(); }
+}
+
+function printJoiningPack(empId) {
+  empId = empId || document.getElementById('quickContractEmp')?.value;
+  if (!empId) { showToast('Select an employee first', 'warning'); return; }
+  const e = data.employees.find(x => x.id === empId);
+  if (!e) { showToast('Employee not found', 'error'); return; }
+  const company = data.companyName || 'Company';
+  const cur = typeof currency === 'function' ? currency() : 'KD';
+  const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'long', year: 'numeric' });
+  const total = typeof getTotalSalary === 'function' ? getTotalSalary(e) : (e.basicSalary || 0);
+  const w = window.open('', '_blank');
+  if (!w) { showToast('Allow pop-ups', 'warning'); return; }
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Joining Pack — ${e.name}</title>
+  <style>
+    @page{size:A4;margin:12mm}
+    body{font-family:Segoe UI,Arial,sans-serif;color:#0f172a;font-size:10.5pt;line-height:1.4;margin:0;padding:12px}
+    h1{font-size:15pt;color:#0f766e;margin:0 0 4px}
+    h2{font-size:12pt;margin:16px 0 8px;border-bottom:2px solid #0f766e;padding-bottom:4px;page-break-after:avoid}
+    .meta{color:#64748b;font-size:9pt;margin-bottom:10px}
+    table{width:100%;border-collapse:collapse;margin:6px 0}
+    th,td{border:1px solid #cbd5e1;padding:6px 8px;text-align:left;font-size:9.5pt;vertical-align:top}
+    th{background:#f1f5f9}
+    .page-break{page-break-before:always}
+    .check td{border:none;padding:3px 0}
+    .sig{margin-top:24px;display:grid;grid-template-columns:1fr 1fr;gap:20px}
+    .sig div{border-top:1px solid #94a3b8;padding-top:6px;font-size:9pt}
+    @media print{.no-print{display:none}}
+  </style></head><body>
+  <h1>${company}</h1>
+  <div class="meta">Employee Joining Pack · ${today} · ${currentCountry||'KW'}</div>
+
+  <h2>1. Offer letter summary</h2>
+  <p>We are pleased to offer <strong>${e.name}</strong> the position of <strong>${e.title||'—'}</strong>
+  effective <strong>${e.joinDate||'TBD'}</strong>, subject to medical fitness, work authorization, and signing of the employment contract.</p>
+  <table>
+    <tr><th>Employee</th><td>${e.name} (${e.id})</td><th>Nationality</th><td>${e.nationality||'—'}</td></tr>
+    <tr><th>Title</th><td>${e.title||'—'}</td><th>Project</th><td>${e.project||'—'}</td></tr>
+    <tr><th>Basic salary</th><td>${e.basicSalary||0} ${cur}</td><th>Package (est.)</th><td>${Number(total).toLocaleString()} ${cur}</td></tr>
+    <tr><th>Housing</th><td>${e.housingAllowance||0}</td><th>Transport / Food</th><td>${e.transportAllowance||0} / ${e.foodAllowance||0}</td></tr>
+  </table>
+  <div class="sig"><div>Authorized signatory<br>${data.hrName||'HR'}<br>____________</div><div>Candidate acceptance<br>${e.name}<br>____________</div></div>
+
+  <div class="page-break"></div>
+  <h1>${company}</h1>
+  <h2>2. Employment contract — key terms (print pack)</h2>
+  <p class="meta">Full bilingual contract available from Document Center · Employment Contract. This page is a joining summary for onboarding.</p>
+  <table>
+    <tr><th>Parties</th><td colspan="3">Employer: ${company} · Employee: ${e.name}</td></tr>
+    <tr><th>Join date</th><td>${e.joinDate||'—'}</td><th>Place of work</th><td>${currentCountry==='SA'?'Saudi Arabia':currentCountry==='AE'?'UAE':'State of Kuwait'}</td></tr>
+    <tr><th>Job title</th><td>${e.title||'—'}</td><th>Passport</th><td>${e.passportNo||'—'}</td></tr>
+    <tr><th>Civil ID</th><td>${e.civilIdNo||e.civilId||'—'}</td><th>IBAN</th><td>${e.iban||'—'}</td></tr>
+    <tr><th>Basic</th><td>${e.basicSalary||0} ${cur}</td><th>Allowances</th><td>H ${e.housingAllowance||0} · T ${e.transportAllowance||0} · F ${e.foodAllowance||0}</td></tr>
+  </table>
+  <p style="font-size:9pt;color:#64748b">Governed by applicable private-sector labour law for the selected country. Full articles in the official contract document.</p>
+  <div class="sig"><div>Employer<br>____________</div><div>Employee<br>____________</div></div>
+
+  <div class="page-break"></div>
+  <h1>${company}</h1>
+  <h2>3. Joining / ID checklist</h2>
+  <table class="check">
+    <tr><td>☐ Passport copy</td><td>☐ Civil ID / visa page</td></tr>
+    <tr><td>☐ Photos</td><td>☐ Educational / experience certificates</td></tr>
+    <tr><td>☐ Medical fitness</td><td>☐ Bank IBAN form</td></tr>
+    <tr><td>☐ Signed offer</td><td>☐ Signed employment contract</td></tr>
+    <tr><td>☐ Safety induction</td><td>☐ Site / gate pass</td></tr>
+    <tr><td>☐ Accommodation allocation</td><td>☐ SIM / Mobile ID (if applicable)</td></tr>
+  </table>
+  <p style="margin-top:16px;font-size:9pt">HR officer: ______________ · Date: ______________</p>
+  <p class="no-print"><button onclick="window.print()">Print / Save PDF</button></p>
+  </body></html>`);
+  w.document.close();
+  setTimeout(() => { try { w.print(); } catch (_) {} }, 350);
+  try { logAudit('joining_pack', e.id); } catch (_) {}
+  showToast('Joining pack ready', 'success');
 }
 
 function printSettlementPack() {
