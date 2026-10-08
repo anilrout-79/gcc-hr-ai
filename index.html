@@ -578,6 +578,32 @@
   }
   tr:hover .table-actions button { opacity: 1; }
 
+
+  /* Collapsed sidebar */
+  body.sidebar-collapsed #appSidebar {
+    width: 72px !important;
+    min-width: 72px !important;
+  }
+  body.sidebar-collapsed #appSidebar .sidebar-label,
+  body.sidebar-collapsed #appSidebar [data-i18n],
+  body.sidebar-collapsed #appSidebar .p-5.border-b .text-xs,
+  body.sidebar-collapsed #appSidebar .p-5.border-b p,
+  body.sidebar-collapsed #appSidebar #hrNameSidebar,
+  body.sidebar-collapsed #appSidebar #hrTitleSidebar,
+  body.sidebar-collapsed #appSidebar .sidebar-section-title {
+    display: none !important;
+  }
+  body.sidebar-collapsed #appSidebar .sidebar-item {
+    justify-content: center;
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+  body.sidebar-collapsed #appSidebar .sidebar-item span { display: none !important; }
+  body.sidebar-collapsed #appSidebar .p-4.border-t { display: flex; justify-content: center; }
+  body.sidebar-collapsed #appSidebar .p-4.border-t > div { flex-direction: column; }
+  #sidebarCollapseBtn i { transition: transform .2s; }
+  body.sidebar-collapsed #sidebarCollapseBtn i { transform: rotate(180deg); }
+
 </style>
 </head>
 <body class="text-gray-800 antialiased">
@@ -752,9 +778,14 @@
   <!-- MAIN -->
   <main class="flex-1 overflow-y-auto">
     <header id="appHeader" class="px-6 py-3.5 flex items-center justify-between sticky top-0 z-20">
-      <div>
+      <div class="flex items-center gap-3 min-w-0">
+        <button type="button" id="sidebarCollapseBtn" onclick="toggleSidebarCollapse()" class="p-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50" title="Collapse sidebar">
+          <i class="fas fa-chevron-left"></i>
+        </button>
+        <div class="min-w-0">
         <h2 id="pageTitle" class="text-xl font-extrabold text-gray-900 tracking-tight">Dashboard</h2>
         <p class="text-xs text-gray-500 flex items-center gap-2 mt-0.5"><span class="live-dot"></span> Live · <span id="currentDateTime"></span></p>
+        </div>
       </div>
       <div class="flex items-center gap-2 flex-wrap justify-end">
         <button onclick="openCommandPalette()" class="hidden sm:flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-xl text-xs text-gray-500 hover:bg-gray-50 hover:border-teal-300 transition" title="Search (Ctrl+K)">
@@ -1352,6 +1383,7 @@
               <p class="text-sm text-gray-500">Bulk run by project · Payslips · Email drafts · WPS ready</p>
             </div>
             <div class="flex flex-wrap gap-2">
+              <button type="button" onclick="toggleMonthClosePanel()" class="bg-slate-800 hover:bg-slate-900 text-white px-3 py-2 rounded-lg text-sm font-semibold"><i class="fas fa-clipboard-check mr-1"></i> Month close</button>
               <button onclick="switchSection('calculator')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-sm font-semibold"><i class="fas fa-calculator mr-1"></i> Calculator</button>
               <button onclick="runBulkPayroll()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg text-sm font-semibold"><i class="fas fa-play mr-1"></i> Run Bulk Payroll</button>
               <button onclick="loadPayrollRunsFromSupabase()" class="bg-teal-600 hover:bg-teal-700 text-white px-3 py-2 rounded-lg text-sm font-semibold" title="Load payroll runs from Postgres"><i class="fas fa-cloud-download-alt mr-1"></i> Load DB</button>
@@ -1368,7 +1400,18 @@
             <div class="bg-rose-500 text-white rounded-xl p-4"><div class="text-sm opacity-90">Avg Salary</div><div class="text-2xl font-bold"><span class="curr">KD</span> <span id="payAvg">0</span></div></div>
           </div>
           <div class="flex flex-wrap gap-3 mb-4 items-end">
-            <div>
+            
+          <div id="monthClosePanel" class="hidden mb-5 border border-slate-200 rounded-xl bg-slate-50 p-4">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+              <div>
+                <div class="font-bold text-slate-900"><i class="fas fa-clipboard-check text-teal-600 mr-1"></i> Monthly close checklist</div>
+                <p class="text-xs text-slate-500">Period <span id="monthClosePeriodLabel">—</span> · Tick items then lock payroll</p>
+              </div>
+              <button type="button" onclick="saveMonthCloseChecklist()" class="text-xs bg-teal-600 text-white px-3 py-1.5 rounded-lg font-semibold">Save checklist</button>
+            </div>
+            <div id="monthCloseList" class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm"></div>
+          </div>
+<div>
               <label class="text-xs font-semibold text-gray-600">Filter by Project</label>
               <select id="payrollProjectFilter" onchange="renderPayrollSummary()" class="border rounded-lg px-3 py-2 text-sm block mt-1">
                 <option value="all">All Projects</option>
@@ -2162,7 +2205,7 @@ let STORAGE_KEY = (function() {
 
 // ---- Supabase cloud (fill key if empty) ----
 const SUPABASE_URL = 'https://jlhlayydqcsvmmzdypcr.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_N8t3mr2fEUNbGQuV8qThSg_ECIYi7V7'; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
+const SUPABASE_KEY = localStorage.getItem('gcc_supabase_key') || ''; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
 let supabaseClient = null;
 try {
   if (window.supabase && SUPABASE_URL && SUPABASE_KEY) {
@@ -3037,7 +3080,8 @@ const colors = ['bg-blue-500','bg-emerald-500','bg-purple-500','bg-rose-500','bg
 
 // -------------------- Persistence --------------------
 function saveData() {
-  try { updateStatusChip('Saved · ' + new Date().toLocaleTimeString()); } catch (_) {}
+  try { restoreSidebarCollapse(); } catch (_) {}
+    try { updateStatusChip('Saved · ' + new Date().toLocaleTimeString()); } catch (_) {}
 
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
 }
@@ -3244,6 +3288,81 @@ document.querySelectorAll('.sidebar-item').forEach(item => {
 });
 
 // -------------------- Dashboard --------------------
+function toggleSidebarCollapse() {
+  document.body.classList.toggle('sidebar-collapsed');
+  try { localStorage.setItem('ahanora_sidebar_collapsed', document.body.classList.contains('sidebar-collapsed') ? '1' : '0'); } catch (_) {}
+}
+function restoreSidebarCollapse() {
+  try {
+    if (localStorage.getItem('ahanora_sidebar_collapsed') === '1') document.body.classList.add('sidebar-collapsed');
+  } catch (_) {}
+}
+
+function toggleMonthClosePanel() {
+  const p = document.getElementById('monthClosePanel');
+  if (!p) return;
+  p.classList.toggle('hidden');
+  if (!p.classList.contains('hidden')) renderMonthCloseChecklist();
+}
+
+function getMonthCloseItems() {
+  const period = document.getElementById('payrollPeriod')?.value || new Date().toISOString().slice(0, 7);
+  return [
+    { id: 'att', label: 'Attendance complete for period' },
+    { id: 'leave', label: 'Leave requests approved / rejected' },
+    { id: 'ot', label: 'Overtime reviewed' },
+    { id: 'payroll_run', label: 'Payroll run executed' },
+    { id: 'payslips', label: 'Payslips generated / sent' },
+    { id: 'wps', label: 'WPS / bank file exported' },
+    { id: 'docs', label: 'Critical document alerts cleared or assigned' },
+    { id: 'journal', label: 'Salary journal posted to accounting (if used)' },
+    { id: 'backup', label: 'Save Cloud / backup taken' },
+    { id: 'lock', label: 'Payroll period locked' },
+  ].map(item => {
+    const store = (data.monthClose && data.monthClose[period]) || {};
+    return { ...item, done: !!store[item.id] };
+  });
+}
+
+function renderMonthCloseChecklist() {
+  const period = document.getElementById('payrollPeriod')?.value || new Date().toISOString().slice(0, 7);
+  const lab = document.getElementById('monthClosePeriodLabel');
+  if (lab) lab.textContent = period;
+  const box = document.getElementById('monthCloseList');
+  if (!box) return;
+  const items = getMonthCloseItems();
+  const done = items.filter(i => i.done).length;
+  box.innerHTML = items.map(i => `
+    <label class="flex items-center gap-2 bg-white border border-slate-200 rounded-lg px-3 py-2 cursor-pointer hover:border-teal-300">
+      <input type="checkbox" data-mc="${i.id}" ${i.done ? 'checked' : ''} onchange="toggleMonthCloseItem('${i.id}', this.checked)" class="rounded text-teal-600">
+      <span class="text-slate-700 ${i.done ? 'line-through text-slate-400' : ''}">${i.label}</span>
+    </label>`).join('') + `
+    <div class="md:col-span-2 text-xs text-slate-500 mt-1">${done}/${items.length} complete
+      ${done === items.length ? ' · <span class="text-emerald-600 font-semibold">Ready to close month</span>' : ''}
+    </div>`;
+}
+
+function toggleMonthCloseItem(id, checked) {
+  const period = document.getElementById('payrollPeriod')?.value || new Date().toISOString().slice(0, 7);
+  if (!data.monthClose) data.monthClose = {};
+  if (!data.monthClose[period]) data.monthClose[period] = {};
+  data.monthClose[period][id] = !!checked;
+  // Auto-detect lock
+  if (id === 'lock' && checked && typeof isPayrollPeriodLocked === 'function' && !isPayrollPeriodLocked(period)) {
+    if (typeof lockPayrollPeriod === 'function') {
+      try { lockPayrollPeriod(); } catch (_) {}
+    }
+  }
+  saveData();
+  renderMonthCloseChecklist();
+}
+
+function saveMonthCloseChecklist() {
+  saveData();
+  showToast('Month close checklist saved', 'success');
+  try { logAudit('month_close', document.getElementById('payrollPeriod')?.value || ''); } catch (_) {}
+}
+
 function renderDashboard() {
   const emps = Array.isArray(data.employees) ? data.employees : [];
   const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
@@ -10501,6 +10620,7 @@ async function init() {
 // Safe boot — never leave a blank page
 init().catch(function(e) { console.error('init promise', e); });
 try {
+  try { restoreSidebarCollapse(); } catch (_) {}
   if (typeof tryRestoreCloudSession === 'function') tryRestoreCloudSession();
 } catch (e) { console.warn('session restore', e); }
 
