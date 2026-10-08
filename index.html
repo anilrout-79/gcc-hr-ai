@@ -874,6 +874,7 @@
                 </div>
                 <p class="text-sm font-medium text-slate-600">One AI. Your Entire Business. · HR · Payroll · Finance</p>
                 <p class="text-slate-500 text-sm mt-1.5">Good day, <span id="dashGreeting" class="font-semibold text-slate-800">Ahmed</span> — workspace is ready.</p>
+                <p class="text-xs text-teal-800/90 mt-2 max-w-xl leading-relaxed" id="gccPlaybookHint">GCC HR workspace — select country for local rules.</p>
               </div>
             </div>
             <div class="text-left md:text-right flex-shrink-0 bg-slate-900 text-white rounded-2xl px-5 py-3.5 shadow-lg shadow-slate-900/10 min-w-[7rem]">
@@ -1042,6 +1043,13 @@
             <button type="button" onclick="bulkApplyStatus()" class="text-xs bg-slate-800 text-white px-3 py-1.5 rounded-lg font-semibold">Apply status</button>
             <input type="text" id="bulkProject" placeholder="Move to project…" class="border rounded-lg px-2 py-1.5 text-xs w-36">
             <button type="button" onclick="bulkApplyProject()" class="text-xs bg-teal-600 text-white px-3 py-1.5 rounded-lg font-semibold">Apply project</button>
+            <select id="bulkWorkCountry" class="border rounded-lg px-2 py-1.5 text-xs">
+              <option value="">Set work country…</option>
+              <option value="KW">Kuwait</option>
+              <option value="SA">Saudi Arabia</option>
+              <option value="AE">UAE</option>
+            </select>
+            <button type="button" onclick="bulkApplyWorkCountry()" class="text-xs bg-indigo-600 text-white px-3 py-1.5 rounded-lg font-semibold">Apply country</button>
             <button type="button" onclick="selectAllVisibleEmployees(true)" class="text-xs border border-slate-300 bg-white px-2 py-1.5 rounded-lg font-semibold">Select all</button>
             <button type="button" onclick="selectAllVisibleEmployees(false)" class="text-xs border border-slate-300 bg-white px-2 py-1.5 rounded-lg font-semibold">Clear</button>
           </div>
@@ -2189,6 +2197,17 @@
               <input type="text" id="settingsHrTitle" class="w-full border border-gray-300 rounded-lg px-4 py-2" onchange="saveSettings()">
             </div>
             <div class="pt-4 border-t">
+              <h4 class="font-semibold mb-2">GCC popularity checklist</h4>
+              <ul class="text-xs text-slate-600 space-y-1 mb-3 list-disc pl-4" id="gccQuickChecklist">
+                <li>Set <strong>Work country</strong> on every employee (KW / SA / AE)</li>
+                <li>Fill Civil ID / Iqama / Emirates ID expiry dates</li>
+                <li>IBAN on all staff for WPS / bank file</li>
+                <li>Configure Visa Quota lines per country</li>
+                <li>Run Monthly close checklist before locking payroll</li>
+                <li>Use Document Center for bilingual contracts & joining packs</li>
+              </ul>
+            </div>
+            <div class="pt-4 border-t">
               <h4 class="font-semibold mb-2">Multi-Company</h4>
               <p class="text-xs text-gray-500 mb-2">Each company uses a separate browser storage key. Switch reloads data.</p>
               <div class="flex gap-2 flex-wrap">
@@ -2287,7 +2306,7 @@ let STORAGE_KEY = (function() {
 
 // ---- Supabase cloud (fill key if empty) ----
 const SUPABASE_URL = 'https://jlhlayydqcsvmmzdypcr.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_N8t3mr2fEUNbGQuV8qThSg_ECIYi7V7'; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
+const SUPABASE_KEY = localStorage.getItem('gcc_supabase_key') || ''; // set once: localStorage.setItem('gcc_supabase_key','sb_publishable_...')
 let supabaseClient = null;
 try {
   if (window.supabase && SUPABASE_URL && SUPABASE_KEY) {
@@ -3461,7 +3480,7 @@ function saveMonthCloseChecklist() {
 }
 
 function renderDashboard() {
-  const emps = Array.isArray(data.employees) ? data.employees : [];
+  const emps = typeof getEmployeesForCountry === 'function' ? getEmployeesForCountry(currentCountry) : (Array.isArray(data.employees) ? data.employees : []);
   const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
   setTxt('statTotalEmp', emps.length);
   setTxt('dashEmpCount', emps.length);
@@ -3512,6 +3531,8 @@ function renderDashboard() {
   try { renderTodayStrip(); } catch (e) { console.warn(e); }
   try { renderDashAlertBanner(); } catch (e) {}
   try { renderDataQualityWidget(); } catch (e) {}
+  try { renderGccNationalizationCard(); } catch (e) {}
+  try { renderGccPlaybookHint(); } catch (e) {}
   try { updateLastSavedChip(); } catch (e) {}
   try { const c=document.getElementById("activeCountryChip"); if(c) c.textContent=currentCountry||"KW"; } catch (e) {}
 }
@@ -3655,9 +3676,36 @@ function editCustomField(id) {
 }
 
 // -------------------- Employees --------------------
+
+/** Employees for active country — uses workCountry (falls back to showing all if unset) */
+function getEmployeesForCountry(code, opts) {
+  opts = opts || {};
+  const showAll = opts.showAll || document.getElementById('empShowAllCountries')?.checked;
+  const cc = (code || currentCountry || 'KW').toUpperCase();
+  const all = Array.isArray(data.employees) ? data.employees : [];
+  if (showAll || opts.forceAll) return all.slice();
+  const tagged = all.filter(e => {
+    const w = String(e.workCountry || e.countryCode || e.country || '').toUpperCase();
+    return w === cc;
+  });
+  // If nobody has workCountry set yet, do not hide everyone — show all + toast once
+  if (tagged.length === 0 && all.some(e => e.workCountry || e.countryCode || e.country)) {
+    return tagged;
+  }
+  if (tagged.length === 0 && all.length > 0 && !all.some(e => e.workCountry || e.countryCode || e.country)) {
+    return all.slice(); // legacy data without country tags
+  }
+  return tagged;
+}
+
 function renderEmployees(list) {
-  const emps = list || data.employees;
-  document.getElementById('empCountBadge').textContent = `(${emps.length})`;
+  const emps = list || getEmployeesForCountry(currentCountry);
+  const badge = document.getElementById('empCountBadge');
+  if (badge) {
+    const total = (data.employees || []).length;
+    const filtered = emps.length;
+    badge.textContent = filtered === total ? `(${filtered})` : `(${filtered} of ${total} · ${currentCountry})`;
+  }
   const tbody = document.getElementById('employeeTableBody');
   const noRes = document.getElementById('noEmpResults');
 
@@ -3736,10 +3784,10 @@ function filterEmployees() {
   const q = (document.getElementById('empSearch').value || '').toLowerCase();
   const dept = document.getElementById('filterDept').value;
   const status = document.getElementById('filterStatus').value;
-  let list = data.employees.filter(e => {
+  let list = getEmployeesForCountry(currentCountry).filter(e => {
     const matchQ = !q || e.name.toLowerCase().includes(q) || e.id.toLowerCase().includes(q) ||
-      e.nationality.toLowerCase().includes(q) || e.project.toLowerCase().includes(q) ||
-      e.title.toLowerCase().includes(q) ||
+      (e.nationality||'').toLowerCase().includes(q) || (e.project||'').toLowerCase().includes(q) ||
+      (e.title||'').toLowerCase().includes(q) ||
       Object.values(e.custom || {}).some(v => String(v).toLowerCase().includes(q));
     const matchDept = !dept || e.department === dept;
     const matchStatus = !status || e.status === status;
@@ -3786,6 +3834,20 @@ function bulkApplyStatus() {
   showToast(ids.length + ' employees → ' + status, 'success');
   try { logAudit('bulk_status', status + ' x' + ids.length); } catch (_) {}
 }
+function bulkApplyWorkCountry() {
+  const cc = document.getElementById('bulkWorkCountry')?.value;
+  const ids = getSelectedEmployeeIds();
+  if (!cc) { showToast('Choose work country', 'warning'); return; }
+  if (!ids.length) { showToast('Select employees first', 'warning'); return; }
+  ids.forEach(id => {
+    const e = data.employees.find(x => x.id === id);
+    if (e) e.workCountry = cc;
+  });
+  saveData();
+  filterEmployees();
+  renderDashboard();
+  showToast(ids.length + ' employees → work country ' + cc, 'success');
+}
 function bulkApplyProject() {
   const project = (document.getElementById('bulkProject')?.value || '').trim();
   const ids = getSelectedEmployeeIds();
@@ -3830,6 +3892,116 @@ function computeDataQuality() {
   const score = Math.round((filled / total) * 100);
   return { score, missing, checks: total, filled };
 }
+function getNationalizationConfig(code) {
+  const c = (code || currentCountry || 'KW').toUpperCase();
+  if (c === 'SA') return {
+    code: 'SA', label: 'Saudization (Nitaqat-style view)', citizenLabel: 'Saudi',
+    match: (n) => /saudi|سعود/i.test(n || ''),
+    tip: 'Track Saudi nationals vs total. Align targets with your Nitaqat band and MHRSD guidance — this is an internal dashboard only.'
+  };
+  if (c === 'AE') return {
+    code: 'AE', label: 'Emiratisation snapshot', citizenLabel: 'UAE national',
+    match: (n) => /emirates|emirati|uae|الإمارات|امارات/i.test(n || ''),
+    tip: 'Track UAE nationals vs total for internal workforce planning. Confirm targets with MOHRE / company policy.'
+  };
+  return {
+    code: 'KW', label: 'Kuwaitization snapshot', citizenLabel: 'Kuwaiti',
+    match: (n) => /kuwait|كويت/i.test(n || ''),
+    tip: 'Track Kuwaiti nationals vs total for internal planning. Confirm any legal quotas with your PAM / company obligations.'
+  };
+}
+function renderGccNationalizationCard() {
+  let box = document.getElementById('gccNationalizationCard');
+  if (!box) {
+    const strip = document.getElementById('dashTodayStrip');
+    if (!strip || !strip.parentNode) return;
+    box = document.createElement('div');
+    box.id = 'gccNationalizationCard';
+    box.className = 'mb-5';
+    strip.parentNode.insertBefore(box, strip.nextSibling);
+  }
+  const cfg = getNationalizationConfig(currentCountry);
+  const emps = typeof getEmployeesForCountry === 'function' ? getEmployeesForCountry(currentCountry) : (data.employees || []);
+  const active = emps.filter(e => {
+    const s = String(e.status || '').toLowerCase();
+    return s !== 'terminated' && s !== 'resigned';
+  });
+  const citizens = active.filter(e => cfg.match(e.nationality));
+  const total = active.length || 0;
+  const pct = total ? Math.round((citizens.length / total) * 1000) / 10 : 0;
+  const target = (data.nationalizationTarget && data.nationalizationTarget[cfg.code]) != null
+    ? data.nationalizationTarget[cfg.code]
+    : (cfg.code === 'SA' ? 30 : cfg.code === 'AE' ? 10 : 15);
+  const gap = Math.max(0, Math.ceil((target / 100) * total - citizens.length));
+  const barColor = pct >= target ? 'bg-emerald-500' : pct >= target * 0.7 ? 'bg-amber-500' : 'bg-rose-500';
+  box.innerHTML = `
+    <div class="rounded-2xl border border-slate-200 bg-white p-4 md:p-5 shadow-sm">
+      <div class="flex flex-wrap items-start justify-between gap-3 mb-3">
+        <div>
+          <div class="text-sm font-bold text-slate-900"><i class="fas fa-flag text-teal-600 mr-1"></i>${cfg.label}</div>
+          <p class="text-xs text-slate-500 mt-0.5">${cfg.tip}</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <label class="text-[10px] font-semibold text-slate-500 uppercase">Internal target %</label>
+          <input type="number" min="0" max="100" value="${target}" id="natTargetInput"
+            class="w-16 border rounded-lg px-2 py-1 text-sm font-bold"
+            onchange="saveNationalizationTarget(this.value)">
+        </div>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+        <div class="bg-slate-50 rounded-xl p-3 text-center">
+          <div class="text-2xl font-black text-slate-900">${total}</div>
+          <div class="text-[10px] uppercase text-slate-500 font-semibold">Active staff (${cfg.code})</div>
+        </div>
+        <div class="bg-teal-50 rounded-xl p-3 text-center">
+          <div class="text-2xl font-black text-teal-700">${citizens.length}</div>
+          <div class="text-[10px] uppercase text-teal-800/80 font-semibold">${cfg.citizenLabel}</div>
+        </div>
+        <div class="bg-indigo-50 rounded-xl p-3 text-center">
+          <div class="text-2xl font-black text-indigo-700">${pct}%</div>
+          <div class="text-[10px] uppercase text-indigo-800/80 font-semibold">Share</div>
+        </div>
+        <div class="bg-amber-50 rounded-xl p-3 text-center">
+          <div class="text-2xl font-black text-amber-700">${gap}</div>
+          <div class="text-[10px] uppercase text-amber-800/80 font-semibold">To hit target</div>
+        </div>
+      </div>
+      <div class="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+        <div class="${barColor} h-full transition-all" style="width:${Math.min(100, pct)}%"></div>
+      </div>
+      <div class="flex justify-between text-[10px] text-slate-500 mt-1">
+        <span>0%</span><span>Target ${target}%</span><span>100%</span>
+      </div>
+    </div>`;
+}
+function saveNationalizationTarget(v) {
+  const code = (currentCountry || 'KW').toUpperCase();
+  if (!data.nationalizationTarget) data.nationalizationTarget = {};
+  data.nationalizationTarget[code] = Math.max(0, Math.min(100, parseFloat(v) || 0));
+  saveData();
+  renderGccNationalizationCard();
+  showToast('Target saved for ' + code, 'success');
+}
+
+function getWorkWeekNote(code) {
+  const c = (code || currentCountry || 'KW').toUpperCase();
+  if (c === 'AE') return 'UAE: many private employers use Mon–Fri or Sun–Thu; confirm your company calendar.';
+  if (c === 'SA') return 'Saudi Arabia: private sector commonly Fri–Sat weekend (confirm your sector calendar).';
+  return 'Kuwait: private sector commonly Fri–Sat weekend (confirm your company policy).';
+}
+
+function renderGccPlaybookHint() {
+  const el = document.getElementById('gccPlaybookHint');
+  if (!el) return;
+  const c = currentCountry || 'KW';
+  const notes = {
+    KW: 'Kuwait focus: Civil ID & residency, WPS-style salary transfer, leave/EOS under Law 6/2010, Kuwaitization tracking.',
+    SA: 'Saudi focus: Iqama/profession, GOSI awareness, WPS, Saudization snapshot, end-of-service under Saudi Labour Law.',
+    AE: 'UAE focus: Emirates ID & work permit, WPS, Emiratisation snapshot, gratuity under Decree-Law 33/2021 framework.'
+  };
+  el.textContent = notes[c] || notes.KW;
+}
+
 function renderDataQualityWidget() {
   const el = document.getElementById('statDataQuality');
   const sub = document.getElementById('statDataQualitySub');
@@ -7533,6 +7705,7 @@ function getReportCatalog() {
     { id: 'leave_balance', area: 'hr', title: 'Leave Balance', desc: 'Annual leave entitlement vs used / pending', icon: 'fa-calendar-check', color: 'teal' },
     { id: 'sick_leave_balance', area: 'hr', title: 'Sick Leave Balance', desc: 'Indicative sick leave usage (from leave requests)', icon: 'fa-notes-medical', color: 'rose' },
     { id: 'eos_balance', area: 'hr', title: 'End of Service Balance', desc: 'Estimated EOS / gratuity by country rules', icon: 'fa-hand-holding-usd', color: 'amber' },
+    { id: 'nationalization', area: 'hr', title: 'Nationalization Snapshot', desc: 'Citizen vs expat share for KW/SA/AE', icon: 'fa-flag', color: 'teal' },
     { id: 'headcount', area: 'hr', title: 'Headcount Register', desc: 'Active employees by project / nationality', icon: 'fa-users', color: 'blue' },
     { id: 'doc_expiry', area: 'hr', title: 'Document Expiry', desc: 'Civil ID / passport / visa risk list', icon: 'fa-id-card', color: 'red' },
     { id: 'payroll_summary', area: 'payroll', title: 'Payroll Summary', desc: 'Period payroll with OT from attendance', icon: 'fa-money-bill-wave', color: 'emerald' },
@@ -7667,6 +7840,21 @@ function runReport(id) {
       excelRows.push({ Employee: e.name, ID: e.id, Join: e.joinDate || '', Years: eos.years, Basic: e.basicSalary || 0, EOS_Estimate: eos.amount, Currency: meta.currency });
     });
     footnote = (emps[0] ? estimateEosAmount(emps[0], meta).note : meta.lawNote) + ' · Not a final settlement calculation.';
+  } else if (id === 'nationalization') {
+    const cfg = typeof getNationalizationConfig === 'function' ? getNationalizationConfig(meta.code) : { citizenLabel: 'National', match: () => false };
+    headers = ['Metric', 'Value'];
+    const active = emps.filter(e => { const s = String(e.status||'').toLowerCase(); return s !== 'terminated' && s !== 'resigned'; });
+    const cit = active.filter(e => cfg.match(e.nationality));
+    const pct = active.length ? Math.round(cit.length / active.length * 1000) / 10 : 0;
+    rows = [
+      ['Country', meta.name],
+      ['Active headcount', active.length],
+      [cfg.citizenLabel || 'Nationals', cit.length],
+      ['Expat / other', active.length - cit.length],
+      ['National share %', pct]
+    ];
+    excelRows = rows.map(r => ({ Metric: r[0], Value: r[1] }));
+    footnote += ' · Internal workforce analytics only — not a regulatory filing.';
   } else if (id === 'headcount') {
     headers = ['Employee', 'ID', 'Title', 'Nationality', 'Project', 'Status', 'Join'];
     emps.forEach(e => {
